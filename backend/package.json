@@ -6,5 +6,8 @@
 	"dependencies": {
 		"express": "^5.2.1"
 	},
-	"type": "module"
+	"type": "module",
+	"scripts": {
+		"build": "tsc"
+	}
 }
