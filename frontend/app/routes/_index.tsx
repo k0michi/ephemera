@@ -17,7 +17,7 @@ export default function Home() {
 
   useEffect(() => {
     store.prepareKeyPair();
-  }, []);
+  }, [store]);
 
   const publicKeyMem = useMemo(() => Base37.fromUint8Array(publicKey || new Uint8Array()), [publicKey]);
 
