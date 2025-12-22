@@ -1,9 +1,11 @@
 /**
- * Base37 encoding and decoding utility.
+ * Ephemera Base37 encoding and decoding utility.
  * 
- * This base37 implementation uses the character set:
+ * Ephemera Base37 uses the character set:
  * '0123456789abcdefghijklmnopqrstuvwxyz_',
  * which is the set of characters used in Twitter.
+ * 
+ * Ephemera Base37 is based on the idea of Base58 encoding used in Bitcoin. The difference is the character set and base.
  * 
  * @see https://github.com/bitcoin/bitcoin/blob/master/src/base58.cpp
  */
