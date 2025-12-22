@@ -15,10 +15,12 @@ export class EphemeraStore extends Store {
 
   revokeKeyPair() {
     this._keyPair = null;
-    if (typeof window !== 'undefined') {
+
+    if (globalThis.localStorage) {
       localStorage.removeItem('ephemera_publicKey');
       localStorage.removeItem('ephemera_privateKey');
     }
+
     this.notifyListeners();
   }
 
@@ -27,7 +29,8 @@ export class EphemeraStore extends Store {
       return;
     }
 
-    if (typeof window !== 'undefined') {
+    // Check the existence of localStorage
+    if (globalThis.localStorage) {
       const publicKeyData = localStorage.getItem('ephemera_publicKey');
       const privateKeyData = localStorage.getItem('ephemera_privateKey');
 
