@@ -18,15 +18,10 @@ jobs:
         working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: ./frontend/pnpm-lock.yaml
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
       - name: Run tests
-        run: pnpm test
+        run: npm test
