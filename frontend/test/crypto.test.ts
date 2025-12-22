@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import Crypto, { type KeyPair } from './crypto';
+import Crypto, { type KeyPair } from '../app/crypto';
 
 describe('Crypto', () => {
   it('generateKeyPair should generate a valid key pair', () => {
