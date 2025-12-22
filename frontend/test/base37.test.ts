@@ -39,13 +39,6 @@ describe('Base37', () => {
       encoded = Base37.fromUint8Array(buffer);
       expect(encoded).toBe('20');
     });
-
-    it('should round-trip encode and decode correctly', () => {
-      const original = new Uint8Array([0, 0, 1, 2, 3, 4, 5, 255]);
-      const encoded = Base37.fromUint8Array(original);
-      const decoded = Base37.toUint8Array(encoded);
-      expect(decoded).toEqual(original);
-    });
   });
 
   it('should round-trip random bytes with many seeds', () => {
