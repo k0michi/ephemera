@@ -27,6 +27,10 @@ describe('Base37', () => {
       let encoded = Base37.fromUint8Array(buffer);
       expect(encoded).toBe('0');
 
+      buffer = new Uint8Array([]);
+      encoded = Base37.fromUint8Array(buffer);
+      expect(encoded).toBe('');
+
       buffer = new Uint8Array([0, 0, 1]);
       encoded = Base37.fromUint8Array(buffer);
       expect(encoded).toBe('001');
