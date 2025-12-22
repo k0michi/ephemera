@@ -26,4 +26,12 @@ describe('Crypto', () => {
     const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
     expect(isValid).toBe(false);
   });
+
+  it('digest should compute correct SHA-256 hash', async () => {
+    const data = new Uint8Array([97]); // 'a'
+    const hash = await Crypto.digest(data);
+    const expectedHex = 'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb';
+    const hashHex = Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
+    expect(hashHex).toBe(expectedHex);
+  });
 });

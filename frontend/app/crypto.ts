@@ -26,4 +26,11 @@ export default class Crypto {
   ): boolean {
     return ed25519.verify(signature, message, publicKey);
   }
+
+  /**
+   * Computes the SHA-256 digest of the input data.
+   */
+  static async digest(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array> {
+    return new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+  }
 }
