@@ -34,4 +34,19 @@ describe('Crypto', () => {
     const hashHex = Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
     expect(hashHex).toBe(expectedHex);
   });
+
+  it('digest should produce different hashes for different inputs', async () => {
+    const data1 = new Uint8Array([97]);
+    const data2 = new Uint8Array([98]);
+    const hash1 = await Crypto.digest(data1);
+    const hash2 = await Crypto.digest(data2);
+    expect(hash1).not.toEqual(hash2);
+  });
+
+  it('digest should be consistent for the same input', async () => {
+    const data = new Uint8Array([97, 98, 99]);
+    const hash1 = await Crypto.digest(data);
+    const hash2 = await Crypto.digest(data);
+    expect(hash1).toEqual(hash2);
+  });
 });
