@@ -13,14 +13,19 @@ export class EphemeraStore extends Store {
     return this._keyPair;
   }
 
+  checkLocalStorage() {
+    if (!globalThis.localStorage) {
+      throw new Error("localStorage is not available");
+    }
+  }
+
   revokeKeyPair() {
     this._keyPair = null;
 
-    if (globalThis.localStorage) {
-      localStorage.removeItem('ephemera_publicKey');
-      localStorage.removeItem('ephemera_privateKey');
-    }
+    this.checkLocalStorage();
 
+    localStorage.removeItem('ephemera_publicKey');
+    localStorage.removeItem('ephemera_privateKey');
     this.notifyListeners();
   }
 
@@ -29,22 +34,21 @@ export class EphemeraStore extends Store {
       return;
     }
 
-    // Check the existence of localStorage
-    if (globalThis.localStorage) {
-      const publicKeyData = localStorage.getItem('ephemera_publicKey');
-      const privateKeyData = localStorage.getItem('ephemera_privateKey');
+    this.checkLocalStorage();
 
-      if (publicKeyData && privateKeyData) {
-        const publicKeyArray: number[] = JSON.parse(publicKeyData);
-        const privateKeyArray: number[] = JSON.parse(privateKeyData);
+    const publicKeyData = localStorage.getItem('ephemera_publicKey');
+    const privateKeyData = localStorage.getItem('ephemera_privateKey');
 
-        this._keyPair = {
-          publicKey: new Uint8Array(publicKeyArray),
-          privateKey: new Uint8Array(privateKeyArray),
-        };
-        this.notifyListeners();
-        return;
-      }
+    if (publicKeyData && privateKeyData) {
+      const publicKeyArray: number[] = JSON.parse(publicKeyData);
+      const privateKeyArray: number[] = JSON.parse(privateKeyData);
+
+      this._keyPair = {
+        publicKey: new Uint8Array(publicKeyArray),
+        privateKey: new Uint8Array(privateKeyArray),
+      };
+      this.notifyListeners();
+      return;
     }
 
     const keyPair = Crypto.generateKeyPair();
@@ -52,6 +56,7 @@ export class EphemeraStore extends Store {
 
     localStorage.setItem('ephemera_publicKey', JSON.stringify(Array.from(keyPair.publicKey)));
     localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(keyPair.privateKey)));
+
     this.notifyListeners();
   }
 }
