@@ -6,8 +6,9 @@
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
+		"@vitest/coverage-v8": "^4.0.16",
 		"ts-to-zod": "^5.1.0",
-		"vitest": "^3.2.4"
+		"vitest": "^4.0.16"
 	},
 	"scripts": {
 		"test": "vitest"
