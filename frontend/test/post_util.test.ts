@@ -36,7 +36,7 @@ describe("PostUtil.validate", () => {
   });
 });
 
-describe("PostUtil.normalize", () => {
+describe("PostUtil.sanitize", () => {
   it("should NFC normalize the string", () => {
     expect(PostUtil.sanitize("è".normalize("NFD"))).toBe("è".normalize("NFC"));
   });
