@@ -2,10 +2,13 @@ import { describe, it, expect } from "vitest";
 import { PostUtil } from "../app/post_util";
 
 describe("PostUtil.weightedLength", () => {
-  it("counts ASCII as 1, non-ASCII as 2", () => {
+  it("counts based on East_Asian_Width", () => {
     expect(PostUtil.weightedLength("abc")).toBe(3);
     expect(PostUtil.weightedLength("あいう")).toBe(6);
     expect(PostUtil.weightedLength("aあb")).toBe(4);
+    expect(PostUtil.weightedLength("𠮷野家")).toBe(6);
+    expect(PostUtil.weightedLength("😃")).toBe(2);
+    expect(PostUtil.weightedLength("🧑‍🧑‍🧒")).toBe(2);
   });
 });
 

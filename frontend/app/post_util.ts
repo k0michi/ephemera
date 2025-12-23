@@ -1,3 +1,5 @@
+import { eastAsianWidth } from 'get-east-asian-width';
+
 export class PostUtil {
   static _kMinPostLength = 1;
   static _kMaxPostLength = 280;
@@ -8,14 +10,32 @@ export class PostUtil {
   static _kForbiddenLetterRegexGlobal = new RegExp(PostUtil._kForbiddenLetterRegex, 'g');
 
   /**
-   * Calculates the weighted length of a string, counting
-   * ASCII characters as 1 and non-ASCII characters as 2.
+   * Calculates the weighted length of the string.
+   * A character's weight is determined by its East Asian Width property:
+   * - Fullwidth (F), Wide (W): 2
+   * - Ambiguous (A), Halfwidth (H), Narrow (Na), Neutral (N): 1
    */
   static weightedLength(string: string): number {
     let length = 0;
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
-    for (const char of string) {
-      length += char.charCodeAt(0) > 0xFF ? 2 : 1;
+    for (const { segment } of segmenter.segment(string)) {
+      const codePoints = Array.from(segment);
+      let segmentWidth = 0;
+
+      // Take the maximum width in the grapheme cluster
+      for (const cp of codePoints) {
+        const codePointValue = cp.codePointAt(0);
+
+        if (codePointValue === undefined) {
+          // Should not happen...
+          continue;
+        }
+
+        segmentWidth = Math.max(eastAsianWidth(codePointValue), segmentWidth);
+      }
+
+      length += segmentWidth;
     }
 
     return length;
