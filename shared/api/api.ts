@@ -16,19 +16,27 @@ export type Dimension = {
   height: number;
 };
 
-export type CreatePostSignalPayload = [
-  Version, // version
+export type CreatePostSignalHeader = [
   Host, // host
   Author, // author
   Timestamp, // created_at
-  'create_post', // type
-  [string] // body
+  'create_post' // type
+];
+
+export type CreatePostSignalBody = string;
+
+export type CreatePostSignalFooter = [];
+
+export type CreatePostSignalPayload = [
+  Version, // version
+  CreatePostSignalHeader, // header
+  CreatePostSignalBody, // body
+  CreatePostSignalFooter // footer
 ];
 
 export type PostSignal = [
-  Hash, // payloadHash
   CreatePostSignalPayload, // payload
-  string // payloadSignature
+  string // signature
 ];
 
 // POST /api/v1/post
