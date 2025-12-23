@@ -3,7 +3,7 @@ import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_index";
 import { useEffect, useMemo, useState } from "react";
 import Base37 from "~/base37";
-import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
+import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
 
 export function meta({ }: Route.MetaArgs) {
