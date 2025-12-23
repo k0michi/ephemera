@@ -1,5 +1,4 @@
-import { describe } from "node:test";
-import { expect, it } from "vitest";
+import { expect, it, describe } from "vitest";
 import Hex from "~/hex";
 
 describe('Hex', () => {

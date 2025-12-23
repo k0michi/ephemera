@@ -1,5 +1,4 @@
-import { describe } from "node:test";
-import { expect, it } from "vitest";
+import { expect, it, describe } from "vitest";
 import Base37 from "~/base37"
 
 function* xorShift32(seed: number): Generator<number> {
