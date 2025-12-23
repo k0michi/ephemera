@@ -1,6 +1,7 @@
 export class PostUtil {
   static _kMaxPostLength = 280;
   static _kForbiddenLetterRegex = /[\x00-\x09\x0b-\x1f\x7f\u0080-\u009f]/;
+  static _kForbiddenLetterRegexGlobal = new RegExp(PostUtil._kForbiddenLetterRegex, 'g');
 
   /**
    * Calculates the weighted length of a string, counting
@@ -33,5 +34,16 @@ export class PostUtil {
     }
 
     return true;
+  }
+
+  /**
+   * Sanitizes the string to be valid as a post.
+   * Note that this does not guarantee the result is valid;
+   * it may still exceed the maximum length.
+   */
+  static sanitize(string: string): string {
+    let normalized = string.normalize('NFC');
+    normalized = normalized.replaceAll(this._kForbiddenLetterRegexGlobal, '');
+    return normalized;
   }
 }

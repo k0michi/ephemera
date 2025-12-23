@@ -28,3 +28,17 @@ describe("PostUtil.validate", () => {
     expect(PostUtil.validate("Hello world!".normalize("NFC"))).toBe(true);
   });
 });
+
+describe("PostUtil.normalize", () => {
+  it("should NFC normalize the string", () => {
+    expect(PostUtil.sanitize("è".normalize("NFD"))).toBe("è".normalize("NFC"));
+  });
+
+  it("should remove forbidden characters", () => {
+    expect(PostUtil.sanitize("abc\x00def\x7fghi")).toBe("abcdefghi");
+  });
+
+  it("should not throw for valid string", () => {
+    expect(() => PostUtil.sanitize("hello world")).not.toThrow();
+  });
+});
