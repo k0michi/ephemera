@@ -52,7 +52,7 @@ describe("SignalCrypto.sign", () => {
     ];
 
     const signed = await SignalCrypto.sign(payload, keyPair.privateKey);
-    const isValid = await SignalCrypto.verify(signed, keyPair.publicKey);
+    const isValid = await SignalCrypto.verify(signed);
 
     expect(isValid).toBe(true);
   });

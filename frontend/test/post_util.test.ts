@@ -14,25 +14,25 @@ describe("PostUtil.weightedLength", () => {
 
 describe("PostUtil.validate", () => {
   it("returns false if under min length", () => {
-    expect(PostUtil.validate("")).toBe(false);
+    expect(PostUtil.validate("")[0]).toBe(false);
   });
 
   it("returns false if over max length", () => {
     const long = "a".repeat(281);
-    expect(PostUtil.validate(long)).toBe(false);
+    expect(PostUtil.validate(long)[0]).toBe(false);
   });
 
   it("returns false if forbidden chars present", () => {
-    expect(PostUtil.validate("abc\x00def")).toBe(false);
-    expect(PostUtil.validate("abc\x7fdef")).toBe(false);
+    expect(PostUtil.validate("abc\x00def")[0]).toBe(false);
+    expect(PostUtil.validate("abc\x7fdef")[0]).toBe(false);
   });
 
   it("returns false if not NFC normalized", () => {
-    expect(PostUtil.validate("è".normalize("NFD"))).toBe(false);
+    expect(PostUtil.validate("è".normalize("NFD"))[0]).toBe(false);
   });
 
   it("returns true for valid post", () => {
-    expect(PostUtil.validate("Hello world!".normalize("NFC"))).toBe(true);
+    expect(PostUtil.validate("Hello world!".normalize("NFC"))[0]).toBe(true);
   });
 });
 
