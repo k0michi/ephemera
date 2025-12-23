@@ -16,6 +16,18 @@ export type Dimension = {
   height: number;
 };
 
+export type SignalPayload<Header, Body, Footer> = [
+  Version, // version
+  Header, // header
+  Body, // body
+  Footer // footer
+];
+
+export type Signal<Payload> = [
+  Payload, // payload
+  string // signature
+];
+
 export type CreatePostSignalHeader = [
   Host, // host
   Author, // author
@@ -27,12 +39,11 @@ export type CreatePostSignalBody = string;
 
 export type CreatePostSignalFooter = [];
 
-export type CreatePostSignalPayload = [
-  Version, // version
-  CreatePostSignalHeader, // header
-  CreatePostSignalBody, // body
-  CreatePostSignalFooter // footer
-];
+export type CreatePostSignalPayload = SignalPayload<
+  CreatePostSignalHeader,
+  CreatePostSignalBody,
+  CreatePostSignalFooter
+>;
 
 export type PostSignal = [
   CreatePostSignalPayload, // payload
