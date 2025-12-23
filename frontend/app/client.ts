@@ -1,4 +1,4 @@
-import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal } from "../../shared/api/api";
+import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../../shared/api/api";
 import type { KeyPair } from "./crypto";
 import Hex from "./hex";
 import SignalCrypto from "./signal_crypto";
@@ -9,6 +9,7 @@ export class Client {
    */
   _host: string;
   _keyPair: KeyPair;
+  _version: Version = 0;
 
   constructor(host: string, keyPair: KeyPair) {
     this._host = host;
@@ -31,7 +32,7 @@ export class Client {
   async sendPost(post: string): Promise<void> {
     const publicKeyHex = Hex.fromUint8Array(this._keyPair.publicKey);
     const payload = [
-      0,
+      this._version,
       [this._host, publicKeyHex, new Date().toISOString(), "create_post"],
       post,
       []
