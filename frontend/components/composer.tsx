@@ -8,6 +8,7 @@ export interface ComposerProps {
 
 export default function Composer({ onSubmit }: ComposerProps) {
   const [value, setValue] = useState("");
+  const minLength = PostUtil._kMinPostLength;
   const maxLength = PostUtil._kMaxPostLength;
   const count = PostUtil.weightedLength(value);
 
@@ -17,6 +18,7 @@ export default function Composer({ onSubmit }: ComposerProps) {
     setValue("");
   };
 
+  const isUnder = count < minLength;
   const isOver = count > maxLength;
 
   return (
@@ -41,7 +43,7 @@ export default function Composer({ onSubmit }: ComposerProps) {
             </div>
           </Form.Group>
           <div className="mt-2 text-end">
-            <Button type="submit" variant="primary" disabled={isOver}>
+            <Button type="submit" variant="primary" disabled={isUnder || isOver}>
               Post
             </Button>
           </div>

@@ -1,5 +1,9 @@
 export class PostUtil {
+  static _kMinPostLength = 1;
   static _kMaxPostLength = 280;
+  /**
+   * U+0000 to U+001F, U+007F to U+009F
+   */
   static _kForbiddenLetterRegex = /[\x00-\x09\x0b-\x1f\x7f\u0080-\u009f]/;
   static _kForbiddenLetterRegexGlobal = new RegExp(PostUtil._kForbiddenLetterRegex, 'g');
 
@@ -21,7 +25,9 @@ export class PostUtil {
    * Validates if the string is valid as a post.
    */
   static validate(string: string): boolean {
-    if (this.weightedLength(string) > this._kMaxPostLength) {
+    const length = this.weightedLength(string);
+
+    if (length < this._kMinPostLength || length > this._kMaxPostLength) {
       return false;
     }
 

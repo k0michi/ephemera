@@ -10,6 +10,10 @@ describe("PostUtil.weightedLength", () => {
 });
 
 describe("PostUtil.validate", () => {
+  it("returns false if under min length", () => {
+    expect(PostUtil.validate("")).toBe(false);
+  });
+
   it("returns false if over max length", () => {
     const long = "a".repeat(281);
     expect(PostUtil.validate(long)).toBe(false);
