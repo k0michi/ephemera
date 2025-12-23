@@ -1,6 +1,6 @@
 import { describe } from "node:test";
 import { expect, it } from "vitest";
-import Hex from "~/hex"
+import Hex from "~/hex";
 
 describe('Hex', () => {
   describe('fromUint8Array', () => {
