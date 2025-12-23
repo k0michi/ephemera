@@ -8,8 +8,8 @@ export interface ComposerProps {
 
 export default function Composer({ onSubmit }: ComposerProps) {
   const [value, setValue] = useState("");
-  const minLength = PostUtil._kMinPostLength;
-  const maxLength = PostUtil._kMaxPostLength;
+  const minLength = PostUtil.kMinPostLength;
+  const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
