@@ -1,5 +1,4 @@
-export interface ApiRequest {
-}
+export type ApiRequest = {};
 
 export interface ApiResponse {
   error?: string;
@@ -19,17 +18,30 @@ export type Dimension = {
   height: number;
 };
 
-export type SignalPayload<Header, Body, Footer> = [
-  Version, // version
-  Header, // header
-  Body, // body
-  Footer // footer
+export type SignalHeader = [
+  Host, // host
+  Author, // author
+  Timestamp, // created_at
+  string // type
 ];
 
-export type Signal<Payload> = [
-  Payload, // payload
+export type SignalBody = unknown;
+
+export type SignalFooter = unknown;
+
+export type SignalPayload = [
+  Version, // version
+  SignalHeader, // header
+  SignalBody, // body
+  SignalFooter // footer
+];
+
+export type Signal = [
+  SignalPayload, // payload
   string // signature
 ];
+
+// create_post signal
 
 export type CreatePostSignalHeader = [
   Host, // host
@@ -42,11 +54,12 @@ export type CreatePostSignalBody = string;
 
 export type CreatePostSignalFooter = [];
 
-export type CreatePostSignalPayload = SignalPayload<
-  CreatePostSignalHeader,
-  CreatePostSignalBody,
-  CreatePostSignalFooter
->;
+export type CreatePostSignalPayload = [
+  Version, // version
+  CreatePostSignalHeader, // header
+  CreatePostSignalBody, // body
+  CreatePostSignalFooter // footer
+];
 
 export type PostSignal = [
   CreatePostSignalPayload, // payload
