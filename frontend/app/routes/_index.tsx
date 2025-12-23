@@ -1,9 +1,10 @@
 import { useReader, useSelector } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_index";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Base37 from "~/base37";
-import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
+import Composer from "components/composer";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -12,9 +13,12 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
+export type MessageState = { type: "success" | "error"; text: string } | null;
+
 export default function Home() {
   const publicKey = useSelector(EphemeraStoreContext, (store) => store.keyPair?.publicKey);
   const store = useReader(EphemeraStoreContext);
+  const [message, setMessage] = useState<MessageState>(null);
 
   useEffect(() => {
     store.prepareKeyPair();
@@ -22,20 +26,34 @@ export default function Home() {
 
   const publicKeyMem = useMemo(() => Base37.fromUint8Array(publicKey || new Uint8Array()), [publicKey]);
 
+  const handleSubmit = async (value: string) => {
+    try {
+      await store.sendPost(value);
+      setMessage({ type: "success", text: "Post submitted successfully!" });
+      setTimeout(() => setMessage(null), 2000);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to submit post."
+      });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
   return (
     <Container className="mt-5">
       <Row className="justify-content-md-center">
         <Col md={8} lg={6}>
-          <Form>
-            <Form.Group className="mb-3" controlId="postContent">
-              <Form.Control as="textarea" rows={4} placeholder="Write here..." />
-            </Form.Group>
-            <Button variant="primary" type="submit" onClick={() => {
-              // TODO
-            }}>
-              Submit
-            </Button>
-          </Form>
+          {message && (
+            <Alert
+              variant={message.type === "success" ? "success" : "danger"}
+              onClose={() => setMessage(null)}
+              dismissible
+            >
+              {message.text}
+            </Alert>
+          )}
+          <Composer onSubmit={handleSubmit} />
           <hr className="my-4" />
           <div>Your public key: {publicKeyMem}</div>
           <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
