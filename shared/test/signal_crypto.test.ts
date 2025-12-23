@@ -1,8 +1,8 @@
-import SignalCrypto from "../app/signal_crypto";
-import Crypto from "../app/crypto";
-import type { CreatePostSignalPayload } from "../../shared/api/api";
+import SignalCrypto from "../lib/signal_crypto.js";
+import Crypto from "../lib/crypto.js";
+import type { CreatePostSignalPayload } from "../api/api.js";
 import { describe, expect, it, vi } from "vitest";
-import Hex from "~/hex";
+import Hex from "../lib/hex.js";
 
 describe("SignalCrypto.sign", () => {
   it("should return the result of signing the payload digest in hex", async () => {

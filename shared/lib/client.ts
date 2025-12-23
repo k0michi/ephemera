@@ -1,8 +1,8 @@
-import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../../shared/api/api";
-import type { KeyPair } from "./crypto";
-import Hex from "./hex";
-import { PostUtil } from "./post_util";
-import SignalCrypto from "./signal_crypto";
+import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
+import type { KeyPair } from "./crypto.js";
+import Hex from "./hex.js";
+import { PostUtil } from "./post_util.js";
+import SignalCrypto from "./signal_crypto.js";
 
 export class Client {
   /**

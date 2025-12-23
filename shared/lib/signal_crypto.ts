@@ -1,4 +1,4 @@
-import type { CreatePostSignalPayload, Signal, SignalPayload } from "../../shared/api/api.js";
+import type { CreatePostSignalPayload, Signal, SignalPayload } from "../api/api.js";
 import Crypto from "./crypto.js";
 import Hex from "./hex.js";
 

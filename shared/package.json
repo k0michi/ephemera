@@ -1,6 +1,8 @@
 {
 	"type": "module",
 	"dependencies": {
+		"@noble/curves": "^2.0.1",
+		"typescript": "^5.9.3",
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {

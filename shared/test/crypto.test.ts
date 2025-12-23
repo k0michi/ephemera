@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import Crypto, { type KeyPair } from '../app/crypto';
+import Crypto, { type KeyPair } from '../lib/crypto.js';
 
 describe('Crypto', () => {
   it('generateKeyPair should generate a valid key pair', () => {
