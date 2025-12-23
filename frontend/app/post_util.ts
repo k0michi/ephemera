@@ -6,8 +6,8 @@ export class PostUtil {
   /**
    * U+0000 to U+001F, U+007F to U+009F
    */
-  static _kForbiddenLetterRegex = /[\x00-\x09\x0b-\x1f\x7f\u0080-\u009f]/;
-  static _kForbiddenLetterRegexGlobal = new RegExp(PostUtil._kForbiddenLetterRegex, 'g');
+  static _kForbiddenCharactersRegex = /[\x00-\x09\x0b-\x1f\x7f\u0080-\u009f]/;
+  static _kForbiddenCharactersRegexGlobal = new RegExp(PostUtil._kForbiddenCharactersRegex, 'g');
 
   /**
    * Calculates the weighted length of the string.
@@ -51,7 +51,7 @@ export class PostUtil {
       return false;
     }
 
-    if (this._kForbiddenLetterRegex.test(string)) {
+    if (this._kForbiddenCharactersRegex.test(string)) {
       return false;
     }
 
@@ -69,7 +69,7 @@ export class PostUtil {
    */
   static sanitize(string: string): string {
     let normalized = string.normalize('NFC');
-    normalized = normalized.replaceAll(this._kForbiddenLetterRegexGlobal, '');
+    normalized = normalized.replaceAll(this._kForbiddenCharactersRegexGlobal, '');
     return normalized;
   }
 }
