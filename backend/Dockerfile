@@ -18,4 +18,4 @@ WORKDIR /app
 COPY --from=builder /app/backend/dist ./backend/dist
 EXPOSE 3000
 WORKDIR /app/backend
-CMD ["node", "run", "start"]
+CMD ["npm", "run", "start"]
