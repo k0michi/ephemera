@@ -4,6 +4,10 @@
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
-		"ts-to-zod": "^5.1.0"
+		"ts-to-zod": "^5.1.0",
+		"vitest": "^3.2.4"
+	},
+	"scripts": {
+		"test": "vitest"
 	}
 }
