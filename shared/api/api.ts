@@ -7,7 +7,10 @@ export interface ApiResponse {
 
 export type Version = 0;
 export type Author = string;
-export type Timestamp = string;
+/**
+ * Unix timestamp in milliseconds.
+ */
+export type Timestamp = number;
 export type Host = string;
 export type Hash = string;
 export type ContentType = string;

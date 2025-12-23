@@ -33,7 +33,7 @@ export class Client {
     const publicKeyHex = Hex.fromUint8Array(this._keyPair.publicKey);
     const payload = [
       this._version,
-      [this._host, publicKeyHex, new Date().toISOString(), "create_post"],
+      [this._host, publicKeyHex, Date.now(), "create_post"],
       post,
       []
     ] satisfies CreatePostSignalPayload;
