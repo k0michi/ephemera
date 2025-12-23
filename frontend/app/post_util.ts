@@ -44,22 +44,22 @@ export class PostUtil {
   /**
    * Validates if the string is valid as a post.
    */
-  static validate(string: string): boolean {
+  static validate(string: string): [boolean, string] {
     const length = this.weightedLength(string);
 
     if (length < this.kMinPostLength || length > this.kMaxPostLength) {
-      return false;
+      return [false, "Invalid length"];
     }
 
     if (this._kForbiddenCharactersRegex.test(string)) {
-      return false;
+      return [false, "Contains forbidden characters"];
     }
 
     if (string !== string.normalize('NFC')) {
-      return false;
+      return [false, "Not normalized"];
     }
 
-    return true;
+    return [true, ''];
   }
 
   /**

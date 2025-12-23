@@ -1,6 +1,7 @@
 import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../../shared/api/api";
 import type { KeyPair } from "./crypto";
 import Hex from "./hex";
+import { PostUtil } from "./post_util";
 import SignalCrypto from "./signal_crypto";
 
 export class Client {
@@ -27,9 +28,15 @@ export class Client {
   /**
    * Sends a post to the server.
    * 
-   * @throws Error if the request fails.
+   * @throws Error if the request fails or the post is invalid.
    */
   async sendPost(post: string): Promise<void> {
+    const validationResult = PostUtil.validate(post);
+
+    if (!validationResult[0]) {
+      throw new Error(`Post validation failed: ${validationResult[1]}`);
+    }
+
     const publicKeyHex = Hex.fromUint8Array(this._keyPair.publicKey);
     const payload = [
       this._version,
