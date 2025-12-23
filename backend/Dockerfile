@@ -1,14 +1,21 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY shared/. ./shared/
+COPY backend/package.json backend/package-lock.json ./backend/
+WORKDIR /app/backend
 RUN npm ci
-COPY . .
+WORKDIR /app
+COPY backend/. ./backend/
+WORKDIR /app/backend
 RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY backend/package.json backend/package-lock.json ./backend/
+WORKDIR /app/backend
 RUN npm ci --omit=dev
-COPY --from=builder /app/dist ./dist
+WORKDIR /app
+COPY --from=builder /app/backend/dist ./backend/dist
 EXPOSE 3000
-CMD ["node", "dist/app.js"]
+WORKDIR /app/backend
+CMD ["node", "run", "start"]
