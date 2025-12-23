@@ -1,6 +1,7 @@
 import { createStoreContext, Store } from "lib/store";
 
 import Crypto, { type KeyPair } from "./crypto";
+import { Client } from "./client";
 
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;
@@ -58,6 +59,18 @@ export class EphemeraStore extends Store {
     localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(keyPair.privateKey)));
 
     this.notifyListeners();
+  }
+
+  /**
+   * @throws Error if sending the post fails.
+   */
+  async sendPost(post: string): Promise<void> {
+    if (!this._keyPair) {
+      throw new Error("Key pair is not prepared");
+    }
+
+    const client = new Client(window.location.host, this._keyPair);
+    await client.sendPost(post);
   }
 }
 

@@ -8,6 +8,7 @@
 	},
 	"type": "module",
 	"scripts": {
-		"build": "tsc"
+		"build": "tsc",
+		"start": "node ./dist/backend/app/app.js"
 	}
 }

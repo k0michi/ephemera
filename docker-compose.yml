@@ -2,20 +2,18 @@ version: '3.9'
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    working_dir: /app
+      context: .
+      dockerfile: ./backend/Dockerfile
+    # working_dir: /app
     environment:
       - NODE_ENV=production
-    restart: unless-stopped
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    working_dir: /app
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    # working_dir: /app
     environment:
       - NODE_ENV=production
-    restart: unless-stopped
   nginx:
     image: nginx:alpine
     ports:
@@ -25,4 +23,3 @@ services:
     depends_on:
       - frontend
       - backend
-    restart: unless-stopped

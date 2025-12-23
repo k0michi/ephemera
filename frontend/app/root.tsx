@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import 'bootstrap/dist/css/bootstrap.css';
 import "./app.css";
 import { EphemeraStoreContext } from "./store";
 
