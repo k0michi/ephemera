@@ -29,7 +29,9 @@ export default function Composer({ onSubmit }: ComposerProps) {
               as="textarea"
               rows={3}
               value={value}
-              onChange={e => setValue(e.target.value)}
+              onChange={e => {
+                setValue(PostUtil.sanitize(e.target.value))
+              }}
               placeholder="What's happening?"
             />
             <div
