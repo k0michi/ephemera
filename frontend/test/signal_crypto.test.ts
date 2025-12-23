@@ -1,15 +1,15 @@
 import SignalCrypto from "../app/signal_crypto";
 import Crypto from "../app/crypto";
-import type { SignalPayload } from "../../shared/api/api";
+import type { CreatePostSignalPayload } from "../../shared/api/api";
 import { describe, expect, it, vi } from "vitest";
 import Hex from "~/hex";
 
 describe("SignalCrypto.sign", () => {
   it("should return the result of signing the payload digest in hex", async () => {
     const keyPair = Crypto.generateKeyPair();
-    const payload: SignalPayload<[string, string, string, string], string, []> = [
+    const payload: CreatePostSignalPayload = [
       0,
-      ["host", Hex.fromUint8Array(keyPair.publicKey), "2025-12-23T00:00:00Z", "create_post"],
+      ["host", Hex.fromUint8Array(keyPair.publicKey), 0, "create_post"],
       "body text",
       []
     ];
@@ -23,9 +23,9 @@ describe("SignalCrypto.sign", () => {
 
   it("should compute the digest of the payload before signing", async () => {
     const keyPair = Crypto.generateKeyPair();
-    const payload: SignalPayload<[string, string, string, string], string, []> = [
+    const payload: CreatePostSignalPayload = [
       0,
-      ["host", Hex.fromUint8Array(keyPair.publicKey), "2025-12-23T00:00:00Z", "create_post"],
+      ["host", Hex.fromUint8Array(keyPair.publicKey), 0, "create_post"],
       "body text",
       []
     ];
@@ -44,9 +44,9 @@ describe("SignalCrypto.sign", () => {
   it("should return a verifiable signature", async () => {
     const keyPair = Crypto.generateKeyPair();
 
-    const payload: SignalPayload<[string, string, string, string], string, []> = [
+    const payload: CreatePostSignalPayload = [
       0,
-      ["host", Hex.fromUint8Array(keyPair.publicKey), "2025-12-23T00:00:00Z", "create_post"],
+      ["host", Hex.fromUint8Array(keyPair.publicKey), 0, "create_post"],
       "body text",
       []
     ];
