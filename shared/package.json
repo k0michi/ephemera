@@ -2,5 +2,8 @@
 	"type": "module",
 	"dependencies": {
 		"zod": "^4.2.1"
+	},
+	"devDependencies": {
+		"ts-to-zod": "^5.1.0"
 	}
 }
