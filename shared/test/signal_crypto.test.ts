@@ -3,6 +3,7 @@ import Crypto from "../lib/crypto.js";
 import type { CreatePostSignalPayload } from "../api/api.js";
 import { describe, expect, it, vi } from "vitest";
 import Hex from "../lib/hex.js";
+import Base37 from "../lib/base37.js";
 
 describe("SignalCrypto.sign", () => {
   it("should return the result of signing the payload digest in hex", async () => {
@@ -46,7 +47,7 @@ describe("SignalCrypto.sign", () => {
 
     const payload: CreatePostSignalPayload = [
       0,
-      ["host", Hex.fromUint8Array(keyPair.publicKey), 0, "create_post"],
+      ["host", Base37.fromUint8Array(keyPair.publicKey), 0, "create_post"],
       "body text",
       []
     ];
