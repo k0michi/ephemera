@@ -1,4 +1,5 @@
 import type { CreatePostSignalPayload, Signal, SignalPayload } from "../api/api.js";
+import Base37 from "./base37.js";
 import Crypto from "./crypto.js";
 import Hex from "./hex.js";
 
@@ -20,6 +21,6 @@ export default class SignalCrypto {
     const [payload, signatureHex] = signal;
     const payloadHash = await SignalCrypto.digest(payload);
     const signatureUint8 = Hex.toUint8Array(signatureHex);
-    return Crypto.verify(payloadHash, signatureUint8, Hex.toUint8Array(payload[1][1]));
+    return Crypto.verify(payloadHash, signatureUint8, Base37.toUint8Array(payload[1][1]));
   }
 }
