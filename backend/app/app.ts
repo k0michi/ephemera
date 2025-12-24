@@ -1,34 +1,53 @@
 import express from 'express';
 import { postRequestSchema } from '@ephemera/shared/dist/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/dist/lib/signal_crypto.js';
+import { type IController } from '../lib/controller.js';
+import { Application } from '../lib/application.js';
+import NullableHelper from '@ephemera/shared/dist/lib/nullable_helper.js';
 
-const app = express();
-app.use(express.json());
+interface IApiV1Controller extends IController {
+  handlePost(req: express.Request, res: express.Response): Promise<void>;
+}
 
-const apiV1 = express.Router();
+class ApiV1Controller implements IApiV1Controller {
+  public path = '/api/v1';
+  public router = express.Router();
 
-apiV1.post('/post', async (req, res) => {
-  const parsed = postRequestSchema.parse(req.body);
-
-  if (!parsed) {
-    return res.status(400).json({ error: 'Invalid request' });
+  constructor() {
+    this.router.post('/post', this.handlePost.bind(this));
   }
 
-  const verified = await SignalCrypto.verify(parsed.post);
+  async handlePost(req: express.Request, res: express.Response) {
+    const parsed = postRequestSchema.parse(req.body);
 
-  if (!verified) {
-    return res.status(400).json({ error: 'Invalid post signature' });
+    if (!parsed) {
+      res.status(400).json({ error: 'Invalid request' });
+      return;
+    }
+
+    const verified = await SignalCrypto.verify(parsed.post);
+
+    if (!verified) {
+      res.status(400).json({ error: 'Invalid post signature' });
+      return;
+    }
+
+    // TODO: Handle the post
+
+    res.status(200).json({});
   }
+}
 
-  // TODO: Handle the post
+class Ephemera extends Application {
+  constructor() {
+    super();
 
-  res.status(200).json({});
-});
+    this.app.use(express.json());
+    this.useController(new ApiV1Controller());
+  }
+}
 
-app.use('/api/v1', apiV1);
+const ephemeraApp = new Ephemera();
+const PORT = NullableHelper.map(process.env.PORT, Number) ?? 3000;
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+ephemeraApp.listen(PORT);
