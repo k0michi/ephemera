@@ -1,15 +1,18 @@
 {
 	"devDependencies": {
 		"@types/express": "^5.0.6",
-		"typescript": "^5.9.3"
+		"node-mocks-http": "^1.17.2",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.16"
 	},
 	"dependencies": {
-		"express": "^5.2.1",
-		"@ephemera/shared": "*"
+		"@ephemera/shared": "*",
+		"express": "^5.2.1"
 	},
 	"type": "module",
 	"scripts": {
 		"build": "tsc -b",
-		"start": "node ./dist/app/app.js"
+		"start": "node ./dist/app/app.js",
+		"test": "vitest"
 	}
 }
