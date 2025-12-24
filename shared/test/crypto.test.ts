@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Crypto, { type KeyPair } from '../lib/crypto.js';
+import ArrayHelper from '../lib/array_helper.js';
 
 describe('Crypto', () => {
   it('generateKeyPair should generate a valid key pair', () => {
@@ -22,7 +23,7 @@ describe('Crypto', () => {
   it('verify should return false for tampered signatures', () => {
     const keyPair: KeyPair = Crypto.generateKeyPair();
     const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
-    signed[0] ^= 0x01;
+    ArrayHelper.strictSet(signed, 0, ArrayHelper.strictGet(signed, 0) ^ 0x01);
     const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
     expect(isValid).toBe(false);
   });
