@@ -4,39 +4,7 @@ import SignalCrypto from '@ephemera/shared/dist/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import { Application } from '../lib/application.js';
 import NullableHelper from '@ephemera/shared/dist/lib/nullable_helper.js';
-
-interface IApiV1Controller extends IController {
-  handlePost(req: express.Request, res: express.Response): Promise<void>;
-}
-
-class ApiV1Controller implements IApiV1Controller {
-  public path = '/api/v1';
-  public router = express.Router();
-
-  constructor() {
-    this.router.post('/post', this.handlePost.bind(this));
-  }
-
-  async handlePost(req: express.Request, res: express.Response) {
-    const parsed = postRequestSchema.parse(req.body);
-
-    if (!parsed) {
-      res.status(400).json({ error: 'Invalid request' });
-      return;
-    }
-
-    const verified = await SignalCrypto.verify(parsed.post);
-
-    if (!verified) {
-      res.status(400).json({ error: 'Invalid post signature' });
-      return;
-    }
-
-    // TODO: Handle the post
-
-    res.status(200).json({});
-  }
-}
+import ApiV1Controller from './api_v1_controller.js';
 
 class Ephemera extends Application {
   constructor() {
