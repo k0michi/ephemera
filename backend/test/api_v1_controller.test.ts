@@ -25,6 +25,10 @@ class MockPostService implements IPostService {
   async create(signal: PostSignal): Promise<void> {
     return;
   }
+
+  async find(): Promise<PostSignal[]> {
+    return [];
+  }
 }
 
 describe('ApiV1Controller', () => {

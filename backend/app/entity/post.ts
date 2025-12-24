@@ -29,5 +29,5 @@ export class Post {
   insertedAt?: Date;
 
   @Column({ type: 'bigint' })
-  createdAt?: number;
+  createdAt?: string;
 }

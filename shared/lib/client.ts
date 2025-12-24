@@ -1,4 +1,4 @@
-import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
+import type { CreatePostSignalPayload, GetPostsResponse, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Hex from "./hex.js";
@@ -68,5 +68,26 @@ export default class Client {
     }
 
     return;
+  }
+
+  async fetchPosts(): Promise<PostSignal[]> {
+    const response = await fetch(`/api/v1/posts`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText}`);
+    }
+
+    const responseData = (await response.json()) as GetPostsResponse;
+
+    if (responseData.error) {
+      throw new Error(`Failed to fetch posts: ${responseData.error}`);
+    }
+
+    return responseData.posts;
   }
 }

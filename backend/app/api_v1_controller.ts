@@ -5,6 +5,7 @@ import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
 import type { IPostService } from './post_service.js';
 import { ApiError } from './api_error.js';
+import type { GetPostsResponse } from '@ephemera/shared/api/api.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -16,6 +17,7 @@ export default class ApiV1Controller implements IController {
     this.config = config;
     this.postService = postService;
     this.router.post('/post', this.handlePost.bind(this));
+    this.router.get('/posts', this.handleGetPosts.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -62,5 +64,15 @@ export default class ApiV1Controller implements IController {
     }
 
     res.status(200).json({});
+  }
+
+  async handleGetPosts(req: express.Request, res: express.Response) {
+    try {
+      const posts = await this.postService.find();
+      res.status(200).json({ posts } satisfies GetPostsResponse);
+    } catch (e) {
+      console.error('Unexpected error in handleGetPosts:', e);
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 }
