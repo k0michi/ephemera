@@ -1,3 +1,5 @@
+import ArrayHelper from "./array_helper.js";
+
 /**
  * Ephemera Base37 encoding and decoding utility.
  * 
@@ -12,7 +14,7 @@
 export default class Base37 {
   private static readonly ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz_';
   private static readonly BASE = 37n;
-  private static readonly LEADER = Base37.ALPHABET[0]; // '0'
+  private static readonly LEADER = ArrayHelper.strictGet(Base37.ALPHABET, 0); // '0'
 
   public static fromUint8Array(buffer: Uint8Array): string {
     if (buffer.length === 0) return '';
@@ -25,7 +27,8 @@ export default class Base37 {
 
     let value = 0n;
     for (let i = zeros; i < buffer.length; i++) {
-      value = (value * 256n) + BigInt(buffer[i]);
+      // value = (value * 256n) + BigInt(buffer[i]);
+      value = (value * 256n) + BigInt(ArrayHelper.strictGet(buffer, i));
     }
 
     let encoded = '';
@@ -50,7 +53,7 @@ export default class Base37 {
 
     let value = 0n;
     for (let i = zeros; i < input.length; i++) {
-      const char = input[i];
+      const char = ArrayHelper.strictGet(input, i);
       const index = Base37.ALPHABET.indexOf(char);
 
       if (index === -1) {

@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EphemeraStore } from '../app/store';
+import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 
 const mockKeyPair = {
   publicKey: new Uint8Array([1, 2, 3]),
   privateKey: new Uint8Array([4, 5, 6]),
 };
 
-vi.mock('../app/crypto', () => ({
-  default: { generateKeyPair: vi.fn(() => mockKeyPair) },
-}));
+vi.spyOn(Crypto, 'generateKeyPair').mockReturnValue(mockKeyPair);
 
 describe('EphemeraStore', () => {
   let store: EphemeraStore;

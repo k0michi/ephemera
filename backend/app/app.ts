@@ -1,13 +1,33 @@
 import express from 'express';
+import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
+import { type IController } from '../lib/controller.js';
+import { Application } from '../lib/application.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import ApiV1Controller from './api_v1_controller.js';
+import Config from './config.js';
 
-const app = express();
+class Ephemera extends Application {
+  config: Config;
 
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
-});
+  constructor() {
+    super();
 
-const PORT = process.env.PORT || 3000;
+    this.config = Config.fromEnv();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+    this.app.use(express.json());
+    this.useController(new ApiV1Controller(this.config));
+  }
+
+  start() {
+    this.listen(this.config.port, (error?: Error) => {
+      if (error) {
+        console.error('Failed to start server:', error);
+      } else {
+        console.log(`Server is running on port ${this.config.port}`);
+      }
+    });
+  }
+}
+
+new Ephemera().start();

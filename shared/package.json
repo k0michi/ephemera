@@ -1,9 +1,18 @@
 {
+	"name": "@ephemera/shared",
 	"type": "module",
 	"dependencies": {
+		"@noble/curves": "^2.0.1",
+		"typescript": "^5.9.3",
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
-		"ts-to-zod": "^5.1.0"
+		"@vitest/coverage-v8": "^4.0.16",
+		"ts-to-zod": "^5.1.0",
+		"vitest": "^4.0.16"
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "vitest"
 	}
 }

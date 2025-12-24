@@ -1,7 +1,7 @@
 import { createStoreContext, Store } from "lib/store";
 
-import Crypto, { type KeyPair } from "./crypto";
-import { Client } from "./client";
+import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
+import Client from '@ephemera/shared/lib/client.js';
 
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;

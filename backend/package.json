@@ -1,14 +1,21 @@
 {
 	"devDependencies": {
 		"@types/express": "^5.0.6",
-		"typescript": "^5.9.3"
+		"node-mocks-http": "^1.17.2",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.0",
+		"vite-node": "^5.2.0",
+		"vitest": "^4.0.16"
 	},
 	"dependencies": {
+		"@ephemera/shared": "*",
 		"express": "^5.2.1"
 	},
 	"type": "module",
 	"scripts": {
-		"build": "tsc",
-		"start": "node ./dist/backend/app/app.js"
+		"build": "vite build",
+		"start": "node ./dist/app.js",
+		"dev": "vite-node app/app.ts --watch",
+		"test": "vitest"
 	}
 }

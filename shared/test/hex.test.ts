@@ -1,5 +1,5 @@
 import { expect, it, describe } from "vitest";
-import Hex from "~/hex";
+import Hex from "../lib/hex.js";
 
 describe('Hex', () => {
   describe('fromUint8Array', () => {

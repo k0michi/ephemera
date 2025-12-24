@@ -2,7 +2,7 @@ import { useReader, useSelector } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_index";
 import { useEffect, useMemo, useState } from "react";
-import Base37 from "~/base37";
+import Base37 from '@ephemera/shared/lib/base37.js';
 import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
 
