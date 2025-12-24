@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PostUtil } from "../lib/post_util.js";
+import PostUtil from "../lib/post_util.js";
 
 describe("PostUtil.weightedLength", () => {
   it("counts based on East_Asian_Width", () => {

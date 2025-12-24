@@ -1,10 +1,10 @@
 import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
 import type { KeyPair } from "./crypto.js";
 import Hex from "./hex.js";
-import { PostUtil } from "./post_util.js";
+import PostUtil from "./post_util.js";
 import SignalCrypto from "./signal_crypto.js";
 
-export class Client {
+export default class Client {
   /**
    * e.g. "example.com". Does not include scheme (http/https) or path.
    */

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { Client } from "../lib/client.js";
+import Client from "../lib/client.js";
 import type { PostResponse } from "../api/api.js";
 import Crypto from "../lib/crypto.js";
 

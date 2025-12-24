@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Form, Button, Card } from "react-bootstrap";
-import { PostUtil } from "../../shared/lib/post_util";
+import PostUtil from "@ephemera/shared/lib/post_util.js";
 
 export interface ComposerProps {
   onSubmit?: (value: string, event: React.FormEvent<HTMLFormElement>) => void;
