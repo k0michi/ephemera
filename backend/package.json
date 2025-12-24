@@ -9,7 +9,9 @@
 	},
 	"dependencies": {
 		"@ephemera/shared": "*",
-		"express": "^5.2.1"
+		"express": "^5.2.1",
+		"reflect-metadata": "^0.2.2",
+		"typeorm": "^0.3.28"
 	},
 	"type": "module",
 	"scripts": {
