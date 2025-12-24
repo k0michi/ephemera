@@ -17,3 +17,18 @@ describe("NullableHelper.unwrap", () => {
     expect(() => NullableHelper.unwrap(undefined)).toThrow();
   });
 });
+
+describe("NullableHelper.map", () => {
+  it("should apply the function if value is not null or undefined", () => {
+    expect(NullableHelper.map(2, x => x * 3)).toBe(6);
+    expect(NullableHelper.map("foo", s => s.toUpperCase())).toBe("FOO");
+  });
+
+  it("should return null if value is null", () => {
+    expect(NullableHelper.map(null, x => x)).toBeNull();
+  });
+
+  it("should return undefined if value is undefined", () => {
+    expect(NullableHelper.map(undefined, x => x)).toBeUndefined();
+  });
+});

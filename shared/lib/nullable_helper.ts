@@ -5,4 +5,17 @@ export default class NullableHelper {
     }
     return value;
   }
+
+  static map<T, U>(
+    value: T | null | undefined,
+    fn: (val: T) => U
+  ): U | null | undefined {
+    if (value === null) {
+      return null;
+    }
+    if (value === undefined) {
+      return undefined;
+    }
+    return fn(value);
+  }
 }
