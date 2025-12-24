@@ -36,7 +36,13 @@ export default class ApiV1Controller implements IController {
       return;
     }
 
-    // TODO: Handle the post
+    const now = Date.now();
+    const timestamp = parsed.post[0][1][2];
+
+    if (Math.abs(now - timestamp) > this.config.allowedTimeSkewMillis) {
+      res.status(400).json({ error: 'Timestamp out of range' });
+      return;
+    }
 
     res.status(200).json({});
   }
