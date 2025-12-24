@@ -12,9 +12,11 @@ export default class ApiV1Controller implements IController {
   }
 
   async handlePost(req: express.Request, res: express.Response) {
-    const parsed = postRequestSchema.parse(req.body);
+    let parsed;
 
-    if (!parsed) {
+    try {
+      parsed = postRequestSchema.parse(req.body);
+    } catch (e) {
       res.status(400).json({ error: 'Invalid request' });
       return;
     }
