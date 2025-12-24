@@ -2,14 +2,13 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createRequest, createResponse } from 'node-mocks-http';
 import ApiV1Controller from '../app/api_v1_controller.js';
 import type { PostRequest } from '@ephemera/shared/api/api.js';
+import Config from '../app/config.js';
+
+function testConfig() {
+  return new Config({ host: 'example.com', port: 3000 });
+}
 
 describe('ApiV1Controller', () => {
-  let controller: ApiV1Controller;
-
-  beforeEach(() => {
-    controller = new ApiV1Controller();
-  });
-
   describe('handlePost', () => {
     it('should respond with 400 for invalid request body', async () => {
       const req = createRequest({
@@ -19,6 +18,9 @@ describe('ApiV1Controller', () => {
       });
       const res = createResponse();
 
+      const config = testConfig();
+
+      const controller = new ApiV1Controller(config);
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(400);
       const data = res._getJSONData();
@@ -35,6 +37,9 @@ describe('ApiV1Controller', () => {
       });
       const res = createResponse();
 
+      const config = testConfig();
+
+      const controller = new ApiV1Controller(config);
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(400);
       const data = res._getJSONData();
