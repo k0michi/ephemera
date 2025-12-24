@@ -8,7 +8,16 @@ import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 
 function testConfig() {
-  return new Config({ host: 'example.com', port: 3000, allowedTimeSkewMillis: 5 * 60 * 1000 });
+  return new Config({
+    host: 'example.com',
+    port: 3000,
+    dbHost: 'localhost',
+    dbPort: 3306,
+    dbUser: 'test',
+    dbPassword: 'test',
+    dbName: 'test',
+    allowedTimeSkewMillis: 5 * 60 * 1000,
+  });
 }
 
 describe('ApiV1Controller', () => {
