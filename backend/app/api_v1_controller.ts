@@ -3,14 +3,18 @@ import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
+import type { IPostService } from './post_service.js';
+import { ApiError } from './api_error.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
   public router = express.Router();
   private config: Config;
+  private postService: IPostService;
 
-  constructor(config: Config) {
+  constructor(config: Config, postService: IPostService) {
     this.config = config;
+    this.postService = postService;
     this.router.post('/post', this.handlePost.bind(this));
   }
 
@@ -42,6 +46,19 @@ export default class ApiV1Controller implements IController {
     if (Math.abs(now - timestamp) > this.config.allowedTimeSkewMillis) {
       res.status(400).json({ error: 'Timestamp out of range' });
       return;
+    }
+
+    try {
+      await this.postService.create(parsed.post);
+    } catch (e) {
+      if (e instanceof ApiError) {
+        res.status(e.statusCode).json({ error: e.message });
+        return;
+      } else {
+        console.error('Unexpected error in handlePost:', e);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
     }
 
     res.status(200).json({});
