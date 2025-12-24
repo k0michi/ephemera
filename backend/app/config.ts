@@ -1,7 +1,13 @@
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 
 export default class Config {
+  /**
+   * Public host name. The port may be different from the listening port.
+   */
   host: string;
+  /**
+   * Listening port number.
+   */
   port: number;
 
   constructor({ host, port }: { host: string; port: number }) {
