@@ -31,7 +31,7 @@ export default class ApiV1Controller implements IController {
       return;
     }
 
-    if (parsed.post[1][0] !== this.config.host) {
+    if (parsed.post[0][1][0] !== this.config.host) {
       res.status(400).json({ error: 'Host mismatch' });
       return;
     }
