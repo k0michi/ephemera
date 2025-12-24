@@ -24,7 +24,11 @@ export default class Crypto {
     signature: Uint8Array,
     publicKey: Uint8Array
   ): boolean {
-    return ed25519.verify(signature, message, publicKey);
+    try {
+      return ed25519.verify(signature, message, publicKey);
+    } catch {
+      return false;
+    }
   }
 
   /**
