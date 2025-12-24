@@ -3,6 +3,8 @@
 		"@types/express": "^5.0.6",
 		"node-mocks-http": "^1.17.2",
 		"typescript": "^5.9.3",
+		"vite": "^7.3.0",
+		"vite-node": "^5.2.0",
 		"vitest": "^4.0.16"
 	},
 	"dependencies": {
@@ -11,8 +13,9 @@
 	},
 	"type": "module",
 	"scripts": {
-		"build": "tsc -b",
-		"start": "node ./dist/app/app.js",
+		"build": "vite build",
+		"start": "node ./dist/app.js",
+		"dev": "vite-node app/app.ts --watch",
 		"test": "vitest"
 	}
 }

@@ -1,6 +1,6 @@
 import express from 'express';
-import { postRequestSchema } from '@ephemera/shared/dist/api/api_schema.js';
-import SignalCrypto from '@ephemera/shared/dist/lib/signal_crypto.js';
+import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 
 export default class ApiV1Controller implements IController {

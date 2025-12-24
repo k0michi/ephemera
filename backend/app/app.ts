@@ -1,9 +1,9 @@
 import express from 'express';
-import { postRequestSchema } from '@ephemera/shared/dist/api/api_schema.js';
-import SignalCrypto from '@ephemera/shared/dist/lib/signal_crypto.js';
+import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import { Application } from '../lib/application.js';
-import NullableHelper from '@ephemera/shared/dist/lib/nullable_helper.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import ApiV1Controller from './api_v1_controller.js';
 
 class Ephemera extends Application {
