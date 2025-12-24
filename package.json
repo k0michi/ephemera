@@ -1,0 +1,9 @@
+{
+  "name": "ephemera",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ]
+}

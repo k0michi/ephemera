@@ -4,11 +4,12 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"express": "^5.2.1"
+		"express": "^5.2.1",
+		"@ephemera/shared": "*"
 	},
 	"type": "module",
 	"scripts": {
-		"build": "tsc",
-		"start": "node ./dist/backend/app/app.js"
+		"build": "tsc -b",
+		"start": "node ./dist/app/app.js"
 	}
 }

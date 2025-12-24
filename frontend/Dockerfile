@@ -1,23 +1,32 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY frontend/. /app/frontend/
-WORKDIR /app/frontend
+FROM node:20-alpine AS base
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY shared/package.json ./shared/
+COPY frontend/package.json ./frontend/
+
+FROM base AS dev-deps
 RUN npm ci
 
-FROM node:20-alpine AS production-dependencies-env
-COPY frontend/package.json frontend/package-lock.json /app/frontend/
-WORKDIR /app/frontend
+FROM base AS prod-deps
 RUN npm ci --omit=dev
 
-FROM node:20-alpine AS build-env
-COPY frontend/. /app/frontend/
-COPY shared/. /app/shared/
-COPY --from=development-dependencies-env /app/frontend/node_modules /app/frontend/node_modules
-WORKDIR /app/frontend
-RUN npm run build
+FROM dev-deps AS builder
+WORKDIR /app
 
-FROM node:20-alpine
-COPY frontend/package.json frontend/package-lock.json /app/frontend/
-COPY --from=production-dependencies-env /app/frontend/node_modules /app/frontend/node_modules
-COPY --from=build-env /app/frontend/build /app/frontend/build
-WORKDIR /app/frontend
-CMD ["npm", "run", "start"]
+COPY shared ./shared
+COPY frontend ./frontend
+
+RUN npm run build -w frontend
+
+FROM node:20-alpine AS runner
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY --from=prod-deps /app/node_modules /app/node_modules
+
+COPY --from=builder /app/frontend/package.json ./
+COPY --from=builder /app/frontend/build ./build
+
+CMD ["npm", "run", "start", "-w", "frontend"]
