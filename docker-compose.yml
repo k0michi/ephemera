@@ -7,6 +7,15 @@ services:
     # working_dir: /app
     environment:
       - NODE_ENV=production
+      - EPHEMERA_HOST=localhost:3000
+      - EPHEMERA_PORT=3000
+      - EPHEMERA_DB_HOST=mariadb
+      - EPHEMERA_DB_PORT=3306
+      - EPHEMERA_DB_USER=ephemera
+      - EPHEMERA_DB_PASSWORD=ephemera_pw
+      - EPHEMERA_DB_NAME=ephemera_db
+    depends_on:
+      - mariadb
   frontend:
     build:
       context: .
@@ -14,6 +23,16 @@ services:
     # working_dir: /app
     environment:
       - NODE_ENV=production
+  mariadb:
+    image: mariadb:11
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=root_pw
+      - MARIADB_DATABASE=ephemera_db
+      - MARIADB_USER=ephemera
+      - MARIADB_PASSWORD=ephemera_pw
+    volumes:
+      - mariadb_data:/var/lib/mysql
   nginx:
     image: nginx:alpine
     ports:
@@ -23,3 +42,6 @@ services:
     depends_on:
       - frontend
       - backend
+
+volumes:
+  mariadb_data:
