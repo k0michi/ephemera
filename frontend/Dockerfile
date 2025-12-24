@@ -15,7 +15,6 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY shared/package.json ./shared/
 COPY frontend/package.json ./frontend/
 RUN npm ci --omit=dev
 
