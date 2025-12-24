@@ -24,7 +24,7 @@ export default class ApiV1Controller implements IController {
     const verified = await SignalCrypto.verify(parsed.post);
 
     if (!verified) {
-      res.status(400).json({ error: 'Invalid post signature' });
+      res.status(400).json({ error: 'Invalid signature' });
       return;
     }
 
