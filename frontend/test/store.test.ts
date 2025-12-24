@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EphemeraStore } from '../app/store';
-import Crypto, { type KeyPair } from '@ephemera/shared/dist/lib/crypto.js';
+import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 
 const mockKeyPair = {
   publicKey: new Uint8Array([1, 2, 3]),
