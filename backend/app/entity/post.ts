@@ -13,7 +13,10 @@ export class Post {
   @Column({ type: 'varchar', length: 255 })
   host?: string;
 
-  @Column({ type: 'char', length: 64 })
+  /**
+   * The minimum length is 32 (00000000000000000000000000000000), and the maximum length is 50 (1ooe3w1qde9ohg2ehtl2z93u9e36mi9_nx_k795re4o1tbul1f).
+   */
+  @Column({ type: 'varchar', length: 50 })
   author?: string;
 
   @Column({ type: 'text', charset: 'utf8mb4', collation: 'utf8mb4_unicode_ci' })
