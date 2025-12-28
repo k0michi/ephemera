@@ -72,6 +72,12 @@ export default class PostService extends PostServiceBase {
     post.footer = signal[0][3];
     post.signature = signal[1];
     post.createdAt = signal[0][1][2];
-    await this.postRepo.save(post);
+
+    try {
+      await this.postRepo.save(post);
+    } catch (e) {
+      console.error('Error saving post:', e);
+      throw new ApiError('Failed to save post', 500);
+    }
   }
 }
