@@ -20,7 +20,7 @@ export class Post {
   content?: string;
 
   @Column({ type: 'json', nullable: true })
-  footer?: any;
+  footer?: unknown;
 
   @Column({ type: 'char', length: 128 })
   signature?: string;
