@@ -28,26 +28,6 @@ export default class ApiV1Controller implements IController {
       return;
     }
 
-    const verified = await SignalCrypto.verify(parsed.post);
-
-    if (!verified) {
-      res.status(400).json({ error: 'Invalid signature' });
-      return;
-    }
-
-    if (parsed.post[0][1][0] !== this.config.host) {
-      res.status(400).json({ error: 'Host mismatch' });
-      return;
-    }
-
-    const now = Date.now();
-    const timestamp = parsed.post[0][1][2];
-
-    if (Math.abs(now - timestamp) > this.config.allowedTimeSkewMillis) {
-      res.status(400).json({ error: 'Timestamp out of range' });
-      return;
-    }
-
     try {
       await this.postService.create(parsed.post);
     } catch (e) {
