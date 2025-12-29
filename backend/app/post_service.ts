@@ -1,6 +1,6 @@
 import { Repository } from "typeorm";
 import { Post } from "./entity/post.js";
-import type { PostSignal, Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignalFooter, PostSignal, Version } from "@ephemera/shared/api/api.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import type Config from "./config.js";
@@ -54,6 +54,8 @@ export abstract class PostServiceBase implements IPostService {
 
     return [true];
   }
+
+  abstract find(): Promise<PostSignal[]>;
 }
 
 export default class PostService extends PostServiceBase {
@@ -112,7 +114,7 @@ export default class PostService extends PostServiceBase {
             "create_post",
           ],
           NullableHelper.unwrap(post.content),
-          NullableHelper.unwrap(post.footer),
+          NullableHelper.unwrap(post.footer) as CreatePostSignalFooter,
         ],
         NullableHelper.unwrap(post.signature),
       ] satisfies PostSignal;
