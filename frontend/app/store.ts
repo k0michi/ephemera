@@ -104,11 +104,13 @@ export class EphemeraStore extends Store {
   importKeyPair(exported: ExportedKeyPair) {
     const publicKey = Base37.toUint8Array(exported.publicKey);
     const privateKey = Base37.toUint8Array(exported.privateKey);
+    const keyPair = { publicKey, privateKey };
 
-    this._keyPair = {
-      publicKey,
-      privateKey,
-    };
+    if (!Crypto.isValidKeyPair(keyPair)) {
+      throw new Error("Invalid key pair");
+    }
+
+    this._keyPair = keyPair;
 
     this.checkLocalStorage();
 

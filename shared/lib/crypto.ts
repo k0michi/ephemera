@@ -37,4 +37,15 @@ export default class Crypto {
   static async digest(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array> {
     return new Uint8Array(await crypto.subtle.digest('SHA-256', data));
   }
+
+  /**
+   * Returns whether the given key pair is valid.
+   */
+  static isValidKeyPair(keyPair: KeyPair): boolean {
+    const derivedPublicKey = ed25519.getPublicKey(keyPair.privateKey);
+    return (
+      derivedPublicKey.length === keyPair.publicKey.length &&
+      derivedPublicKey.every((byte, index) => byte === keyPair.publicKey[index])
+    );
+  }
 }
