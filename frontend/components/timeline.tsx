@@ -1,5 +1,6 @@
 
 import type { GetPostsRequest, PostSignal } from "@ephemera/shared/api/api";
+import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader } from "lib/store";
 import React from "react";
 import { Card, ListGroup, Container, Row, Col } from "react-bootstrap";
@@ -55,7 +56,8 @@ export default function Timeline({ }: TimelineProps) {
       <Row className="justify-content-center">
         <ListGroup>
           {posts.map((post) => (
-            <ListGroup.Item key={post[0][1][1]} className="mb-3 p-0 border-0">
+            // Assumes signatures are unique.
+            <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
               <Card>
                 <Card.Body>
                   <Card.Title>
