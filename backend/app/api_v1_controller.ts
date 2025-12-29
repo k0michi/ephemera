@@ -62,14 +62,14 @@ export default class ApiV1Controller implements IController {
     try {
       const options: PostFindOptions = {
         limit: limit,
-        ...(parsed.cursor !== undefined ? { cursor: parsed.cursor } : {})
+        cursor: parsed.cursor,
       };
 
       const result = await this.postService.find(options);
 
       const response: GetPostsResponse = {
         posts: result.posts,
-        ...(result.nextCursor !== undefined ? { cursor: result.nextCursor } : {})
+        cursor: result.nextCursor,
       };
 
       res.status(200).json(response);

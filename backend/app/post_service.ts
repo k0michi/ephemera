@@ -18,12 +18,12 @@ export interface IPostService {
 
 export interface PostFindOptions {
   limit: number;
-  cursor?: string;
+  cursor: string | null;
 }
 
 export interface PostFindResult {
   posts: PostSignal[];
-  nextCursor?: string;
+  nextCursor: string | null;
 }
 
 export abstract class PostServiceBase implements IPostService {
