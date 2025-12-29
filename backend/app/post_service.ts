@@ -5,24 +5,66 @@ import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import type Config from "./config.js";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
+import { ApiError } from "./api_error.js";
 
 export interface IPostService {
   create(signal: PostSignal): Promise<void>;
+
+  validate(signal: PostSignal): Promise<[boolean, string?]>;
+
   find(): Promise<PostSignal[]>;
 }
 
-export default class PostService implements IPostService {
+export abstract class PostServiceBase implements IPostService {
   private config: Config;
-  private postRepo: Repository<Post>;
 
-  constructor(config: Config, postRepo: Repository<Post>) {
-    this.postRepo = postRepo;
+  constructor(config: Config) {
     this.config = config;
   }
 
-  async create(signal: PostSignal) {
-    // TODO: validation here
+  async create(signal: PostSignal): Promise<void> {
+    const validation = await this.validate(signal);
 
+    if (!validation[0]) {
+      throw new ApiError(validation[1] || 'Invalid post signal', 400);
+    }
+
+    await this.createImpl(signal);
+  }
+
+  abstract createImpl(signal: PostSignal): Promise<void>;
+
+  async validate(signal: PostSignal): Promise<[boolean, string?]> {
+    const verified = await SignalCrypto.verify(signal);
+
+    if (!verified) {
+      return [false, 'Invalid signature'];
+    }
+
+    if (signal[0][1][0] !== this.config.host) {
+      return [false, 'Host mismatch'];
+    }
+
+    const now = Date.now();
+    const timestamp = signal[0][1][2];
+
+    if (Math.abs(now - timestamp) > this.config.allowedTimeSkewMillis) {
+      return [false, 'Timestamp out of range'];
+    }
+
+    return [true];
+  }
+}
+
+export default class PostService extends PostServiceBase {
+  private postRepo: Repository<Post>;
+
+  constructor(config: Config, postRepo: Repository<Post>) {
+    super(config);
+    this.postRepo = postRepo;
+  }
+
+  async createImpl(signal: PostSignal) {
     const post = new Post();
     const digest = await SignalCrypto.digest(signal[0]);
     post.id = Hex.fromUint8Array(digest);
@@ -33,7 +75,17 @@ export default class PostService implements IPostService {
     post.footer = signal[0][3];
     post.signature = signal[1];
     post.createdAt = String(signal[0][1][2]);
-    await this.postRepo.save(post);
+
+    try {
+      await this.postRepo.insert(post);
+    } catch (e: any) {
+      if (e?.code === 'ER_DUP_ENTRY') {
+        throw new ApiError('Post already exists', 409);
+      }
+
+      console.error('Error saving post:', e);
+      throw new ApiError('Failed to save post', 500);
+    }
   }
 
   static unwrapVersion(version: number): Version {
