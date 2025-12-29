@@ -154,4 +154,45 @@ describe('ApiV1Controller', () => {
       expect(data).toHaveProperty('error', 'Timestamp out of range');
     });
   });
+
+  describe('handleGetPosts', () => {
+    it('should respond with 400 for invalid query parameters', async () => {
+      const req = createRequest({
+        method: 'GET',
+        url: '/api/v1/posts',
+        query: { limit: 'invalid' },
+      });
+      const res = createResponse();
+
+      const config = testConfig();
+
+      const controller = new ApiV1Controller(config, new MockPostService(config));
+      await controller.handleGetPosts(req, res);
+      expect(res.statusCode).toBe(400);
+      const data = res._getJSONData();
+      expect(data).toHaveProperty('error', 'Invalid request');
+    });
+
+    it('should respond with 200 and empty posts', async () => {
+      const req = createRequest({
+        method: 'GET',
+        url: '/api/v1/posts',
+        query: {
+          cursor: null,
+        },
+      });
+      const res = createResponse();
+
+      const config = testConfig();
+
+      const controller = new ApiV1Controller(config, new MockPostService(config));
+      await controller.handleGetPosts(req, res);
+      expect(res.statusCode).toBe(200);
+      const data = res._getJSONData();
+      expect(data).toHaveProperty('posts');
+      expect(Array.isArray(data.posts)).toBe(true);
+      expect(data.posts.length).toBe(0);
+      expect(data).toHaveProperty('nextCursor', null);
+    });
+  });
 });
