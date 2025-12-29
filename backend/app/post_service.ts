@@ -26,7 +26,7 @@ export abstract class PostServiceBase implements IPostService {
       throw new ApiError(validation[1] || 'Invalid post signal', 400);
     }
 
-    return this.createImpl(signal);
+    await this.createImpl(signal);
   }
 
   abstract createImpl(signal: PostSignal): Promise<void>;
@@ -74,8 +74,12 @@ export default class PostService extends PostServiceBase {
     post.createdAt = signal[0][1][2];
 
     try {
-      await this.postRepo.save(post);
-    } catch (e) {
+      await this.postRepo.insert(post);
+    } catch (e: any) {
+      if (e?.code === 'ER_DUP_ENTRY') {
+        throw new ApiError('Post already exists', 409);
+      }
+
       console.error('Error saving post:', e);
       throw new ApiError('Failed to save post', 500);
     }
