@@ -3,6 +3,12 @@ import { createStoreContext, Store } from "lib/store";
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
 import type { PostSignal } from "@ephemera/shared/api/api";
+import Base37 from "@ephemera/shared/lib/base37";
+
+export interface ExportedKeyPair {
+  publicKey: string;
+  privateKey: string;
+}
 
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;
@@ -82,6 +88,34 @@ export class EphemeraStore extends Store {
     const client = new Client(window.location.host, this._keyPair);
     const posts = await client.fetchPosts();
     return posts;
+  }
+
+  exportKeyPair(): ExportedKeyPair | null {
+    if (!this._keyPair) {
+      return null;
+    }
+
+    return {
+      publicKey: Base37.fromUint8Array(this._keyPair.publicKey),
+      privateKey: Base37.fromUint8Array(this._keyPair.privateKey),
+    };
+  }
+
+  importKeyPair(exported: ExportedKeyPair) {
+    const publicKey = Base37.toUint8Array(exported.publicKey);
+    const privateKey = Base37.toUint8Array(exported.privateKey);
+
+    this._keyPair = {
+      publicKey,
+      privateKey,
+    };
+
+    this.checkLocalStorage();
+
+    localStorage.setItem('ephemera_publicKey', JSON.stringify(Array.from(publicKey)));
+    localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(privateKey)));
+
+    this.notifyListeners();
   }
 }
 

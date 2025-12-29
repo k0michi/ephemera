@@ -7,6 +7,7 @@ import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
 import Timeline from "components/timeline";
 import type { PostSignal } from "@ephemera/shared/api/api";
+import FileHelper from "~/file_helper";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -54,6 +55,37 @@ export default function Home() {
     }
   };
 
+  const handleExportKeyPair = () => {
+    const exportedPublicKey = store.exportKeyPair();
+
+    if (!exportedPublicKey) return;
+
+    FileHelper.downloadFile(
+      JSON.stringify(exportedPublicKey),
+      `${publicKeyMem}.json`,
+      'application/json'
+    );
+  };
+
+  const handleImportKeyPair = async () => {
+    try {
+      const files = await FileHelper.selectFile({ accept: 'application/json', multiple: false });
+      const file = files[0];
+      const text = await file.text();
+      const importedKeyPair = JSON.parse(text);
+
+      store.importKeyPair(importedKeyPair);
+      setMessage({ type: "success", text: "Key pair imported successfully!" });
+      setTimeout(() => setMessage(null), 2000);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to import key pair."
+      });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
   return (
     <Container className="mt-5">
       <Row className="justify-content-md-center">
@@ -72,6 +104,12 @@ export default function Home() {
           <div>Your public key: {publicKeyMem}</div>
           <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
             Revoke Key Pair
+          </Button>
+          <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
+            Export Key Pair
+          </Button>
+          <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
+            Import Key Pair
           </Button>
           <Timeline posts={posts} />
         </Col>
