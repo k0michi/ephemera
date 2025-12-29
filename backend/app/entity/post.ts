@@ -4,6 +4,9 @@ import { Entity, PrimaryColumn, Column, Index, CreateDateColumn } from 'typeorm'
 @Index(['author', 'createdAt'])
 @Index(['createdAt'])
 export class Post {
+  /**
+   * Post signal digest in hex encoding. This is always 32 bytes (64 hex characters).
+   */
   @PrimaryColumn({ type: 'char', length: 64 })
   id?: string;
 
