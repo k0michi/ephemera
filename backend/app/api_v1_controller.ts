@@ -6,6 +6,7 @@ import type Config from './config.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
 import type { GetPostsResponse } from '@ephemera/shared/api/api.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -57,12 +58,12 @@ export default class ApiV1Controller implements IController {
     }
 
     const kDefaultLimit = 16;
-    const limit = parsed.limit ?? kDefaultLimit;
+    const limit = NullableHelper.map(parsed.limit, (value) => parseInt(value)) ?? kDefaultLimit;
 
     try {
       const options: PostFindOptions = {
         limit: limit,
-        cursor: parsed.cursor,
+        cursor: parsed.cursor ?? null,
       };
 
       const result = await this.postService.find(options);
