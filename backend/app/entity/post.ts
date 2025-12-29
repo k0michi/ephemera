@@ -10,7 +10,7 @@ export class Post {
   @PrimaryColumn({ type: 'char', length: 64 })
   id?: string;
 
-  @Column({ type: 'tinyint', default: 1 })
+  @Column({ type: 'tinyint' })
   version?: number;
 
   @Column({ type: 'varchar', length: 255 })
