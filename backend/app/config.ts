@@ -31,13 +31,13 @@ export default class Config {
 
   static fromEnv(): Config {
     const envParser = new EnvParser(process.env);
-    const host = envParser.getStringMandatory('EPHEMERA_HOST');
-    const port = envParser.getNumberMandatory('EPHEMERA_PORT');
-    const dbHost = envParser.getStringMandatory('EPHEMERA_DB_HOST');
-    const dbPort = envParser.getNumberMandatory('EPHEMERA_DB_PORT');
-    const dbUser = envParser.getStringMandatory('EPHEMERA_DB_USER');
-    const dbPassword = envParser.getStringMandatory('EPHEMERA_DB_PASSWORD');
-    const dbName = envParser.getStringMandatory('EPHEMERA_DB_NAME');
+    const host = envParser.getStringRequired('EPHEMERA_HOST');
+    const port = envParser.getNumberRequired('EPHEMERA_PORT');
+    const dbHost = envParser.getStringRequired('EPHEMERA_DB_HOST');
+    const dbPort = envParser.getNumberRequired('EPHEMERA_DB_PORT');
+    const dbUser = envParser.getStringRequired('EPHEMERA_DB_USER');
+    const dbPassword = envParser.getStringRequired('EPHEMERA_DB_PASSWORD');
+    const dbName = envParser.getStringRequired('EPHEMERA_DB_NAME');
     const allowedTimeSkewMillis = envParser.getNumberOptional('EPHEMERA_ALLOWED_TIME_SKEW_MILLIS', Config._kDefaultAllowedTimeSkewMillis);
     return new Config({ host, port, dbHost, dbPort, dbUser, dbPassword, dbName, allowedTimeSkewMillis });
   }

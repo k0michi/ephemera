@@ -5,7 +5,7 @@ export default class EnvParser {
     this._env = env;
   }
 
-  public getStringMandatory(key: string): string {
+  public getStringRequired(key: string): string {
     const value = this._env[key];
 
     if (value === undefined) {
@@ -15,7 +15,7 @@ export default class EnvParser {
     return value;
   }
 
-  public getNumberMandatory(key: string): number {
+  public getNumberRequired(key: string): number {
     const value = this._env[key];
 
     if (value === undefined) {

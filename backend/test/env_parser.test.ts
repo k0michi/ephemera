@@ -16,31 +16,31 @@ describe('EnvParser', () => {
   it('should retrieve mandatory string variable', () => {
     process.env.TEST_STRING = 'hello';
     const parser = new EnvParser(process.env);
-    const value = parser.getStringMandatory('TEST_STRING');
+    const value = parser.getStringRequired('TEST_STRING');
     expect(value).toBe('hello');
   });
 
   it('should throw error for missing mandatory string variable', () => {
     const parser = new EnvParser(process.env);
-    expect(() => parser.getStringMandatory('MISSING_STRING')).toThrowError('Environment variable MISSING_STRING is not set');
+    expect(() => parser.getStringRequired('MISSING_STRING')).toThrowError('Environment variable MISSING_STRING is not set');
   });
 
   it('should retrieve mandatory number variable', () => {
     process.env.TEST_NUMBER = '42';
     const parser = new EnvParser(process.env);
-    const value = parser.getNumberMandatory('TEST_NUMBER');
+    const value = parser.getNumberRequired('TEST_NUMBER');
     expect(value).toBe(42);
   });
 
   it('should throw error for missing mandatory number variable', () => {
     const parser = new EnvParser(process.env);
-    expect(() => parser.getNumberMandatory('MISSING_NUMBER')).toThrowError('Environment variable MISSING_NUMBER is not set');
+    expect(() => parser.getNumberRequired('MISSING_NUMBER')).toThrowError('Environment variable MISSING_NUMBER is not set');
   });
 
   it('should throw error for invalid mandatory number variable', () => {
     process.env.INVALID_NUMBER = 'not_a_number';
     const parser = new EnvParser(process.env);
-    expect(() => parser.getNumberMandatory('INVALID_NUMBER')).toThrowError('Environment variable INVALID_NUMBER is not a valid number');
+    expect(() => parser.getNumberRequired('INVALID_NUMBER')).toThrowError('Environment variable INVALID_NUMBER is not a valid number');
   });
 
   it('should retrieve optional string variable with default', () => {
