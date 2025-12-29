@@ -6,6 +6,7 @@ import Hex from "@ephemera/shared/lib/hex.js";
 import type Config from "./config.js";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 import { ApiError } from "./api_error.js";
+import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 
 export interface IPostService {
   create(signal: PostSignal): Promise<void>;
@@ -114,7 +115,7 @@ export default class PostService extends PostServiceBase {
             "create_post",
           ],
           NullableHelper.unwrap(post.content),
-          NullableHelper.unwrap(post.footer) as CreatePostSignalFooter,
+          NullableHelper.unwrap(createPostSignalFooterSchema.parse(post.footer)),
         ],
         NullableHelper.unwrap(post.signature),
       ] satisfies PostSignal;
