@@ -1,6 +1,7 @@
 version: '3.9'
 services:
   backend:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./backend/Dockerfile
@@ -17,6 +18,7 @@ services:
     depends_on:
       - mariadb
   frontend:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
@@ -25,7 +27,7 @@ services:
       - NODE_ENV=production
   mariadb:
     image: mariadb:11
-    restart: always
+    restart: unless-stopped
     environment:
       - MARIADB_ROOT_PASSWORD=root_pw
       - MARIADB_DATABASE=ephemera_db
@@ -35,6 +37,7 @@ services:
       - mariadb_data:/var/lib/mysql
   nginx:
     image: nginx:alpine
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
