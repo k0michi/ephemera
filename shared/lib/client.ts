@@ -87,9 +87,6 @@ export default class Client {
 
     const response = await fetch(`/api/v1/posts?${params.toString()}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
     });
 
     if (!response.ok) {
