@@ -22,6 +22,7 @@ class Ephemera extends Application {
 
     let attempts = 0;
     let delay = 1000;
+    const kMaxAttempts = 10;
 
     while (true) {
       try {
@@ -43,6 +44,11 @@ class Ephemera extends Application {
       } catch (error) {
         attempts++;
         console.error(`Database configuration attempt ${attempts} failed:`, error);
+
+        if (attempts >= kMaxAttempts) {
+          throw new Error('Max database connection attempts exceeded');
+        }
+
         console.log(`Retrying in ${delay / 1000} seconds...`);
         await new Promise(res => setTimeout(res, delay));
         delay = Math.min(delay * 2, 30000);
