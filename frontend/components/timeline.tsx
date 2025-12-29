@@ -31,6 +31,8 @@ export default function Timeline({ }: TimelineProps) {
   }, [loading, hasMore, store, cursor]);
 
   React.useEffect(() => {
+    const target = bottomRef.current;
+
     const observer = new window.IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -40,13 +42,13 @@ export default function Timeline({ }: TimelineProps) {
       { threshold: 0.1 }
     );
 
-    if (bottomRef.current) {
-      observer.observe(bottomRef.current);
+    if (target) {
+      observer.observe(target);
     }
 
     return () => {
-      if (bottomRef.current) {
-        observer.unobserve(bottomRef.current);
+      if (target) {
+        observer.unobserve(target);
       }
     };
   }, [fetchPosts, hasMore]);
