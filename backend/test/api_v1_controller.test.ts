@@ -31,7 +31,10 @@ class MockPostService extends PostServiceBase {
   }
 
   async find(options: PostFindOptions): Promise<PostFindResult> {
-    return { posts: [] };
+    return {
+      posts: [],
+      nextCursor: null,
+    };
   }
 }
 
