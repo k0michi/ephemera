@@ -27,7 +27,7 @@ export class Post {
   @Column({ type: 'text', charset: 'utf8mb4', collation: 'utf8mb4_unicode_ci' })
   content?: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'json' })
   footer?: unknown;
 
   /**
