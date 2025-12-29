@@ -120,7 +120,6 @@ export default class PostService extends PostServiceBase {
       ] satisfies PostSignal;
     });
 
-    console.log(signals[0]);
     return signals;
   }
 }
