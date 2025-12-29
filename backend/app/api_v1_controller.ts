@@ -69,7 +69,7 @@ export default class ApiV1Controller implements IController {
 
       const response: GetPostsResponse = {
         posts: result.posts,
-        cursor: result.nextCursor,
+        nextCursor: result.nextCursor,
       };
 
       res.status(200).json(response);

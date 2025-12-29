@@ -82,5 +82,5 @@ export interface GetPostsRequest extends ApiRequest {
 
 export interface GetPostsResponse extends ApiResponse {
   posts: PostSignal[];
-  cursor: string | null;
+  nextCursor: string | null;
 }

@@ -57,5 +57,5 @@ export const getPostsRequestSchema = apiRequestSchema.extend({
 
 export const getPostsResponseSchema = apiResponseSchema.extend({
     posts: z.array(postSignalSchema),
-    cursor: z.string().nullable()
+    nextCursor: z.string().nullable()
 });
