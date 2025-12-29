@@ -121,7 +121,7 @@ export default class PostService extends PostServiceBase {
 
     let dbSignals = await this.postRepo.find({
       order: {
-        createdAt: "DESC",
+        seq: "DESC",
       },
       take: options.limit + 1,
       where: {
