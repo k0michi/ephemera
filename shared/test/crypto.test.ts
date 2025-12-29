@@ -50,4 +50,23 @@ describe('Crypto', () => {
     const hash2 = await Crypto.digest(data);
     expect(hash1).toEqual(hash2);
   });
+
+  describe('isValidKeyPair', () => {
+    it('should return true for a valid key pair', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const isValid = Crypto.isValidKeyPair(keyPair);
+      expect(isValid).toBe(true);
+    });
+
+    it('should return false for an invalid key pair', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const tamperedKeyPair: KeyPair = {
+        publicKey: keyPair.publicKey.slice(),
+        privateKey: keyPair.privateKey,
+      };
+      ArrayHelper.strictSet(tamperedKeyPair.publicKey, 0, ArrayHelper.strictGet(tamperedKeyPair.publicKey, 0) ^ 0x01);
+      const isValid = Crypto.isValidKeyPair(tamperedKeyPair);
+      expect(isValid).toBe(false);
+    });
+  });
 });
