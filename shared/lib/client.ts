@@ -2,6 +2,7 @@ import type { CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRe
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Hex from "./hex.js";
+import NullableHelper from "./nullable_helper.js";
 import PostUtil from "./post_util.js";
 import SignalCrypto from "./signal_crypto.js";
 
@@ -74,16 +75,14 @@ export default class Client {
     return;
   }
 
-  async fetchPosts(options: GetPostsRequest): Promise<GetPostsResponse> {
-    const params = new URLSearchParams();
-
-    if (options.limit !== undefined) {
-      params.append("limit", String(options.limit));
-    }
-
-    if (options.cursor !== null) {
-      params.append("cursor", options.cursor);
-    }
+  async fetchPosts(options: {
+    cursor: string | null;
+    limit?: number;
+  }): Promise<GetPostsResponse> {
+    const params = new URLSearchParams({
+      ...(options.limit !== undefined ? { limit: String(options.limit) } : {}),
+      ...(options.cursor !== null ? { cursor: options.cursor } : {}),
+    } satisfies GetPostsRequest);
 
     const response = await fetch(`/api/v1/posts?${params.toString()}`, {
       method: "GET",
