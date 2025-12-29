@@ -57,7 +57,7 @@ export default class ApiV1Controller implements IController {
     }
 
     const kDefaultLimit = 16;
-    const limit = parsed.limit ? Math.min(parsed.limit, 128) : kDefaultLimit;
+    const limit = parsed.limit ?? kDefaultLimit;
 
     try {
       const options: PostFindOptions = {

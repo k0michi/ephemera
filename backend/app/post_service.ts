@@ -112,11 +112,18 @@ export default class PostService extends PostServiceBase {
   async find(options: PostFindOptions): Promise<PostFindResult> {
     const cursorNum = options?.cursor ? Number(options.cursor) : Number.MAX_SAFE_INTEGER;
 
+    if (options.limit < 1) {
+      throw new ApiError('Limit must be at least 1', 400);
+    }
+
+    const kMaxLimit = 128;
+    options.limit = Math.min(options.limit, kMaxLimit);
+
     let dbSignals = await this.postRepo.find({
       order: {
         createdAt: "DESC",
       },
-      take: options.limit,
+      take: options.limit + 1,
       where: {
         seq: LessThan(cursorNum),
       },
@@ -139,10 +146,18 @@ export default class PostService extends PostServiceBase {
       ] satisfies PostSignal;
     });
 
-    const nextCursor = NullableHelper.map(dbSignals.at(-1)?.seq, (seq) => String(seq));
+    let nextCursor: string | null = null;
+
+    if (dbSignals.length > options.limit) {
+      // There is a next page
+      const lastPost = NullableHelper.unwrap(dbSignals.at(-2));
+      nextCursor = String(NullableHelper.unwrap(lastPost.seq));
+      signals.pop();
+    }
+
     const result: PostFindResult = {
       posts: signals,
-      ...(nextCursor !== undefined ? { nextCursor: nextCursor } : {}),
+      nextCursor: nextCursor,
     };
 
     return result;
