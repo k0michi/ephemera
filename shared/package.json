@@ -13,6 +13,7 @@
 	},
 	"scripts": {
 		"build": "tsc",
-		"test": "vitest"
+		"test": "vitest",
+		"gen-zod": "ts-to-zod ./api/api.ts ./api/api_schema.ts"
 	}
 }
