@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, Index, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, Index, CreateDateColumn, Generated } from 'typeorm';
 
 @Entity('posts')
 @Index(['author', 'createdAt'])
@@ -41,4 +41,9 @@ export class Post {
 
   @Column({ type: 'bigint' })
   createdAt?: string;
+
+  @Column({ type: 'int' })
+  @Generated("increment")
+  @Index({ unique: true })
+  seq?: number;
 }

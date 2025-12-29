@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
-import Timeline from "components/timeline";
 import type { PostSignal } from "@ephemera/shared/api/api";
+import Timeline from "components/timeline";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -21,20 +21,9 @@ export default function Home() {
   const publicKey = useSelector(EphemeraStoreContext, (store) => store.keyPair?.publicKey);
   const store = useReader(EphemeraStoreContext);
   const [message, setMessage] = useState<MessageState>(null);
-  const [posts, setPosts] = useState<PostSignal[]>([]);
 
   useEffect(() => {
     store.prepareKeyPair();
-  }, [store]);
-
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const posts = await store.fetchPosts();
-      setPosts(posts);
-    };
-
-    fetchPosts();
   }, [store]);
 
 
@@ -73,7 +62,7 @@ export default function Home() {
           <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
             Revoke Key Pair
           </Button>
-          <Timeline posts={posts} />
+          <Timeline />
         </Col>
       </Row>
     </Container>

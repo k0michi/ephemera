@@ -1,4 +1,4 @@
-import type { CreatePostSignalPayload, GetPostsResponse, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
+import type { CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Hex from "./hex.js";
@@ -10,10 +10,10 @@ export default class Client {
    * e.g. "example.com". Does not include scheme (http/https) or path.
    */
   _host: string;
-  _keyPair: KeyPair;
+  _keyPair: KeyPair | null;
   _version: Version = 0;
 
-  constructor(host: string, keyPair: KeyPair) {
+  constructor(host: string, keyPair: KeyPair | null) {
     this._host = host;
     this._keyPair = keyPair;
   }
@@ -22,7 +22,7 @@ export default class Client {
     return this._host;
   }
 
-  get keyPair(): KeyPair {
+  get keyPair(): KeyPair | null {
     return this._keyPair;
   }
 
@@ -32,6 +32,10 @@ export default class Client {
    * @throws Error if the request fails or the post is invalid.
    */
   async sendPost(post: string): Promise<void> {
+    if (!this._keyPair) {
+      throw new Error("Key pair does not exist");
+    }
+
     const validationResult = PostUtil.validate(post);
 
     if (!validationResult[0]) {
@@ -70,8 +74,18 @@ export default class Client {
     return;
   }
 
-  async fetchPosts(): Promise<PostSignal[]> {
-    const response = await fetch(`/api/v1/posts`, {
+  async fetchPosts(options: GetPostsRequest): Promise<GetPostsResponse> {
+    const params = new URLSearchParams();
+
+    if (options.limit !== undefined) {
+      params.append("limit", String(options.limit));
+    }
+
+    if (options.cursor !== null) {
+      params.append("cursor", options.cursor);
+    }
+
+    const response = await fetch(`/api/v1/posts?${params.toString()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -88,6 +102,6 @@ export default class Client {
       throw new Error(`Failed to fetch posts: ${responseData.error}`);
     }
 
-    return responseData.posts;
+    return responseData;
   }
 }

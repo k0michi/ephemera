@@ -1,9 +1,9 @@
 import express from 'express';
-import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { getPostsRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
-import type { IPostService } from './post_service.js';
+import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
 import type { GetPostsResponse } from '@ephemera/shared/api/api.js';
 
@@ -47,9 +47,32 @@ export default class ApiV1Controller implements IController {
   }
 
   async handleGetPosts(req: express.Request, res: express.Response) {
+    let parsed;
+
     try {
-      const posts = await this.postService.find();
-      res.status(200).json({ posts } satisfies GetPostsResponse);
+      parsed = getPostsRequestSchema.parse(req.query);
+    } catch (e) {
+      res.status(400).json({ error: 'Invalid request' });
+      return;
+    }
+
+    const kDefaultLimit = 16;
+    const limit = parsed.limit ? Math.min(parsed.limit, 128) : kDefaultLimit;
+
+    try {
+      const options: PostFindOptions = {
+        limit: limit,
+        ...(parsed.cursor !== undefined ? { cursor: parsed.cursor } : {})
+      };
+
+      const result = await this.postService.find(options);
+
+      const response: GetPostsResponse = {
+        posts: result.posts,
+        ...(result.nextCursor !== undefined ? { cursor: result.nextCursor } : {})
+      };
+
+      res.status(200).json(response);
     } catch (e) {
       console.error('Unexpected error in handleGetPosts:', e);
       res.status(500).json({ error: 'Internal server error' });

@@ -6,7 +6,7 @@ import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { PostServiceBase, type IPostService } from '../app/post_service.js';
+import { PostServiceBase, type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
 
 function testConfig() {
   return new Config({
@@ -30,8 +30,8 @@ class MockPostService extends PostServiceBase {
     return;
   }
 
-  async find(): Promise<PostSignal[]> {
-    return [];
+  async find(options: PostFindOptions): Promise<PostFindResult> {
+    return { posts: [] };
   }
 }
 

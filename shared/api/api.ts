@@ -76,8 +76,11 @@ export interface PostResponse extends ApiResponse {
 
 // GET /api/v1/posts
 export interface GetPostsRequest extends ApiRequest {
+  cursor: string | null;
+  limit?: number;
 }
 
 export interface GetPostsResponse extends ApiResponse {
   posts: PostSignal[];
+  cursor: string | null;
 }

@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { LessThan, Repository } from "typeorm";
 import { Post } from "./entity/post.js";
 import type { CreatePostSignalFooter, PostSignal, Version } from "@ephemera/shared/api/api.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
@@ -13,7 +13,17 @@ export interface IPostService {
 
   validate(signal: PostSignal): Promise<[boolean, string?]>;
 
-  find(): Promise<PostSignal[]>;
+  find(options: PostFindOptions): Promise<PostFindResult>;
+}
+
+export interface PostFindOptions {
+  limit: number;
+  cursor?: string;
+}
+
+export interface PostFindResult {
+  posts: PostSignal[];
+  nextCursor?: string;
 }
 
 export abstract class PostServiceBase implements IPostService {
@@ -56,7 +66,7 @@ export abstract class PostServiceBase implements IPostService {
     return [true];
   }
 
-  abstract find(): Promise<PostSignal[]>;
+  abstract find(options: PostFindOptions): Promise<PostFindResult>;
 }
 
 export default class PostService extends PostServiceBase {
@@ -99,12 +109,20 @@ export default class PostService extends PostServiceBase {
     }
   }
 
-  async find(): Promise<PostSignal[]> {
-    const signals = (await this.postRepo.find({
+  async find(options: PostFindOptions): Promise<PostFindResult> {
+    const cursorNum = options?.cursor ? Number(options.cursor) : Number.MAX_SAFE_INTEGER;
+
+    let dbSignals = await this.postRepo.find({
       order: {
         createdAt: "DESC",
       },
-    })).map((post) => {
+      take: options.limit,
+      where: {
+        seq: LessThan(cursorNum),
+      },
+    });
+
+    const signals = dbSignals.map((post) => {
       return [
         [
           PostService.unwrapVersion(NullableHelper.unwrap(post.version)),
@@ -121,6 +139,12 @@ export default class PostService extends PostServiceBase {
       ] satisfies PostSignal;
     });
 
-    return signals;
+    const nextCursor = NullableHelper.map(dbSignals.at(-1)?.seq, (seq) => String(seq));
+    const result: PostFindResult = {
+      posts: signals,
+      ...(nextCursor !== undefined ? { nextCursor: nextCursor } : {}),
+    };
+
+    return result;
   }
 }
