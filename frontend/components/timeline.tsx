@@ -25,8 +25,8 @@ export default function Timeline({ }: TimelineProps) {
     setLoading(true);
     const response = await store.getClient().fetchPosts({ cursor });
     setPosts((prevPosts) => [...prevPosts, ...response.posts]);
-    setCursor(response?.nextCursor);
-    setHasMore(!!response?.nextCursor);
+    setCursor(response.nextCursor);
+    setHasMore(!!response.nextCursor);
     setLoading(false);
   }, [loading, hasMore, store, cursor]);
 
