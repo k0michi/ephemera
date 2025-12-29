@@ -1,33 +1,90 @@
+import "reflect-metadata";
 import express from 'express';
-import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
-import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
-import { type IController } from '../lib/controller.js';
 import { Application } from '../lib/application.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import ApiV1Controller from './api_v1_controller.js';
 import Config from './config.js';
+import { DataSource } from "typeorm";
+import { Post } from "./entity/post.js";
+import PostService from "./post_service.js";
 
 class Ephemera extends Application {
-  config: Config;
+  config?: Config;
+  postService?: PostService;
+  dataSource?: DataSource;
 
   constructor() {
     super();
+  }
 
+  async initializeDatabase() {
+    const config = NullableHelper.unwrap(this.config);
+
+    let attempts = 0;
+    let delay = 1000;
+    const kMaxAttempts = 10;
+
+    while (true) {
+      try {
+        this.dataSource = new DataSource({
+          type: "mariadb",
+          host: config.dbHost,
+          port: config.dbPort,
+          username: config.dbUser,
+          password: config.dbPassword,
+          database: config.dbName,
+          synchronize: true,
+          logging: false,
+          entities: [Post],
+          migrations: [],
+          subscribers: [],
+        });
+
+        await this.dataSource.initialize();
+      } catch (error) {
+        attempts++;
+        console.error(`Database configuration attempt ${attempts} failed:`, error);
+
+        if (attempts >= kMaxAttempts) {
+          throw new Error('Max database connection attempts exceeded');
+        }
+
+        console.log(`Retrying in ${delay / 1000} seconds...`);
+        await new Promise(res => setTimeout(res, delay));
+        delay = Math.min(delay * 2, 30000);
+        continue;
+      }
+
+      break;
+    }
+  }
+
+  async initialize() {
     this.config = Config.fromEnv();
+    await this.initializeDatabase();
+    console.log('Database initialized');
+
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.dataSource).getRepository(Post));
 
     this.app.use(express.json());
-    this.useController(new ApiV1Controller(this.config));
+    this.useController(new ApiV1Controller(this.config, this.postService));
+
+    console.log('Application initialized');
   }
 
   start() {
-    this.listen(this.config.port, (error?: Error) => {
+    const port = NullableHelper.unwrap(this.config?.port);
+
+    this.listen(port, (error?: Error) => {
       if (error) {
         console.error('Failed to start server:', error);
       } else {
-        console.log(`Server is running on port ${this.config.port}`);
+        console.log(`Server is running on port ${port}`);
       }
     });
   }
 }
 
-new Ephemera().start();
+const application = new Ephemera();
+await application.initialize();
+application.start();

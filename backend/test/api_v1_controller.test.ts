@@ -1,14 +1,34 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createRequest, createResponse } from 'node-mocks-http';
 import ApiV1Controller from '../app/api_v1_controller.js';
-import type { CreatePostSignalPayload, PostRequest } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignalPayload, PostRequest, PostSignal } from '@ephemera/shared/api/api.js';
 import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
+import { PostServiceBase, type IPostService } from '../app/post_service.js';
 
 function testConfig() {
-  return new Config({ host: 'example.com', port: 3000, allowedTimeSkewMillis: 5 * 60 * 1000 });
+  return new Config({
+    host: 'example.com',
+    port: 3000,
+    dbHost: 'localhost',
+    dbPort: 3306,
+    dbUser: 'test',
+    dbPassword: 'test',
+    dbName: 'test',
+    allowedTimeSkewMillis: 5 * 60 * 1000,
+  });
+}
+
+class MockPostService extends PostServiceBase {
+  constructor(config: Config) {
+    super(config);
+  }
+
+  async createImpl(signal: PostSignal): Promise<void> {
+    return;
+  }
 }
 
 describe('ApiV1Controller', () => {
@@ -23,7 +43,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config);
+      const controller = new ApiV1Controller(config, new MockPostService(config));
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(400);
       const data = res._getJSONData();
@@ -42,7 +62,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config);
+      const controller = new ApiV1Controller(config, new MockPostService(config));
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(400);
       const data = res._getJSONData();
@@ -68,7 +88,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config);
+      const controller = new ApiV1Controller(config, new MockPostService(config));
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(200);
       const data = res._getJSONData();
@@ -94,7 +114,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config);
+      const controller = new ApiV1Controller(config, new MockPostService(config));
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(400);
       const data = res._getJSONData();
@@ -120,7 +140,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config);
+      const controller = new ApiV1Controller(config, new MockPostService(config));
       await controller.handlePost(req, res);
       expect(res.statusCode).toBe(400);
       const data = res._getJSONData();

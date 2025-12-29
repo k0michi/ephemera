@@ -1,4 +1,5 @@
 import type { CreatePostSignalPayload, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
+import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Hex from "./hex.js";
 import PostUtil from "./post_util.js";
@@ -37,10 +38,10 @@ export default class Client {
       throw new Error(`Post validation failed: ${validationResult[1]}`);
     }
 
-    const publicKeyHex = Hex.fromUint8Array(this._keyPair.publicKey);
+    const publicKeyBase37 = Base37.fromUint8Array(this._keyPair.publicKey);
     const payload = [
       this._version,
-      [this._host, publicKeyHex, Date.now(), "create_post"],
+      [this._host, publicKeyBase37, Date.now(), "create_post"],
       post,
       []
     ] satisfies CreatePostSignalPayload;

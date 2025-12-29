@@ -1,7 +1,9 @@
 {
 	"devDependencies": {
+		"@testcontainers/mariadb": "^11.11.0",
 		"@types/express": "^5.0.6",
 		"node-mocks-http": "^1.17.2",
+		"testcontainers": "^11.11.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.0",
 		"vite-node": "^5.2.0",
@@ -9,7 +11,10 @@
 	},
 	"dependencies": {
 		"@ephemera/shared": "*",
-		"express": "^5.2.1"
+		"express": "^5.2.1",
+		"mysql2": "^3.16.0",
+		"reflect-metadata": "^0.2.2",
+		"typeorm": "^0.3.28"
 	},
 	"type": "module",
 	"scripts": {
