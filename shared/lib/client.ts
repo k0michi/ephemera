@@ -1,10 +1,97 @@
-import type { CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, PostResponse, PostSignal, Version } from "../api/api.js";
+import { apiResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Hex from "./hex.js";
 import NullableHelper from "./nullable_helper.js";
 import PostUtil from "./post_util.js";
 import SignalCrypto from "./signal_crypto.js";
+
+class FetchError extends Error {
+}
+
+class Fetcher {
+  static async get(path: string, params: Record<string, string> = {}, options: RequestInit = {}): Promise<ApiResponse> {
+    const urlParams = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(params)) {
+      urlParams.append(key, value);
+    }
+
+    const response = await fetch(`${path}?${urlParams.toString()}`, {
+      method: "GET",
+      ...options,
+    });
+
+    let json: any;
+
+    try {
+      json = await response.json();
+    } catch (e) {
+      throw new FetchError(`Failed to parse JSON response from ${path}`);
+    }
+
+    if (!response.ok) {
+      const error = json.error;
+
+      if (typeof error === "string") {
+        throw new FetchError(`Request to ${path} failed: ${error}`);
+      } else {
+        throw new FetchError(`Request to ${path} failed`);
+      }
+    }
+
+    let parsed;
+
+    try {
+      parsed = apiResponseSchema.loose().parse(json);
+    } catch (e) {
+      throw new FetchError(`Invalid response format from ${path}`);
+    }
+
+    // FIXME: proper type conversion
+    return parsed as ApiResponse;
+  }
+
+  static async post<T extends ApiRequest>(path: string, body: T, options: RequestInit = {}): Promise<ApiResponse> {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      ...options,
+    });
+
+    let json: any;
+
+    try {
+      json = await response.json();
+    } catch (e) {
+      throw new FetchError(`Failed to parse JSON response from ${path}`);
+    }
+
+    if (!response.ok) {
+      const error = json.error;
+
+      if (typeof error === "string") {
+        throw new FetchError(`Request to ${path} failed: ${error}`);
+      } else {
+        throw new FetchError(`Request to ${path} failed`);
+      }
+    }
+
+    let parsed;
+
+    try {
+      parsed = apiResponseSchema.loose().parse(json);
+    } catch (e) {
+      throw new FetchError(`Invalid response format from ${path}`);
+    }
+
+    return parsed as ApiResponse;
+  }
+}
 
 export default class Client {
   /**
@@ -51,53 +138,21 @@ export default class Client {
       []
     ] satisfies CreatePostSignalPayload;
     const signed: PostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
-    const response = await fetch(`/api/v1/post`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        post: signed
-      } satisfies PostRequest
-      )
-    });
 
-    if (!response.ok) {
-      throw new Error(`Failed to send post: ${response.status} ${response.statusText}`);
-    }
-
-    const responseData = (await response.json()) as PostResponse;
-
-    if (responseData.error) {
-      throw new Error(`Failed to send post: ${responseData.error}`);
-    }
-
-    return;
+    const response = await Fetcher.post(`/api/v1/post`, {
+      post: signed
+    } satisfies PostRequest);
   }
 
   async fetchPosts(options: {
     cursor: string | null;
     limit?: number;
   }): Promise<GetPostsResponse> {
-    const params = new URLSearchParams({
+    const response = await Fetcher.get(`/api/v1/posts`, {
       ...(options.limit !== undefined ? { limit: String(options.limit) } : {}),
       ...(options.cursor !== null ? { cursor: options.cursor } : {}),
     } satisfies GetPostsRequest);
 
-    const response = await fetch(`/api/v1/posts?${params.toString()}`, {
-      method: "GET",
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText}`);
-    }
-
-    const responseData = (await response.json()) as GetPostsResponse;
-
-    if (responseData.error) {
-      throw new Error(`Failed to fetch posts: ${responseData.error}`);
-    }
-
-    return responseData;
+    return response as GetPostsResponse;
   }
 }
