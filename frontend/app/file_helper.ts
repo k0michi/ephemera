@@ -1,6 +1,7 @@
+import ArrayHelper from "@ephemera/shared/lib/array_helper";
+
 export interface SelectFileOptions {
   accept?: string;
-  multiple?: boolean;
 }
 
 export default class FileHelper {
@@ -16,18 +17,17 @@ export default class FileHelper {
     URL.revokeObjectURL(url);
   }
 
-  static selectFile(options: SelectFileOptions = {}): Promise<File[]> {
+  static selectFile(options: SelectFileOptions = {}): Promise<File> {
     return new Promise((resolve, reject) => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = options.accept || '';
-      input.multiple = options.multiple || false;
 
       input.onchange = (event) => {
         const target = event.target as HTMLInputElement;
 
         if (target.files) {
-          resolve(Array.from(target.files));
+          resolve(ArrayHelper.strictGet(target.files, 0));
         } else {
           // Never happens
           reject(new Error('No files selected'));

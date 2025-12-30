@@ -58,8 +58,7 @@ export default function Home() {
 
   const handleImportKeyPair = async () => {
     try {
-      const files = await FileHelper.selectFile({ accept: 'application/json', multiple: false });
-      const file = files[0];
+      const file = await FileHelper.selectFile({ accept: 'application/json' });
       const text = await file.text();
       const importedKeyPair = JSON.parse(text);
 
