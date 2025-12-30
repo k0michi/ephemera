@@ -7,10 +7,43 @@ import NullableHelper from "./nullable_helper.js";
 import PostUtil from "./post_util.js";
 import SignalCrypto from "./signal_crypto.js";
 
-class FetchError extends Error {
+export class FetchError extends Error {
 }
 
-class Fetcher {
+export class Fetcher {
+  static async fetch(input: RequestInfo, init?: RequestInit): Promise<ApiResponse> {
+    const response = await fetch(input, init);
+
+    let json: any;
+
+    try {
+      json = await response.json();
+    } catch (e) {
+      throw new FetchError(`Failed to parse JSON response from ${input.toString()}`);
+    }
+
+    if (!response.ok) {
+      const error = json.error;
+
+      if (typeof error === "string") {
+        throw new FetchError(`Request to ${input.toString()} failed: ${error}`);
+      } else {
+        throw new FetchError(`Request to ${input.toString()} failed`);
+      }
+    }
+
+    let parsed;
+
+    try {
+      parsed = apiResponseSchema.loose().parse(json);
+    } catch (e) {
+      throw new FetchError(`Invalid response format from ${input.toString()}`);
+    }
+
+    // FIXME: proper type conversion
+    return parsed as ApiResponse;
+  }
+
   static async get(path: string, params: Record<string, string> = {}, options: RequestInit = {}): Promise<ApiResponse> {
     const urlParams = new URLSearchParams();
 
@@ -18,43 +51,14 @@ class Fetcher {
       urlParams.append(key, value);
     }
 
-    const response = await fetch(`${path}?${urlParams.toString()}`, {
+    return this.fetch(`${path}?${urlParams.toString()}`, {
       method: "GET",
       ...options,
     });
-
-    let json: any;
-
-    try {
-      json = await response.json();
-    } catch (e) {
-      throw new FetchError(`Failed to parse JSON response from ${path}`);
-    }
-
-    if (!response.ok) {
-      const error = json.error;
-
-      if (typeof error === "string") {
-        throw new FetchError(`Request to ${path} failed: ${error}`);
-      } else {
-        throw new FetchError(`Request to ${path} failed`);
-      }
-    }
-
-    let parsed;
-
-    try {
-      parsed = apiResponseSchema.loose().parse(json);
-    } catch (e) {
-      throw new FetchError(`Invalid response format from ${path}`);
-    }
-
-    // FIXME: proper type conversion
-    return parsed as ApiResponse;
   }
 
   static async post<T extends ApiRequest>(path: string, body: T, options: RequestInit = {}): Promise<ApiResponse> {
-    const response = await fetch(path, {
+    return this.fetch(path, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -62,34 +66,6 @@ class Fetcher {
       body: JSON.stringify(body),
       ...options,
     });
-
-    let json: any;
-
-    try {
-      json = await response.json();
-    } catch (e) {
-      throw new FetchError(`Failed to parse JSON response from ${path}`);
-    }
-
-    if (!response.ok) {
-      const error = json.error;
-
-      if (typeof error === "string") {
-        throw new FetchError(`Request to ${path} failed: ${error}`);
-      } else {
-        throw new FetchError(`Request to ${path} failed`);
-      }
-    }
-
-    let parsed;
-
-    try {
-      parsed = apiResponseSchema.loose().parse(json);
-    } catch (e) {
-      throw new FetchError(`Invalid response format from ${path}`);
-    }
-
-    return parsed as ApiResponse;
   }
 }
 
