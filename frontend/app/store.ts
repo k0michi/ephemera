@@ -80,14 +80,8 @@ export class EphemeraStore extends Store {
     await client.sendPost(post);
   }
 
-  async fetchPosts(): Promise<PostSignal[]> {
-    if (!this._keyPair) {
-      throw new Error("Key pair is not prepared");
-    }
-
-    const client = new Client(window.location.host, this._keyPair);
-    const posts = await client.fetchPosts();
-    return posts;
+  getClient(): Client {
+    return new Client(window.location.host, this._keyPair);
   }
 
   exportKeyPair(): ExportedKeyPair | null {

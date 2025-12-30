@@ -1,11 +1,12 @@
 import express from 'express';
-import { postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { getPostsRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
-import type { IPostService } from './post_service.js';
+import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
 import type { GetPostsResponse } from '@ephemera/shared/api/api.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -26,53 +27,47 @@ export default class ApiV1Controller implements IController {
     try {
       parsed = postRequestSchema.parse(req.body);
     } catch (e) {
-      res.status(400).json({ error: 'Invalid request' });
-      return;
+      throw new ApiError('Invalid request', 400);
     }
 
-    const verified = await SignalCrypto.verify(parsed.post);
-
-    if (!verified) {
-      res.status(400).json({ error: 'Invalid signature' });
-      return;
-    }
-
-    if (parsed.post[0][1][0] !== this.config.host) {
-      res.status(400).json({ error: 'Host mismatch' });
-      return;
-    }
-
-    const now = Date.now();
-    const timestamp = parsed.post[0][1][2];
-
-    if (Math.abs(now - timestamp) > this.config.allowedTimeSkewMillis) {
-      res.status(400).json({ error: 'Timestamp out of range' });
-      return;
-    }
-
-    try {
-      await this.postService.create(parsed.post);
-    } catch (e) {
-      if (e instanceof ApiError) {
-        res.status(e.statusCode).json({ error: e.message });
-        return;
-      } else {
-        console.error('Unexpected error in handlePost:', e);
-        res.status(500).json({ error: 'Internal server error' });
-        return;
-      }
-    }
-
+    await this.postService.create(parsed.post);
     res.status(200).json({});
   }
 
-  async handleGetPosts(req: express.Request, res: express.Response) {
-    try {
-      const posts = await this.postService.find();
-      res.status(200).json({ posts } satisfies GetPostsResponse);
-    } catch (e) {
-      console.error('Unexpected error in handleGetPosts:', e);
-      res.status(500).json({ error: 'Internal server error' });
+  static parseInt(string: string): number {
+    const result = Number.parseInt(string, 10);
+
+    if (Number.isNaN(result)) {
+      throw new ApiError('Invalid request', 400);
     }
+
+    return result;
+  }
+
+  async handleGetPosts(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getPostsRequestSchema.parse(req.query);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const kDefaultLimit = 16;
+    const limit = NullableHelper.map(parsed.limit, (value) => ApiV1Controller.parseInt(value)) ?? kDefaultLimit;
+
+    const options: PostFindOptions = {
+      limit: limit,
+      cursor: parsed.cursor ?? null,
+    };
+
+    const result = await this.postService.find(options);
+
+    const response: GetPostsResponse = {
+      posts: result.posts,
+      nextCursor: result.nextCursor,
+    };
+
+    res.status(200).json(response);
   }
 }

@@ -1,7 +1,9 @@
 {
 	"devDependencies": {
+		"@testcontainers/mariadb": "^11.11.0",
 		"@types/express": "^5.0.6",
 		"node-mocks-http": "^1.17.2",
+		"testcontainers": "^11.11.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.0",
 		"vite-node": "^5.2.0",
@@ -19,6 +21,7 @@
 		"build": "vite build",
 		"start": "node ./dist/app.js",
 		"dev": "vite-node app/app.ts --watch",
-		"test": "vitest"
+		"test": "vitest",
+		"typecheck": "tsc -b"
 	}
 }
