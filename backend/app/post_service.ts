@@ -110,7 +110,11 @@ export default class PostService extends PostServiceBase {
   }
 
   async find(options: PostFindOptions): Promise<PostFindResult> {
-    const cursorNum = options?.cursor ? Number(options.cursor) : Number.MAX_SAFE_INTEGER;
+    const cursorNum = options?.cursor ? parseInt(options.cursor) : Number.MAX_SAFE_INTEGER;
+
+    if (isNaN(cursorNum) || cursorNum < 0) {
+      throw new ApiError('Invalid cursor', 400);
+    }
 
     if (options.limit < 1) {
       throw new ApiError('Limit must be at least 1', 400);
