@@ -6,7 +6,7 @@ import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { PostServiceBase, type IPostService } from '../app/post_service.js';
+import { PostServiceBase, type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
 
 function testConfig() {
   return new Config({
@@ -29,6 +29,13 @@ class MockPostService extends PostServiceBase {
   async createImpl(signal: PostSignal): Promise<void> {
     return;
   }
+
+  async find(options: PostFindOptions): Promise<PostFindResult> {
+    return {
+      posts: [],
+      nextCursor: null,
+    };
+  }
 }
 
 describe('ApiV1Controller', () => {
@@ -44,10 +51,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Invalid request');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
     it('should respond with 400 for invalid post signature', async () => {
@@ -63,10 +67,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Invalid signature');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
     });
 
     it('should respond with 200 for valid post', async () => {
@@ -89,10 +90,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(200);
-      const data = res._getJSONData();
-      expect(data).toEqual({});
+      await expect(controller.handlePost(req, res)).resolves.not.toThrow();
     });
 
     it('should respond with 400 for host mismatch', async () => {
@@ -115,10 +113,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Host mismatch');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
     });
 
     it('should respond with 400 for timestamp out of range', async () => {
@@ -141,10 +136,44 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
+    });
+  });
+
+  describe('handleGetPosts', () => {
+    it('should respond with 400 for invalid query parameters', async () => {
+      const req = createRequest({
+        method: 'GET',
+        url: '/api/v1/posts',
+        query: { limit: 'invalid' },
+      });
+      const res = createResponse();
+
+      const config = testConfig();
+
+      const controller = new ApiV1Controller(config, new MockPostService(config));
+      await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
+    });
+
+    it('should respond with 200 and empty posts', async () => {
+      const req = createRequest({
+        method: 'GET',
+        url: '/api/v1/posts',
+        query: {
+        },
+      });
+      const res = createResponse();
+
+      const config = testConfig();
+
+      const controller = new ApiV1Controller(config, new MockPostService(config));
+      await controller.handleGetPosts(req, res);
+      expect(res.statusCode).toBe(200);
       const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Timestamp out of range');
+      expect(data).toHaveProperty('posts');
+      expect(Array.isArray(data.posts)).toBe(true);
+      expect(data.posts.length).toBe(0);
+      expect(data).toHaveProperty('nextCursor', null);
     });
   });
 });

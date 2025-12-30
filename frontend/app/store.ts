@@ -2,6 +2,7 @@ import { createStoreContext, Store } from "lib/store";
 
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
+import type { PostSignal } from "@ephemera/shared/api/api";
 
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;
@@ -71,6 +72,10 @@ export class EphemeraStore extends Store {
 
     const client = new Client(window.location.host, this._keyPair);
     await client.sendPost(post);
+  }
+
+  getClient(): Client {
+    return new Client(window.location.host, this._keyPair);
   }
 }
 

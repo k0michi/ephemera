@@ -1,15 +1,29 @@
-import { Repository } from "typeorm";
+import { LessThan, Repository } from "typeorm";
 import { Post } from "./entity/post.js";
-import type { PostSignal } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignalFooter, PostSignal, Version } from "@ephemera/shared/api/api.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import type Config from "./config.js";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 import { ApiError } from "./api_error.js";
+import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 
 export interface IPostService {
   create(signal: PostSignal): Promise<void>;
 
   validate(signal: PostSignal): Promise<[boolean, string?]>;
+
+  find(options: PostFindOptions): Promise<PostFindResult>;
+}
+
+export interface PostFindOptions {
+  limit: number;
+  cursor: string | null;
+}
+
+export interface PostFindResult {
+  posts: PostSignal[];
+  nextCursor: string | null;
 }
 
 export abstract class PostServiceBase implements IPostService {
@@ -51,6 +65,8 @@ export abstract class PostServiceBase implements IPostService {
 
     return [true];
   }
+
+  abstract find(options: PostFindOptions): Promise<PostFindResult>;
 }
 
 export default class PostService extends PostServiceBase {
@@ -71,7 +87,7 @@ export default class PostService extends PostServiceBase {
     post.content = signal[0][2];
     post.footer = signal[0][3];
     post.signature = signal[1];
-    post.createdAt = signal[0][1][2];
+    post.createdAt = String(signal[0][1][2]);
 
     try {
       await this.postRepo.insert(post);
@@ -83,5 +99,71 @@ export default class PostService extends PostServiceBase {
       console.error('Error saving post:', e);
       throw new ApiError('Failed to save post', 500);
     }
+  }
+
+  static unwrapVersion(version: number): Version {
+    if (version === 0) {
+      return 0;
+    } else {
+      throw new Error(`Unsupported version: ${version}`);
+    }
+  }
+
+  async find(options: PostFindOptions): Promise<PostFindResult> {
+    const cursorNum = options?.cursor ? parseInt(options.cursor) : Number.MAX_SAFE_INTEGER;
+
+    if (isNaN(cursorNum) || cursorNum < 0) {
+      throw new ApiError('Invalid cursor', 400);
+    }
+
+    if (options.limit < 1) {
+      throw new ApiError('Limit must be at least 1', 400);
+    }
+
+    const kMaxLimit = 128;
+    options.limit = Math.min(options.limit, kMaxLimit);
+
+    let dbSignals = await this.postRepo.find({
+      order: {
+        seq: "DESC",
+      },
+      take: options.limit + 1,
+      where: {
+        seq: LessThan(cursorNum),
+      },
+    });
+
+    const signals = dbSignals.map((post) => {
+      return [
+        [
+          PostService.unwrapVersion(NullableHelper.unwrap(post.version)),
+          [
+            NullableHelper.unwrap(post.host),
+            NullableHelper.unwrap(post.author),
+            NullableHelper.unwrap(Number(post.createdAt)),
+            "create_post",
+          ],
+          NullableHelper.unwrap(post.content),
+          NullableHelper.unwrap(createPostSignalFooterSchema.parse(post.footer)),
+        ],
+        NullableHelper.unwrap(post.signature),
+      ] satisfies PostSignal;
+    });
+
+    let nextCursor: string | null = null;
+
+    if (dbSignals.length > options.limit) {
+      // There is a next page
+      const lastPost = NullableHelper.unwrap(dbSignals.at(-2));
+      nextCursor = String(NullableHelper.unwrap(lastPost.seq));
+      signals.pop();
+    }
+
+    const result: PostFindResult = {
+      posts: signals,
+      nextCursor: nextCursor,
+    };
+
+    return result;
   }
 }

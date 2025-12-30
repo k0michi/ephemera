@@ -7,6 +7,8 @@ import Config from './config.js';
 import { DataSource } from "typeorm";
 import { Post } from "./entity/post.js";
 import PostService from "./post_service.js";
+import { ApiError } from "./api_error.js";
+import type { ApiResponse } from "@ephemera/shared/api/api.js";
 
 class Ephemera extends Application {
   config?: Config;
@@ -68,6 +70,15 @@ class Ephemera extends Application {
 
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService));
+
+    this.app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (err instanceof ApiError) {
+        res.status(err.statusCode).json({ error: err.message } satisfies ApiResponse);
+      } else {
+        console.error('Unhandled error:', err);
+        res.status(500).json({ error: 'Internal Server Error' } satisfies ApiResponse);
+      }
+    });
 
     console.log('Application initialized');
   }

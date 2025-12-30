@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
+import type { PostSignal } from "@ephemera/shared/api/api";
+import Timeline from "components/timeline";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -23,6 +25,7 @@ export default function Home() {
   useEffect(() => {
     store.prepareKeyPair();
   }, [store]);
+
 
   const publicKeyMem = useMemo(() => Base37.fromUint8Array(publicKey || new Uint8Array()), [publicKey]);
 
@@ -59,6 +62,7 @@ export default function Home() {
           <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
             Revoke Key Pair
           </Button>
+          <Timeline />
         </Col>
       </Row>
     </Container>

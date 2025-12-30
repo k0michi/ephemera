@@ -50,8 +50,12 @@ export const postRequestSchema = apiRequestSchema.extend({
 
 export const postResponseSchema = apiResponseSchema;
 
-export const getPostsRequestSchema = apiRequestSchema;
+export const getPostsRequestSchema = apiRequestSchema.extend({
+    cursor: z.string().optional(),
+    limit: z.string().optional()
+});
 
 export const getPostsResponseSchema = apiResponseSchema.extend({
-    posts: z.array(postSignalSchema)
+    posts: z.array(postSignalSchema),
+    nextCursor: z.string().nullable()
 });

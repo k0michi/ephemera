@@ -80,4 +80,61 @@ describe('PostService', () => {
     await expect(postService.create(signal)).resolves.toBeUndefined();
     await expect(postService.create(signal)).rejects.toThrowError('Post already exists');
   });
+
+  describe('find', () => {
+    it('should retrieve posts with pagination', async () => {
+      const keyPair = Crypto.generateKeyPair();
+      const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+      // Insert 5 posts
+      for (let i = 0; i < 5; i++) {
+        const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], `Post number ${i}`, []] satisfies CreatePostSignalPayload;
+        const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+        await postService.create(signal);
+      }
+
+      let result = await postService.find({ limit: 3, cursor: null });
+      expect(result.posts.length).toBe(3);
+      expect(result.nextCursor).not.toBeNull();
+
+      expect(result?.posts?.[0]?.[0][2]).toBe('Post number 4');
+      expect(result?.posts?.[1]?.[0][2]).toBe('Post number 3');
+      expect(result?.posts?.[2]?.[0][2]).toBe('Post number 2');
+
+      result = await postService.find({ limit: 3, cursor: result.nextCursor });
+      expect(result.posts.length).toBe(2);
+      expect(result.nextCursor).toBeNull();
+
+      expect(result?.posts?.[0]?.[0][2]).toBe('Post number 1');
+      expect(result?.posts?.[1]?.[0][2]).toBe('Post number 0');
+    });
+
+    it('should retrieve posts with pagination, when limit matches total posts', async () => {
+      const keyPair = Crypto.generateKeyPair();
+      const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+      // Insert 1 post
+      for (let i = 0; i < 1; i++) {
+        const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], `Post number ${i}`, []] satisfies CreatePostSignalPayload;
+        const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+        await postService.create(signal);
+      }
+
+      let result = await postService.find({ limit: 1, cursor: null });
+      expect(result.posts.length).toBe(1);
+      expect(result.nextCursor).toBeNull();
+
+      expect(result?.posts?.[0]?.[0][2]).toBe('Post number 0');
+    });
+
+    it('should return empty result when no posts exist', async () => {
+      const result = await postService.find({ limit: 3, cursor: null });
+      expect(result.posts.length).toBe(0);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it('should throw error for invalid limit', async () => {
+      await expect(postService.find({ limit: 0, cursor: null })).rejects.toThrowError();
+    });
+  });
 });

@@ -21,6 +21,7 @@
 		"build": "vite build",
 		"start": "node ./dist/app.js",
 		"dev": "vite-node app/app.ts --watch",
-		"test": "vitest"
+		"test": "vitest",
+		"typecheck": "tsc -b"
 	}
 }
