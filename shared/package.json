@@ -14,6 +14,7 @@
 	"scripts": {
 		"build": "tsc",
 		"test": "vitest",
-		"gen-zod": "ts-to-zod ./api/api.ts ./api/api_schema.ts"
+		"gen-zod": "ts-to-zod ./api/api.ts ./api/api_schema.ts",
+		"typecheck": "tsc -b"
 	}
 }

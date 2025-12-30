@@ -17,6 +17,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Type check
+        run: npm run typecheck
       - name: Run tests
         run: npm test -- --coverage
       - name: Upload coverage to Codecov
@@ -34,6 +36,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Type check
+        run: npm run typecheck
       - name: Run tests
         run: npm test -- --coverage
       - name: Upload coverage to Codecov
@@ -51,6 +55,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Type check
+        run: npm run typecheck
       - name: Run tests
         run: npm test -- --coverage
       - name: Upload coverage to Codecov
