@@ -42,7 +42,7 @@ export default function Timeline({ }: TimelineProps) {
 
     const observer = new window.IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries?.[0]?.isIntersecting) {
           fetchPosts();
         }
       },
