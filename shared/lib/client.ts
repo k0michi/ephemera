@@ -1,5 +1,5 @@
 import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, PostSignal, Version } from "../api/api.js";
-import { apiResponseSchema } from "../api/api_schema.js";
+import { apiResponseSchema, getPostsResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import PostUtil from "./post_util.js";
@@ -38,7 +38,6 @@ export class Fetcher {
       throw new FetchError(`Invalid response format from ${input.toString()}`);
     }
 
-    // FIXME: proper type conversion
     return parsed as ApiResponse;
   }
 
@@ -127,6 +126,14 @@ export default class Client {
       ...(options.cursor !== null ? { cursor: options.cursor } : {}),
     } satisfies GetPostsRequest);
 
-    return response as GetPostsResponse;
+    let parsed;
+
+    try {
+      parsed = getPostsResponseSchema.parse(response);
+    } catch (e) {
+      throw new FetchError("Invalid response format for fetchPosts");
+    }
+
+    return parsed as GetPostsResponse;
   }
 }
