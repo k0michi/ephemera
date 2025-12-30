@@ -40,7 +40,7 @@ export const posts = mysqlTable('posts', {
 
   insertedAt: timestamp('insertedAt').defaultNow(),
 
-  createdAt: bigint('createdAt', { mode: 'bigint' }),
+  createdAt: bigint('createdAt', { mode: 'number' }),
 
   seq: int('seq').autoincrement(),
 }, (table) => [

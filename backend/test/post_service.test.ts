@@ -1,16 +1,19 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { MariaDbContainer, StartedMariaDbContainer } from "@testcontainers/mariadb";
-import { DataSource } from 'typeorm';
 import PostService from '../app/post_service.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import type { CreatePostSignalPayload } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { Post } from '../app/entity/post.js';
+import type { MySql2Database } from 'drizzle-orm/mysql2';
+import { drizzle } from "drizzle-orm/mysql2";
+import * as schema from '../app/db/schema.js';
+import { exec } from 'child_process';
+import util from 'util';
+const execAsync = util.promisify(exec);
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
-  let dataSource: DataSource;
   let postService: PostService;
 
   beforeEach(async () => {
@@ -20,21 +23,16 @@ describe('PostService', () => {
       .withUserPassword('test_pw')
       .start();
 
-    dataSource = new DataSource({
-      type: "mariadb",
-      host: container.getHost(),
-      port: container.getPort(),
-      username: container.getUsername(),
-      password: container.getUserPassword(),
-      database: container.getDatabase(),
-      synchronize: true,
-      logging: false,
-      entities: [Post],
-      migrations: [],
-      subscribers: [],
+    await execAsync(`npx drizzle-kit push --force`, {
+      env: {
+        ...process.env,
+        EPHEMERA_DB_HOST: container.getHost(),
+        EPHEMERA_DB_PORT: container.getPort().toString(),
+        EPHEMERA_DB_USER: container.getUsername(),
+        EPHEMERA_DB_PASSWORD: container.getUserPassword(),
+        EPHEMERA_DB_NAME: container.getDatabase(),
+      }
     });
-
-    await dataSource.initialize();
 
     postService = new PostService(
       {
@@ -47,17 +45,12 @@ describe('PostService', () => {
         dbName: container.getDatabase(),
         allowedTimeSkewMillis: 5 * 60 * 1000,
       },
-      dataSource.getRepository('Post')
+      drizzle(container.getConnectionUri())
     );
   }, 60_000);
 
   afterEach(async () => {
-    if (dataSource && dataSource.isInitialized) {
-      await dataSource.destroy();
-    }
-    if (container) {
-      await container.stop();
-    }
+    await container.stop();
   });
 
   it('should insert a post signal successfully', async () => {

@@ -1,19 +1,19 @@
-import "reflect-metadata";
+
 import express from 'express';
 import { Application } from '../lib/application.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import ApiV1Controller from './api_v1_controller.js';
 import Config from './config.js';
-import { DataSource } from "typeorm";
-import { Post } from "./entity/post.js";
 import PostService from "./post_service.js";
 import { ApiError } from "./api_error.js";
 import type { ApiResponse } from "@ephemera/shared/api/api.js";
+import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
+import mysql from 'mysql2/promise';
 
 class Ephemera extends Application {
   config?: Config;
   postService?: PostService;
-  dataSource?: DataSource;
+  db?: MySql2Database;
 
   constructor() {
     super();
@@ -21,44 +21,32 @@ class Ephemera extends Application {
 
   async initializeDatabase() {
     const config = NullableHelper.unwrap(this.config);
-
     let attempts = 0;
     let delay = 1000;
     const kMaxAttempts = 10;
-
+    let connection;
     while (true) {
       try {
-        this.dataSource = new DataSource({
-          type: "mariadb",
+        connection = await mysql.createConnection({
           host: config.dbHost,
           port: config.dbPort,
-          username: config.dbUser,
+          user: config.dbUser,
           password: config.dbPassword,
           database: config.dbName,
-          synchronize: true,
-          logging: false,
-          entities: [Post],
-          migrations: [],
-          subscribers: [],
         });
-
-        await this.dataSource.initialize();
+        break;
       } catch (error) {
         attempts++;
         console.error(`Database configuration attempt ${attempts} failed:`, error);
-
         if (attempts >= kMaxAttempts) {
           throw new Error('Max database connection attempts exceeded');
         }
-
         console.log(`Retrying in ${delay / 1000} seconds...`);
         await new Promise(res => setTimeout(res, delay));
         delay = Math.min(delay * 2, 30000);
-        continue;
       }
-
-      break;
     }
+    this.db = drizzle(connection);
   }
 
   async initialize() {
@@ -66,7 +54,7 @@ class Ephemera extends Application {
     await this.initializeDatabase();
     console.log('Database initialized');
 
-    this.postService = new PostService(this.config, NullableHelper.unwrap(this.dataSource).getRepository(Post));
+    this.postService = new PostService(this.config, this.db!);
 
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService));
@@ -85,7 +73,6 @@ class Ephemera extends Application {
 
   start() {
     const port = NullableHelper.unwrap(this.config?.port);
-
     this.listen(port, (error?: Error) => {
       if (error) {
         console.error('Failed to start server:', error);

@@ -1,5 +1,3 @@
-import { LessThan, Repository } from "typeorm";
-import { Post } from "./entity/post.js";
 import type { CreatePostSignalFooter, PostSignal, Version } from "@ephemera/shared/api/api.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import Hex from "@ephemera/shared/lib/hex.js";
@@ -7,6 +5,9 @@ import type Config from "./config.js";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 import { ApiError } from "./api_error.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
+import type { MySql2Database } from "drizzle-orm/mysql2";
+import { posts } from "./db/schema.js";
+import { desc, lt } from "drizzle-orm";
 
 export interface IPostService {
   create(signal: PostSignal): Promise<void>;
@@ -70,29 +71,29 @@ export abstract class PostServiceBase implements IPostService {
 }
 
 export default class PostService extends PostServiceBase {
-  private postRepo: Repository<Post>;
+  private postRepo: MySql2Database;
 
-  constructor(config: Config, postRepo: Repository<Post>) {
+  constructor(config: Config, postRepo: MySql2Database) {
     super(config);
     this.postRepo = postRepo;
   }
 
   async createImpl(signal: PostSignal) {
-    const post = new Post();
     const digest = await SignalCrypto.digest(signal[0]);
-    post.id = Hex.fromUint8Array(digest);
-    post.version = signal[0][0];
-    post.host = signal[0][1][0];
-    post.author = signal[0][1][1];
-    post.content = signal[0][2];
-    post.footer = signal[0][3];
-    post.signature = signal[1];
-    post.createdAt = String(signal[0][1][2]);
 
     try {
-      await this.postRepo.insert(post);
+      await this.postRepo.insert(posts).values({
+        id: Hex.fromUint8Array(digest),
+        version: signal[0][0],
+        host: signal[0][1][0],
+        author: signal[0][1][1],
+        content: signal[0][2],
+        footer: signal[0][3],
+        signature: signal[1],
+        createdAt: signal[0][1][2],
+      });
     } catch (e: any) {
-      if (e?.code === 'ER_DUP_ENTRY') {
+      if (e?.cause?.code === 'ER_DUP_ENTRY') {
         throw new ApiError('Post already exists', 409);
       }
 
@@ -123,15 +124,10 @@ export default class PostService extends PostServiceBase {
     const kMaxLimit = 128;
     options.limit = Math.min(options.limit, kMaxLimit);
 
-    let dbSignals = await this.postRepo.find({
-      order: {
-        seq: "DESC",
-      },
-      take: options.limit + 1,
-      where: {
-        seq: LessThan(cursorNum),
-      },
-    });
+    const dbSignals = await this.postRepo.select().from(posts)
+      .where(lt(posts.seq, cursorNum))
+      .orderBy(desc(posts.seq))
+      .limit(options.limit + 1);
 
     const signals = dbSignals.map((post) => {
       return [
@@ -144,7 +140,7 @@ export default class PostService extends PostServiceBase {
             "create_post",
           ],
           NullableHelper.unwrap(post.content),
-          NullableHelper.unwrap(createPostSignalFooterSchema.parse(post.footer)),
+          NullableHelper.unwrap(createPostSignalFooterSchema.parse(JSON.parse(post.footer as string))),
         ],
         NullableHelper.unwrap(post.signature),
       ] satisfies PostSignal;
