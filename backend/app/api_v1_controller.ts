@@ -27,24 +27,21 @@ export default class ApiV1Controller implements IController {
     try {
       parsed = postRequestSchema.parse(req.body);
     } catch (e) {
-      res.status(400).json({ error: 'Invalid request' });
-      return;
+      throw new ApiError('Invalid request', 400);
     }
 
-    try {
-      await this.postService.create(parsed.post);
-    } catch (e) {
-      if (e instanceof ApiError) {
-        res.status(e.statusCode).json({ error: e.message });
-        return;
-      } else {
-        console.error('Unexpected error in handlePost:', e);
-        res.status(500).json({ error: 'Internal server error' });
-        return;
-      }
-    }
-
+    await this.postService.create(parsed.post);
     res.status(200).json({});
+  }
+
+  static parseInt(string: string): number {
+    const result = Number.parseInt(string, 10);
+
+    if (Number.isNaN(result)) {
+      throw new Error('Invalid request');
+    }
+
+    return result;
   }
 
   async handleGetPosts(req: express.Request, res: express.Response) {
@@ -53,30 +50,24 @@ export default class ApiV1Controller implements IController {
     try {
       parsed = getPostsRequestSchema.parse(req.query);
     } catch (e) {
-      res.status(400).json({ error: 'Invalid request' });
-      return;
+      throw new ApiError('Invalid request', 400);
     }
 
     const kDefaultLimit = 16;
-    const limit = NullableHelper.map(parsed.limit, (value) => parseInt(value)) ?? kDefaultLimit;
+    const limit = NullableHelper.map(parsed.limit, (value) => ApiV1Controller.parseInt(value)) ?? kDefaultLimit;
 
-    try {
-      const options: PostFindOptions = {
-        limit: limit,
-        cursor: parsed.cursor ?? null,
-      };
+    const options: PostFindOptions = {
+      limit: limit,
+      cursor: parsed.cursor ?? null,
+    };
 
-      const result = await this.postService.find(options);
+    const result = await this.postService.find(options);
 
-      const response: GetPostsResponse = {
-        posts: result.posts,
-        nextCursor: result.nextCursor,
-      };
+    const response: GetPostsResponse = {
+      posts: result.posts,
+      nextCursor: result.nextCursor,
+    };
 
-      res.status(200).json(response);
-    } catch (e) {
-      console.error('Unexpected error in handleGetPosts:', e);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+    res.status(200).json(response);
   }
 }

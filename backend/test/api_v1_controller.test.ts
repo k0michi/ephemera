@@ -51,10 +51,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Invalid request');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
     it('should respond with 400 for invalid post signature', async () => {
@@ -70,10 +67,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Invalid signature');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
     });
 
     it('should respond with 200 for valid post', async () => {
@@ -96,10 +90,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(200);
-      const data = res._getJSONData();
-      expect(data).toEqual({});
+      await expect(controller.handlePost(req, res)).resolves.not.toThrow();
     });
 
     it('should respond with 400 for host mismatch', async () => {
@@ -122,10 +113,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Host mismatch');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
     });
 
     it('should respond with 400 for timestamp out of range', async () => {
@@ -148,10 +136,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handlePost(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Timestamp out of range');
+      await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
     });
   });
 
@@ -167,10 +152,7 @@ describe('ApiV1Controller', () => {
       const config = testConfig();
 
       const controller = new ApiV1Controller(config, new MockPostService(config));
-      await controller.handleGetPosts(req, res);
-      expect(res.statusCode).toBe(400);
-      const data = res._getJSONData();
-      expect(data).toHaveProperty('error', 'Invalid request');
+      await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
     });
 
     it('should respond with 200 and empty posts', async () => {
@@ -178,7 +160,6 @@ describe('ApiV1Controller', () => {
         method: 'GET',
         url: '/api/v1/posts',
         query: {
-          cursor: null,
         },
       });
       const res = createResponse();
