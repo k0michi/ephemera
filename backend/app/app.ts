@@ -9,6 +9,7 @@ import { ApiError } from "./api_error.js";
 import type { ApiResponse } from "@ephemera/shared/api/api.js";
 import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
 
 class Ephemera extends Application {
   config?: Config;
@@ -47,6 +48,7 @@ class Ephemera extends Application {
       }
     }
     this.db = drizzle(connection);
+    await migrate(this.db, { migrationsFolder: './drizzle' });
   }
 
   async initialize() {
