@@ -17,8 +17,7 @@
 		"drizzle-orm": "^0.45.1",
 		"express": "^5.2.1",
 		"mysql2": "^3.16.0",
-		"reflect-metadata": "^0.2.2",
-		"typeorm": "^0.3.28"
+		"reflect-metadata": "^0.2.2"
 	},
 	"type": "module",
 	"scripts": {
