@@ -38,7 +38,7 @@ export default class ApiV1Controller implements IController {
     const result = Number.parseInt(string, 10);
 
     if (Number.isNaN(result)) {
-      throw new Error('Invalid request');
+      throw new ApiError('Invalid request', 400);
     }
 
     return result;
