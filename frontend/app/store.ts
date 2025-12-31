@@ -7,6 +7,8 @@ import Base37 from "@ephemera/shared/lib/base37";
 
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;
+  private _kPublicKeyStorageKey = 'ephemera_publicKey';
+  private _kPrivateKeyStorageKey = 'ephemera_privateKey';
 
   constructor() {
     super();
@@ -29,8 +31,8 @@ export class EphemeraStore extends Store {
 
     const localStorage = this.getLocalStorage();
 
-    localStorage.removeItem('ephemera_publicKey');
-    localStorage.removeItem('ephemera_privateKey');
+    localStorage.removeItem(this._kPublicKeyStorageKey);
+    localStorage.removeItem(this._kPrivateKeyStorageKey);
     this.notifyListeners();
   }
 
@@ -41,8 +43,8 @@ export class EphemeraStore extends Store {
 
     const localStorage = this.getLocalStorage();
 
-    const publicKeyData = localStorage.getItem('ephemera_publicKey');
-    const privateKeyData = localStorage.getItem('ephemera_privateKey');
+    const publicKeyData = localStorage.getItem(this._kPublicKeyStorageKey);
+    const privateKeyData = localStorage.getItem(this._kPrivateKeyStorageKey);
 
     if (publicKeyData && privateKeyData) {
       const publicKeyArray: number[] = JSON.parse(publicKeyData);
@@ -59,8 +61,8 @@ export class EphemeraStore extends Store {
     const keyPair = Crypto.generateKeyPair();
     this._keyPair = keyPair;
 
-    localStorage.setItem('ephemera_publicKey', JSON.stringify(Array.from(keyPair.publicKey)));
-    localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(keyPair.privateKey)));
+    localStorage.setItem(this._kPublicKeyStorageKey, JSON.stringify(Array.from(keyPair.publicKey)));
+    localStorage.setItem(this._kPrivateKeyStorageKey, JSON.stringify(Array.from(keyPair.privateKey)));
 
     this.notifyListeners();
   }
@@ -105,8 +107,8 @@ export class EphemeraStore extends Store {
 
     const localStorage = this.getLocalStorage();
 
-    localStorage.setItem('ephemera_publicKey', JSON.stringify(Array.from(publicKey)));
-    localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(privateKey)));
+    localStorage.setItem(this._kPublicKeyStorageKey, JSON.stringify(Array.from(publicKey)));
+    localStorage.setItem(this._kPrivateKeyStorageKey, JSON.stringify(Array.from(privateKey)));
 
     this.notifyListeners();
   }
