@@ -38,7 +38,9 @@ export default class FileHelper {
         reject(new Error('Cancelled'));
       });
 
+      document.body.appendChild(input);
       input.click();
+      document.body.removeChild(input);
     });
   }
 }
