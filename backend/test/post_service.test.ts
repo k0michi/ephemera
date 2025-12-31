@@ -7,10 +7,7 @@ import type { CreatePostSignalPayload } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import type { MySql2Database } from 'drizzle-orm/mysql2';
 import { drizzle } from "drizzle-orm/mysql2";
-import * as schema from '../app/db/schema.js';
-import { exec } from 'child_process';
-import util from 'util';
-const execAsync = util.promisify(exec);
+import { migrate } from 'drizzle-orm/mysql2/migrator';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -23,16 +20,7 @@ describe('PostService', () => {
       .withUserPassword('test_pw')
       .start();
 
-    await execAsync(`npx drizzle-kit push --force`, {
-      env: {
-        ...process.env,
-        EPHEMERA_DB_HOST: container.getHost(),
-        EPHEMERA_DB_PORT: container.getPort().toString(),
-        EPHEMERA_DB_USER: container.getUsername(),
-        EPHEMERA_DB_PASSWORD: container.getUserPassword(),
-        EPHEMERA_DB_NAME: container.getDatabase(),
-      }
-    });
+    await migrate(drizzle(container.getConnectionUri()), { migrationsFolder: './drizzle' });
 
     postService = new PostService(
       {
@@ -50,6 +38,7 @@ describe('PostService', () => {
   }, 60_000);
 
   afterEach(async () => {
+
     await container.stop();
   });
 
