@@ -1,4 +1,4 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version } from "../api/api.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload } from "../api/api.js";
 import { apiResponseSchema, getPostsResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
@@ -57,6 +57,17 @@ export class Fetcher {
   static async post<T extends ApiRequest>(path: string, body: T, options: RequestInit = {}): Promise<ApiResponse> {
     return this.fetch(path, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      ...options,
+    });
+  }
+
+  static async delete<T extends ApiRequest>(path: string, body: T, options: RequestInit = {}): Promise<ApiResponse> {
+    return this.fetch(path, {
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
@@ -135,5 +146,21 @@ export default class Client {
     }
 
     return parsed as GetPostsResponse;
+  }
+
+  async deletePost(postId: string): Promise<void> {
+    const payload: DeletePostSignalPayload = [
+      this._version,
+      [this._host, postId, Date.now(), "delete_post"],
+      [
+        postId
+      ],
+      []
+    ];
+    const signed: DeletePostSignal = await SignalCrypto.sign(payload, this._keyPair!.privateKey) as DeletePostSignal;
+
+    const response = await Fetcher.delete(`/api/v1/post`, {
+      post: signed
+    } satisfies DeletePostRequest);
   }
 }

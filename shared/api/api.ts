@@ -128,3 +128,11 @@ export interface GetPostsResponse extends ApiResponse {
   posts: CreatePostSignal[];
   nextCursor: string | null;
 }
+
+// DELETE /api/v1/post
+export interface DeletePostRequest extends ApiRequest {
+  post: DeletePostSignal;
+}
+
+export interface DeletePostResponse extends ApiResponse {
+}
