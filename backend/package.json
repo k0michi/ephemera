@@ -16,8 +16,7 @@
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.45.1",
 		"express": "^5.2.1",
-		"mysql2": "^3.16.0",
-		"reflect-metadata": "^0.2.2"
+		"mysql2": "^3.16.0"
 	},
 	"type": "module",
 	"scripts": {
