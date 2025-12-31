@@ -2,10 +2,13 @@ import { createStoreContext, Store } from "../lib/store.js";
 
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
-import type { PostSignal } from "@ephemera/shared/api/api";
+import type { ExportedKeyPair, PostSignal } from "@ephemera/shared/api/api";
+import Base37 from "@ephemera/shared/lib/base37";
 
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;
+  private _kPublicKeyStorageKey = 'ephemera_publicKey';
+  private _kPrivateKeyStorageKey = 'ephemera_privateKey';
 
   constructor() {
     super();
@@ -15,19 +18,21 @@ export class EphemeraStore extends Store {
     return this._keyPair;
   }
 
-  checkLocalStorage() {
+  getLocalStorage() {
     if (!globalThis.localStorage) {
       throw new Error("localStorage is not available");
     }
+
+    return globalThis.localStorage;
   }
 
   revokeKeyPair() {
     this._keyPair = null;
 
-    this.checkLocalStorage();
+    const localStorage = this.getLocalStorage();
 
-    localStorage.removeItem('ephemera_publicKey');
-    localStorage.removeItem('ephemera_privateKey');
+    localStorage.removeItem(this._kPublicKeyStorageKey);
+    localStorage.removeItem(this._kPrivateKeyStorageKey);
     this.notifyListeners();
   }
 
@@ -36,10 +41,10 @@ export class EphemeraStore extends Store {
       return;
     }
 
-    this.checkLocalStorage();
+    const localStorage = this.getLocalStorage();
 
-    const publicKeyData = localStorage.getItem('ephemera_publicKey');
-    const privateKeyData = localStorage.getItem('ephemera_privateKey');
+    const publicKeyData = localStorage.getItem(this._kPublicKeyStorageKey);
+    const privateKeyData = localStorage.getItem(this._kPrivateKeyStorageKey);
 
     if (publicKeyData && privateKeyData) {
       const publicKeyArray: number[] = JSON.parse(publicKeyData);
@@ -56,8 +61,8 @@ export class EphemeraStore extends Store {
     const keyPair = Crypto.generateKeyPair();
     this._keyPair = keyPair;
 
-    localStorage.setItem('ephemera_publicKey', JSON.stringify(Array.from(keyPair.publicKey)));
-    localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(keyPair.privateKey)));
+    localStorage.setItem(this._kPublicKeyStorageKey, JSON.stringify(Array.from(keyPair.publicKey)));
+    localStorage.setItem(this._kPrivateKeyStorageKey, JSON.stringify(Array.from(keyPair.privateKey)));
 
     this.notifyListeners();
   }
@@ -76,6 +81,36 @@ export class EphemeraStore extends Store {
 
   getClient(): Client {
     return new Client(window.location.host, this._keyPair);
+  }
+
+  exportKeyPair(): ExportedKeyPair | null {
+    if (!this._keyPair) {
+      return null;
+    }
+
+    return {
+      publicKey: Base37.fromUint8Array(this._keyPair.publicKey),
+      privateKey: Base37.fromUint8Array(this._keyPair.privateKey),
+    };
+  }
+
+  importKeyPair(exported: ExportedKeyPair) {
+    const publicKey = Base37.toUint8Array(exported.publicKey);
+    const privateKey = Base37.toUint8Array(exported.privateKey);
+    const keyPair = { publicKey, privateKey };
+
+    if (!Crypto.isValidKeyPair(keyPair)) {
+      throw new Error("Invalid key pair");
+    }
+
+    this._keyPair = keyPair;
+
+    const localStorage = this.getLocalStorage();
+
+    localStorage.setItem(this._kPublicKeyStorageKey, JSON.stringify(Array.from(publicKey)));
+    localStorage.setItem(this._kPrivateKeyStorageKey, JSON.stringify(Array.from(privateKey)));
+
+    this.notifyListeners();
   }
 }
 

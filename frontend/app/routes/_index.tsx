@@ -6,7 +6,9 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
 import type { PostSignal } from "@ephemera/shared/api/api";
+import FileHelper from "~/file_helper";
 import Timeline from "components/timeline";
+import { exportedKeyPairSchema } from "@ephemera/shared/api/api_schema";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -43,6 +45,42 @@ export default function Home() {
     }
   };
 
+  const handleExportKeyPair = () => {
+    const exported = store.exportKeyPair();
+
+    if (!exported) return;
+
+    FileHelper.downloadFile(
+      JSON.stringify(exported),
+      `${publicKeyMem}.json`,
+      'application/json'
+    );
+  };
+
+  const handleImportKeyPair = async () => {
+    try {
+      const file = await FileHelper.selectFile({ accept: 'application/json' });
+      const text = await file.text();
+      let parsed;
+
+      try {
+        parsed = exportedKeyPairSchema.parse(JSON.parse(text));
+      } catch {
+        throw new Error("Invalid key pair format");
+      }
+
+      store.importKeyPair(parsed);
+      setMessage({ type: "success", text: "Key pair imported successfully!" });
+      setTimeout(() => setMessage(null), 2000);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to import key pair."
+      });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
   return (
     <Container className="mt-5">
       <Row className="justify-content-md-center">
@@ -62,9 +100,15 @@ export default function Home() {
           <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
             Revoke Key Pair
           </Button>
+          <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
+            Export Key Pair
+          </Button>
+          <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
+            Import Key Pair
+          </Button>
           <Timeline />
-        </Col>
-      </Row>
-    </Container>
+        </Col >
+      </Row >
+    </Container >
   );
 }

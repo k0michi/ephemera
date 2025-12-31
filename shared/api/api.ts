@@ -1,9 +1,3 @@
-export type ApiRequest = {};
-
-export interface ApiResponse {
-  error?: string;
-}
-
 export type Version = 0;
 export type Author = string;
 /**
@@ -65,6 +59,25 @@ export type PostSignal = [
   CreatePostSignalPayload, // payload
   string // signature
 ];
+
+//
+// Client
+//
+
+export interface ExportedKeyPair {
+  publicKey: string;
+  privateKey: string;
+}
+
+//
+// API requests and responses
+//
+
+export type ApiRequest = {};
+
+export interface ApiResponse {
+  error?: string;
+}
 
 // POST /api/v1/post
 export interface PostRequest extends ApiRequest {
