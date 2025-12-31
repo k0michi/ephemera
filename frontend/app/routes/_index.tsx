@@ -8,6 +8,7 @@ import Composer from "components/composer";
 import type { PostSignal } from "@ephemera/shared/api/api";
 import FileHelper from "~/file_helper";
 import Timeline from "components/timeline";
+import { exportedKeyPairSchema } from "@ephemera/shared/api/api_schema";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -60,9 +61,15 @@ export default function Home() {
     try {
       const file = await FileHelper.selectFile({ accept: 'application/json' });
       const text = await file.text();
-      const importedKeyPair = JSON.parse(text);
+      let parsed;
 
-      store.importKeyPair(importedKeyPair);
+      try {
+        parsed = exportedKeyPairSchema.parse(JSON.parse(text));
+      } catch {
+        throw new Error("Invalid key pair format");
+      }
+
+      store.importKeyPair(parsed);
       setMessage({ type: "success", text: "Key pair imported successfully!" });
       setTimeout(() => setMessage(null), 2000);
     } catch (error) {
