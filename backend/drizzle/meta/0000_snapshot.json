@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "c4e089f4-c491-49f3-b31b-3bba1bf9c469",
+  "id": "5c245696-e8e5-4548-aae2-44175634af7b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "posts": {
@@ -58,7 +58,7 @@
         },
         "insertedAt": {
           "name": "insertedAt",
-          "type": "timestamp",
+          "type": "timestamp(3)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
