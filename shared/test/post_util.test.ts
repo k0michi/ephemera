@@ -18,7 +18,7 @@ describe("PostUtil.validate", () => {
   });
 
   it("returns false if over max length", () => {
-    const long = "a".repeat(281);
+    const long = "a".repeat(PostUtil.kMaxPostLength + 1);
     expect(PostUtil.validate(long)[0]).toBe(false);
   });
 
