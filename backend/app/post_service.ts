@@ -71,18 +71,18 @@ export abstract class PostServiceBase implements IPostService {
 }
 
 export default class PostService extends PostServiceBase {
-  private postRepo: MySql2Database;
+  private database: MySql2Database;
 
-  constructor(config: Config, postRepo: MySql2Database) {
+  constructor(config: Config, database: MySql2Database) {
     super(config);
-    this.postRepo = postRepo;
+    this.database = database;
   }
 
   async createImpl(signal: PostSignal) {
     const digest = await SignalCrypto.digest(signal[0]);
 
     try {
-      await this.postRepo.insert(posts).values({
+      await this.database.insert(posts).values({
         id: Hex.fromUint8Array(digest),
         version: signal[0][0],
         host: signal[0][1][0],
@@ -124,7 +124,7 @@ export default class PostService extends PostServiceBase {
     const kMaxLimit = 128;
     options.limit = Math.min(options.limit, kMaxLimit);
 
-    const dbSignals = await this.postRepo.select().from(posts)
+    const dbSignals = await this.database.select().from(posts)
       .where(lt(posts.seq, cursorNum))
       .orderBy(desc(posts.seq))
       .limit(options.limit + 1);
