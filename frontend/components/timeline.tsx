@@ -65,13 +65,9 @@ export default function Timeline({ }: TimelineProps) {
   }, [fetchPosts, hasMore]);
 
   const handleDeletePost = async (post: CreatePostSignal) => {
-    try {
-      const digest = await SignalCrypto.digest(post[0]);
-      await store.getClient().deletePost(Hex.fromUint8Array(digest));
-      setPosts((prevPosts) => prevPosts.filter((p) => p !== post));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete post.");
-    }
+    const digest = await SignalCrypto.digest(post[0]);
+    await store.getClient().deletePost(Hex.fromUint8Array(digest));
+    setPosts((prevPosts) => prevPosts.filter((p) => p !== post));
   };
 
   return (
