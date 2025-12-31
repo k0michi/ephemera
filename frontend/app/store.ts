@@ -16,16 +16,18 @@ export class EphemeraStore extends Store {
     return this._keyPair;
   }
 
-  checkLocalStorage() {
+  getLocalStorage() {
     if (!globalThis.localStorage) {
       throw new Error("localStorage is not available");
     }
+
+    return globalThis.localStorage;
   }
 
   revokeKeyPair() {
     this._keyPair = null;
 
-    this.checkLocalStorage();
+    const localStorage = this.getLocalStorage();
 
     localStorage.removeItem('ephemera_publicKey');
     localStorage.removeItem('ephemera_privateKey');
@@ -37,7 +39,7 @@ export class EphemeraStore extends Store {
       return;
     }
 
-    this.checkLocalStorage();
+    const localStorage = this.getLocalStorage();
 
     const publicKeyData = localStorage.getItem('ephemera_publicKey');
     const privateKeyData = localStorage.getItem('ephemera_privateKey');
@@ -101,7 +103,7 @@ export class EphemeraStore extends Store {
 
     this._keyPair = keyPair;
 
-    this.checkLocalStorage();
+    const localStorage = this.getLocalStorage();
 
     localStorage.setItem('ephemera_publicKey', JSON.stringify(Array.from(publicKey)));
     localStorage.setItem('ephemera_privateKey', JSON.stringify(Array.from(privateKey)));
