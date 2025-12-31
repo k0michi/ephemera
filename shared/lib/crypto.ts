@@ -42,10 +42,14 @@ export default class Crypto {
    * Returns whether the given key pair is valid.
    */
   static isValidKeyPair(keyPair: KeyPair): boolean {
-    const derivedPublicKey = ed25519.getPublicKey(keyPair.privateKey);
-    return (
-      derivedPublicKey.length === keyPair.publicKey.length &&
-      derivedPublicKey.every((byte, index) => byte === keyPair.publicKey[index])
-    );
+    try {
+      const derivedPublicKey = ed25519.getPublicKey(keyPair.privateKey);
+      return (
+        derivedPublicKey.length === keyPair.publicKey.length &&
+        derivedPublicKey.every((byte, index) => byte === keyPair.publicKey[index])
+      );
+    } catch {
+      return false;
+    }
   }
 }

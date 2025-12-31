@@ -68,5 +68,15 @@ describe('Crypto', () => {
       const isValid = Crypto.isValidKeyPair(tamperedKeyPair);
       expect(isValid).toBe(false);
     });
+
+    it('should return false for malformed private key', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const malformedKeyPair: KeyPair = {
+        publicKey: keyPair.publicKey,
+        privateKey: new Uint8Array(0),
+      };
+      const isValid = Crypto.isValidKeyPair(malformedKeyPair);
+      expect(isValid).toBe(false);
+    });
   });
 });
