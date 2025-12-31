@@ -12,6 +12,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY backend/package.json ./backend/
+COPY backend/drizzle ./backend/drizzle
 RUN npm ci --omit=dev
 WORKDIR /app
 COPY --from=builder /app/backend/dist ./backend/dist
