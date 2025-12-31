@@ -103,7 +103,7 @@ export default function Timeline({ }: TimelineProps) {
                         </span>
                       </Card.Title>
                       <Dropdown align="end">
-                        <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`}>
+                        <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
                           <BsThreeDots className="text-secondary" />
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
