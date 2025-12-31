@@ -8,9 +8,12 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import type { MySql2Database } from 'drizzle-orm/mysql2';
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
+import type { Pool } from 'mysql2';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
+  let database: MySql2Database;
+  let pool: Pool;
   let postService: PostService;
 
   beforeEach(async () => {
@@ -20,7 +23,10 @@ describe('PostService', () => {
       .withUserPassword('test_pw')
       .start();
 
-    await migrate(drizzle(container.getConnectionUri()), { migrationsFolder: './drizzle' });
+    const db = drizzle(container.getConnectionUri());
+    pool = db.$client;
+    database = db;
+    await migrate(db, { migrationsFolder: './drizzle' });
 
     postService = new PostService(
       {
@@ -33,12 +39,17 @@ describe('PostService', () => {
         dbName: container.getDatabase(),
         allowedTimeSkewMillis: 5 * 60 * 1000,
       },
-      drizzle(container.getConnectionUri())
+      database
     );
   }, 60_000);
 
   afterEach(async () => {
-
+    await new Promise<void>((resolve, reject) => {
+      pool.end(err => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
     await container.stop();
   });
 
