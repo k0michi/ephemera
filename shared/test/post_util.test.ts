@@ -17,8 +17,13 @@ describe("PostUtil.validate", () => {
     expect(PostUtil.validate("")[0]).toBe(false);
   });
 
+  it("returns true if at max length", () => {
+    const max = "a".repeat(PostUtil.kMaxPostLength);
+    expect(PostUtil.validate(max)[0]).toBe(true);
+  });
+
   it("returns false if over max length", () => {
-    const long = "a".repeat(281);
+    const long = "a".repeat(PostUtil.kMaxPostLength + 1);
     expect(PostUtil.validate(long)[0]).toBe(false);
   });
 
