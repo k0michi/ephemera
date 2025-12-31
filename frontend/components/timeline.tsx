@@ -7,6 +7,7 @@ import { Card, ListGroup, Container, Row, Col, Dropdown } from "react-bootstrap"
 import { EphemeraStoreContext } from "~/store";
 import { BsThreeDots } from "react-icons/bs";
 import Hex from "@ephemera/shared/lib/hex";
+import Base37 from "@ephemera/shared/lib/base37";
 
 export interface TimelineProps {
 }
@@ -19,6 +20,7 @@ export default function Timeline({ }: TimelineProps) {
   const [cursor, setCursor] = React.useState<string | null>(null);
   const bottomRef = React.useRef<HTMLDivElement | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
 
   const fetchPosts = React.useCallback(async () => {
     if (loading || !hasMore) {
@@ -71,47 +73,52 @@ export default function Timeline({ }: TimelineProps) {
     <Container className="mt-4">
       <Row className="justify-content-center">
         <ListGroup>
-          {posts.map((post) => (
-            // Assumes signatures are unique.
-            <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
-              <Card>
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-start">
-                    <Card.Title className="mb-0">
-                      <span
-                        className="text-secondary fs-6"
-                        style={{
-                          fontFamily: 'monospace',
-                          display: 'inline-block',
-                          maxWidth: '100%',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          verticalAlign: 'bottom'
-                        }}
-                      >
-                        @{post[0][1][1]}
-                      </span>
-                    </Card.Title>
-                    <Dropdown align="end">
-                      <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`}>
-                        <BsThreeDots className="text-secondary" />
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => handleDeletePost(post)}>
-                          Delete post
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </div>
-                  <Card.Text style={{ whiteSpace: 'pre-line' }}>{post[0][2]}</Card.Text>
-                </Card.Body>
-                <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
-                  {new Date(post[0][1][2]).toLocaleString()}
-                </Card.Footer>
-              </Card>
-            </ListGroup.Item>
-          ))}
+          {posts.map((post) => {
+            const postPublicKey = post[0][1][1];
+            const isMine = myPublicKeyBase37 === postPublicKey;
+            return (
+              <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
+                <Card>
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-start">
+                      <Card.Title className="mb-0">
+                        <span
+                          className="text-secondary fs-6"
+                          style={{
+                            fontFamily: 'monospace',
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            verticalAlign: 'bottom'
+                          }}
+                        >
+                          @{post[0][1][1]}
+                        </span>
+                      </Card.Title>
+                      <Dropdown align="end">
+                        <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`}>
+                          <BsThreeDots className="text-secondary" />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          {isMine && (
+                            <Dropdown.Item onClick={() => handleDeletePost(post)}>
+                              Delete post
+                            </Dropdown.Item>
+                          )}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
+                    <Card.Text style={{ whiteSpace: 'pre-line' }}>{post[0][2]}</Card.Text>
+                  </Card.Body>
+                  <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
+                    {new Date(post[0][1][2]).toLocaleString()}
+                  </Card.Footer>
+                </Card>
+              </ListGroup.Item>
+            );
+          })}
           {
             <div ref={bottomRef} style={{ height: 1, display: hasMore ? 'block' : 'none' }}>
               {error ? (
