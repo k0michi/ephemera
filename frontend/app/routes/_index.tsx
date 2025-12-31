@@ -18,12 +18,9 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
-export type MessageState = { type: "success" | "error"; text: string } | null;
-
 export default function Home() {
   const publicKey = useSelector(EphemeraStoreContext, (store) => store.keyPair?.publicKey);
   const store = useReader(EphemeraStoreContext);
-  const [message, setMessage] = useState<MessageState>(null);
 
   useEffect(() => {
     store.prepareKeyPair();
