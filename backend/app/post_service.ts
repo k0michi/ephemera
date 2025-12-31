@@ -12,7 +12,7 @@ import { and, desc, eq, lt } from "drizzle-orm";
 export interface IPostService {
   create(signal: CreatePostSignal): Promise<void>;
 
-  validate(signal: CreatePostSignal): Promise<[boolean, string?]>;
+  validate<T extends Signal>(signal: T): Promise<[boolean, string?]>;
 
   find(options: PostFindOptions): Promise<PostFindResult>;
 
