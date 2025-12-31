@@ -36,9 +36,9 @@ export default class FileHelper {
         }
       };
 
-      input.addEventListener('cancel', () => {
+      input.oncancel = (event) => {
         reject(new Error('Cancelled'));
-      });
+      };
 
       document.body.appendChild(input);
       input.click();
