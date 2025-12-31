@@ -46,12 +46,12 @@ export default function Home() {
   };
 
   const handleExportKeyPair = () => {
-    const exportedPublicKey = store.exportKeyPair();
+    const exported = store.exportKeyPair();
 
-    if (!exportedPublicKey) return;
+    if (!exported) return;
 
     FileHelper.downloadFile(
-      JSON.stringify(exportedPublicKey),
+      JSON.stringify(exported),
       `${publicKeyMem}.json`,
       'application/json'
     );
