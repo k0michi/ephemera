@@ -8,6 +8,7 @@ export default class FileHelper {
   static downloadFile(data: string, filename: string, type: string) {
     const file = new Blob([data], { type });
     const a = document.createElement("a");
+    a.style.display = 'none';
     const url = URL.createObjectURL(file);
     a.href = url;
     a.download = filename;
@@ -22,6 +23,7 @@ export default class FileHelper {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = options.accept || '';
+      input.style.display = 'none';
 
       input.onchange = (event) => {
         const target = event.target as HTMLInputElement;
