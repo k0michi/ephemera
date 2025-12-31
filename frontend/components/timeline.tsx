@@ -19,7 +19,6 @@ export default function Timeline({ }: TimelineProps) {
   const store = useReader(EphemeraStoreContext);
   const [cursor, setCursor] = React.useState<string | null>(null);
   const bottomRef = React.useRef<HTMLDivElement | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
   const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
 
   const fetchPosts = React.useCallback(async () => {
@@ -35,7 +34,9 @@ export default function Timeline({ }: TimelineProps) {
       setCursor(response.nextCursor);
       setHasMore(!!response.nextCursor);
     } catch (e) {
-      setError("Failed to fetch posts.");
+      store.addLog("danger", e instanceof Error ? e.message : "Failed to fetch posts.");
+      // Stop loading more
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -126,11 +127,7 @@ export default function Timeline({ }: TimelineProps) {
           })}
           {
             <div ref={bottomRef} style={{ height: 1, display: hasMore ? 'block' : 'none' }}>
-              {error ? (
-                <div className="d-flex align-items-center justify-content-center gap-2 alert alert-danger p-2 my-2" role="alert" style={{ minHeight: 40 }}>
-                  {error}
-                </div>
-              ) : hasMore ? (
+              {hasMore ? (
                 loading ? (
                   <div className="d-flex align-items-center justify-content-center gap-2 alert alert-light p-2 my-2" role="status" style={{ minHeight: 40 }}>
                     <span className="spinner-border spinner-border-sm text-secondary" aria-hidden="true"></span>
