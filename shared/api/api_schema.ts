@@ -36,7 +36,17 @@ export const createPostSignalFooterSchema = z.tuple([]);
 
 export const createPostSignalPayloadSchema = z.tuple([versionSchema, createPostSignalHeaderSchema, createPostSignalBodySchema, createPostSignalFooterSchema]);
 
-export const postSignalSchema = z.tuple([createPostSignalPayloadSchema, z.string()]);
+export const createPostSignalSchema = z.tuple([createPostSignalPayloadSchema, z.string()]);
+
+export const deletePostSignalHeaderSchema = z.tuple([hostSchema, authorSchema, timestampSchema, z.literal("delete_post")]);
+
+export const deletePostSignalBodySchema = z.tuple([hashSchema]);
+
+export const deletePostSignalFooterSchema = z.tuple([]);
+
+export const deletePostSignalPayloadSchema = z.tuple([versionSchema, deletePostSignalHeaderSchema, deletePostSignalBodySchema, deletePostSignalFooterSchema]);
+
+export const deletePostSignalSchema = z.tuple([deletePostSignalPayloadSchema, z.string()]);
 
 export const exportedKeyPairSchema = z.object({
     publicKey: z.string(),
@@ -50,7 +60,7 @@ export const apiResponseSchema = z.object({
 });
 
 export const postRequestSchema = apiRequestSchema.extend({
-    post: postSignalSchema
+    post: createPostSignalSchema
 });
 
 export const postResponseSchema = apiResponseSchema;
@@ -61,6 +71,12 @@ export const getPostsRequestSchema = apiRequestSchema.extend({
 });
 
 export const getPostsResponseSchema = apiResponseSchema.extend({
-    posts: z.array(postSignalSchema),
+    posts: z.array(createPostSignalSchema),
     nextCursor: z.string().nullable()
 });
+
+export const deletePostRequestSchema = apiRequestSchema.extend({
+    post: deletePostSignalSchema
+});
+
+export const deletePostResponseSchema = apiResponseSchema;
