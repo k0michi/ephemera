@@ -7,7 +7,7 @@ import { ApiError } from "./api_error.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import { posts } from "./db/schema.js";
-import { desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 
 export interface IPostService {
   create(signal: CreatePostSignal): Promise<void>;
@@ -177,7 +177,7 @@ export default class PostService extends PostServiceBase {
     const postId = signal[0][2][0];
 
     const deleteResult = await this.database.delete(posts)
-      .where(eq(posts.id, postId))
+      .where(and(eq(posts.id, postId), eq(posts.author, signal[0][1][1])))
       .execute();
 
     if (deleteResult[0].affectedRows === 0) {
