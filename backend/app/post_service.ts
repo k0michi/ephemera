@@ -1,4 +1,4 @@
-import type { CreatePostSignalFooter, CreatePostSignal, Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignalFooter, CreatePostSignal, Version, DeletePostSignal, Signal } from "@ephemera/shared/api/api.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import type Config from "./config.js";
@@ -7,7 +7,7 @@ import { ApiError } from "./api_error.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import { posts } from "./db/schema.js";
-import { desc, lt } from "drizzle-orm";
+import { desc, eq, lt } from "drizzle-orm";
 
 export interface IPostService {
   create(signal: CreatePostSignal): Promise<void>;
@@ -15,6 +15,8 @@ export interface IPostService {
   validate(signal: CreatePostSignal): Promise<[boolean, string?]>;
 
   find(options: PostFindOptions): Promise<PostFindResult>;
+
+  delete(signal: DeletePostSignal): Promise<void>;
 }
 
 export interface PostFindOptions {
@@ -46,7 +48,7 @@ export abstract class PostServiceBase implements IPostService {
 
   abstract createImpl(signal: CreatePostSignal): Promise<void>;
 
-  async validate(signal: CreatePostSignal): Promise<[boolean, string?]> {
+  async validate<T extends Signal>(signal: T): Promise<[boolean, string?]> {
     const verified = await SignalCrypto.verify(signal);
 
     if (!verified) {
@@ -68,6 +70,8 @@ export abstract class PostServiceBase implements IPostService {
   }
 
   abstract find(options: PostFindOptions): Promise<PostFindResult>;
+
+  abstract delete(signal: DeletePostSignal): Promise<void>;
 }
 
 export default class PostService extends PostServiceBase {
@@ -161,5 +165,23 @@ export default class PostService extends PostServiceBase {
     };
 
     return result;
+  }
+
+  async delete(signal: DeletePostSignal): Promise<void> {
+    const validation = await this.validate(signal);
+
+    if (!validation[0]) {
+      throw new ApiError(validation[1] || 'Invalid delete signal', 400);
+    }
+
+    const postId = signal[0][2][0];
+
+    const deleteResult = await this.database.delete(posts)
+      .where(eq(posts.id, postId))
+      .execute();
+
+    if (deleteResult[0].affectedRows === 0) {
+      throw new ApiError('Post not found', 404);
+    }
   }
 }

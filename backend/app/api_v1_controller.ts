@@ -1,5 +1,5 @@
 import express from 'express';
-import { getPostsRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, deletePostSignalSchema, getPostsRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
@@ -19,6 +19,7 @@ export default class ApiV1Controller implements IController {
     this.postService = postService;
     this.router.post('/post', this.handlePost.bind(this));
     this.router.get('/posts', this.handleGetPosts.bind(this));
+    this.router.delete('/post', this.handleDeletePost.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -69,5 +70,18 @@ export default class ApiV1Controller implements IController {
     };
 
     res.status(200).json(response);
+  }
+
+  async handleDeletePost(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = deletePostRequestSchema.parse(req.body);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    await this.postService.delete(parsed.post);
+    res.status(200).json({});
   }
 }
