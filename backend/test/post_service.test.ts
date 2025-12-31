@@ -1,16 +1,19 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { MariaDbContainer, StartedMariaDbContainer } from "@testcontainers/mariadb";
-import { DataSource } from 'typeorm';
 import PostService from '../app/post_service.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import type { CreatePostSignalPayload } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { Post } from '../app/entity/post.js';
+import type { MySql2Database } from 'drizzle-orm/mysql2';
+import { drizzle } from "drizzle-orm/mysql2";
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+import type { Pool } from 'mysql2';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
-  let dataSource: DataSource;
+  let database: MySql2Database;
+  let pool: Pool;
   let postService: PostService;
 
   beforeEach(async () => {
@@ -20,21 +23,10 @@ describe('PostService', () => {
       .withUserPassword('test_pw')
       .start();
 
-    dataSource = new DataSource({
-      type: "mariadb",
-      host: container.getHost(),
-      port: container.getPort(),
-      username: container.getUsername(),
-      password: container.getUserPassword(),
-      database: container.getDatabase(),
-      synchronize: true,
-      logging: false,
-      entities: [Post],
-      migrations: [],
-      subscribers: [],
-    });
-
-    await dataSource.initialize();
+    const db = drizzle(container.getConnectionUri());
+    pool = db.$client;
+    database = db;
+    await migrate(db, { migrationsFolder: './drizzle' });
 
     postService = new PostService(
       {
@@ -47,17 +39,18 @@ describe('PostService', () => {
         dbName: container.getDatabase(),
         allowedTimeSkewMillis: 5 * 60 * 1000,
       },
-      dataSource.getRepository('Post')
+      database
     );
   }, 60_000);
 
   afterEach(async () => {
-    if (dataSource && dataSource.isInitialized) {
-      await dataSource.destroy();
-    }
-    if (container) {
-      await container.stop();
-    }
+    await new Promise<void>((resolve, reject) => {
+      pool.end(err => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    await container.stop();
   });
 
   it('should insert a post signal successfully', async () => {
