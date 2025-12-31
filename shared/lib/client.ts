@@ -149,9 +149,13 @@ export default class Client {
   }
 
   async deletePost(postId: string): Promise<void> {
+    if (!this._keyPair) {
+      throw new Error("Key pair does not exist");
+    }
+
     const payload: DeletePostSignalPayload = [
       this._version,
-      [this._host, postId, Date.now(), "delete_post"],
+      [this._host, Base37.fromUint8Array(this._keyPair.publicKey), Date.now(), "delete_post"],
       [
         postId
       ],
