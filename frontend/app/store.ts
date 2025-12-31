@@ -17,6 +17,7 @@ export class EphemeraStore extends Store {
   private _kPrivateKeyStorageKey = 'ephemera_privateKey';
   private _logEntries: LogEntry[] = [];
   private _nextLogId: number = 0;
+  private _kMaxLogEntries: number = 8;
 
   constructor() {
     super();
@@ -39,6 +40,10 @@ export class EphemeraStore extends Store {
         id: this._nextLogId++,
       }
     ];
+
+    if (this._logEntries.length > this._kMaxLogEntries) {
+      this._logEntries = this._logEntries.slice(-this._kMaxLogEntries);
+    }
 
     this.notifyListeners();
   }
