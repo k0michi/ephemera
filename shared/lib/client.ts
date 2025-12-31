@@ -161,7 +161,7 @@ export default class Client {
       ],
       []
     ];
-    const signed: DeletePostSignal = await SignalCrypto.sign(payload, this._keyPair!.privateKey) as DeletePostSignal;
+    const signed: DeletePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
 
     const response = await Fetcher.delete(`/api/v1/post`, {
       post: signed
