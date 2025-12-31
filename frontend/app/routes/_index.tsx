@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import Composer from "components/composer";
-import type { PostSignal } from "@ephemera/shared/api/api";
+import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import FileHelper from "~/file_helper";
 import Timeline from "components/timeline";
 import { exportedKeyPairSchema } from "@ephemera/shared/api/api_schema";

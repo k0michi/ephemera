@@ -55,7 +55,7 @@ export type CreatePostSignalPayload = [
   CreatePostSignalFooter // footer
 ];
 
-export type PostSignal = [
+export type CreatePostSignal = [
   CreatePostSignalPayload, // payload
   string // signature
 ];
@@ -81,7 +81,7 @@ export interface ApiResponse {
 
 // POST /api/v1/post
 export interface PostRequest extends ApiRequest {
-  post: PostSignal;
+  post: CreatePostSignal;
 }
 
 export interface PostResponse extends ApiResponse {
@@ -94,6 +94,6 @@ export interface GetPostsRequest extends ApiRequest {
 }
 
 export interface GetPostsResponse extends ApiResponse {
-  posts: PostSignal[];
+  posts: CreatePostSignal[];
   nextCursor: string | null;
 }

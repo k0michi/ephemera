@@ -1,4 +1,4 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, PostSignal, Version } from "../api/api.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version } from "../api/api.js";
 import { apiResponseSchema, getPostsResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
@@ -110,7 +110,7 @@ export default class Client {
       post,
       []
     ] satisfies CreatePostSignalPayload;
-    const signed: PostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
+    const signed: CreatePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
 
     const response = await Fetcher.post(`/api/v1/post`, {
       post: signed

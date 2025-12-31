@@ -1,5 +1,5 @@
 
-import type { GetPostsRequest, PostSignal } from "@ephemera/shared/api/api";
+import type { GetPostsRequest, CreatePostSignal } from "@ephemera/shared/api/api";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader } from "lib/store";
 import React from "react";
@@ -10,7 +10,7 @@ export interface TimelineProps {
 }
 
 export default function Timeline({ }: TimelineProps) {
-  const [posts, setPosts] = React.useState<PostSignal[]>([]);
+  const [posts, setPosts] = React.useState<CreatePostSignal[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
   const store = useReader(EphemeraStoreContext);

@@ -2,7 +2,7 @@ import { createStoreContext, Store } from "../lib/store.js";
 
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
-import type { ExportedKeyPair, PostSignal } from "@ephemera/shared/api/api";
+import type { ExportedKeyPair, CreatePostSignal } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
 
 export class EphemeraStore extends Store {
