@@ -6,7 +6,7 @@ CREATE TABLE `posts` (
 	`content` text,
 	`footer` json,
 	`signature` char(128),
-	`insertedAt` timestamp(3) DEFAULT (now()),
+	`insertedAt` timestamp(3) DEFAULT CURRENT_TIMESTAMP(3),
 	`createdAt` bigint,
 	`seq` int AUTO_INCREMENT,
 	CONSTRAINT `posts_id` PRIMARY KEY(`id`),

@@ -38,7 +38,7 @@ export const posts = mysqlTable('posts', {
    */
   signature: char('signature', { length: 128 }),
 
-  insertedAt: timestamp('insertedAt', { fsp: 3 }).defaultNow(),
+  insertedAt: timestamp('insertedAt', { fsp: 3 }).default(sql`CURRENT_TIMESTAMP(3)`),
 
   createdAt: bigint('createdAt', { mode: 'number' }),
 

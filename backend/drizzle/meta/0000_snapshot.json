@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "5c245696-e8e5-4548-aae2-44175634af7b",
+  "id": "d0422a92-7a3d-4139-833d-0faa204373b2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "posts": {
@@ -62,7 +62,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(now())"
+          "default": "CURRENT_TIMESTAMP(3)"
         },
         "createdAt": {
           "name": "createdAt",
