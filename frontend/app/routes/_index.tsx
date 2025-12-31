@@ -3,12 +3,13 @@ import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_index";
 import { useEffect, useMemo, useState } from "react";
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { Button, Container, Row, Col, Alert } from 'react-bootstrap';
+import { Button, Container, Row, Col, Toast, ToastContainer } from 'react-bootstrap';
 import Composer from "components/composer";
-import type { PostSignal } from "@ephemera/shared/api/api";
+import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import FileHelper from "~/file_helper";
 import Timeline from "components/timeline";
 import { exportedKeyPairSchema } from "@ephemera/shared/api/api_schema";
+import Notifier from "components/notifier";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -17,12 +18,9 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
-export type MessageState = { type: "success" | "error"; text: string } | null;
-
 export default function Home() {
   const publicKey = useSelector(EphemeraStoreContext, (store) => store.keyPair?.publicKey);
   const store = useReader(EphemeraStoreContext);
-  const [message, setMessage] = useState<MessageState>(null);
 
   useEffect(() => {
     store.prepareKeyPair();
@@ -34,14 +32,9 @@ export default function Home() {
   const handleSubmit = async (value: string) => {
     try {
       await store.sendPost(value);
-      setMessage({ type: "success", text: "Post submitted successfully!" });
-      setTimeout(() => setMessage(null), 2000);
+      store.addLog("success", "Post submitted successfully!");
     } catch (error) {
-      setMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Failed to submit post."
-      });
-      setTimeout(() => setMessage(null), 3000);
+      store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
     }
   };
 
@@ -70,45 +63,34 @@ export default function Home() {
       }
 
       store.importKeyPair(parsed);
-      setMessage({ type: "success", text: "Key pair imported successfully!" });
-      setTimeout(() => setMessage(null), 2000);
+      store.addLog("success", "Key pair imported successfully!");
     } catch (error) {
-      setMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Failed to import key pair."
-      });
-      setTimeout(() => setMessage(null), 3000);
+      store.addLog("danger", error instanceof Error ? error.message : "Failed to import key pair.");
     }
   };
 
   return (
-    <Container className="mt-5">
-      <Row className="justify-content-md-center">
-        <Col md={8} lg={6}>
-          {message && (
-            <Alert
-              variant={message.type === "success" ? "success" : "danger"}
-              onClose={() => setMessage(null)}
-              dismissible
-            >
-              {message.text}
-            </Alert>
-          )}
-          <Composer onSubmit={handleSubmit} />
-          <hr className="my-4" />
-          <div>Your public key: {publicKeyMem}</div>
-          <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
-            Revoke Key Pair
-          </Button>
-          <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
-            Export Key Pair
-          </Button>
-          <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
-            Import Key Pair
-          </Button>
-          <Timeline />
-        </Col >
-      </Row >
-    </Container >
+    <>
+      <Container className="mt-5">
+        <Row className="justify-content-md-center">
+          <Col md={8} lg={6}>
+            <Composer onSubmit={handleSubmit} />
+            <hr className="my-4" />
+            <div>Your public key: {publicKeyMem}</div>
+            <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
+              Revoke Key Pair
+            </Button>
+            <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
+              Export Key Pair
+            </Button>
+            <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
+              Import Key Pair
+            </Button>
+            <Timeline />
+          </Col >
+        </Row >
+      </Container>
+      <Notifier />
+    </>
   );
 }

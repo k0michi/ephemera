@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createRequest, createResponse } from 'node-mocks-http';
 import ApiV1Controller from '../app/api_v1_controller.js';
-import type { CreatePostSignalPayload, PostRequest, PostSignal } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignalPayload, PostRequest, CreatePostSignal } from '@ephemera/shared/api/api.js';
 import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
@@ -26,7 +26,7 @@ class MockPostService extends PostServiceBase {
     super(config);
   }
 
-  async createImpl(signal: PostSignal): Promise<void> {
+  async createImpl(signal: CreatePostSignal): Promise<void> {
     return;
   }
 

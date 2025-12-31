@@ -1,4 +1,4 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, PostSignal, Version } from "../api/api.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload } from "../api/api.js";
 import { apiResponseSchema, getPostsResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
@@ -64,6 +64,17 @@ export class Fetcher {
       ...options,
     });
   }
+
+  static async delete<T extends ApiRequest>(path: string, body: T, options: RequestInit = {}): Promise<ApiResponse> {
+    return this.fetch(path, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      ...options,
+    });
+  }
 }
 
 export default class Client {
@@ -110,7 +121,7 @@ export default class Client {
       post,
       []
     ] satisfies CreatePostSignalPayload;
-    const signed: PostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
+    const signed: CreatePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
 
     const response = await Fetcher.post(`/api/v1/post`, {
       post: signed
@@ -135,5 +146,25 @@ export default class Client {
     }
 
     return parsed as GetPostsResponse;
+  }
+
+  async deletePost(postId: string): Promise<void> {
+    if (!this._keyPair) {
+      throw new Error("Key pair does not exist");
+    }
+
+    const payload: DeletePostSignalPayload = [
+      this._version,
+      [this._host, Base37.fromUint8Array(this._keyPair.publicKey), Date.now(), "delete_post"],
+      [
+        postId
+      ],
+      []
+    ];
+    const signed: DeletePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
+
+    const response = await Fetcher.delete(`/api/v1/post`, {
+      post: signed
+    } satisfies DeletePostRequest);
   }
 }

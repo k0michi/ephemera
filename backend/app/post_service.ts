@@ -1,4 +1,4 @@
-import type { CreatePostSignalFooter, PostSignal, Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignalFooter, CreatePostSignal, Version } from "@ephemera/shared/api/api.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import type Config from "./config.js";
@@ -10,9 +10,9 @@ import { posts } from "./db/schema.js";
 import { desc, lt } from "drizzle-orm";
 
 export interface IPostService {
-  create(signal: PostSignal): Promise<void>;
+  create(signal: CreatePostSignal): Promise<void>;
 
-  validate(signal: PostSignal): Promise<[boolean, string?]>;
+  validate(signal: CreatePostSignal): Promise<[boolean, string?]>;
 
   find(options: PostFindOptions): Promise<PostFindResult>;
 }
@@ -23,7 +23,7 @@ export interface PostFindOptions {
 }
 
 export interface PostFindResult {
-  posts: PostSignal[];
+  posts: CreatePostSignal[];
   nextCursor: string | null;
 }
 
@@ -34,7 +34,7 @@ export abstract class PostServiceBase implements IPostService {
     this.config = config;
   }
 
-  async create(signal: PostSignal): Promise<void> {
+  async create(signal: CreatePostSignal): Promise<void> {
     const validation = await this.validate(signal);
 
     if (!validation[0]) {
@@ -44,9 +44,9 @@ export abstract class PostServiceBase implements IPostService {
     await this.createImpl(signal);
   }
 
-  abstract createImpl(signal: PostSignal): Promise<void>;
+  abstract createImpl(signal: CreatePostSignal): Promise<void>;
 
-  async validate(signal: PostSignal): Promise<[boolean, string?]> {
+  async validate(signal: CreatePostSignal): Promise<[boolean, string?]> {
     const verified = await SignalCrypto.verify(signal);
 
     if (!verified) {
@@ -78,7 +78,7 @@ export default class PostService extends PostServiceBase {
     this.database = database;
   }
 
-  async createImpl(signal: PostSignal) {
+  async createImpl(signal: CreatePostSignal) {
     const digest = await SignalCrypto.digest(signal[0]);
 
     try {
@@ -143,7 +143,7 @@ export default class PostService extends PostServiceBase {
           NullableHelper.unwrap(createPostSignalFooterSchema.parse(JSON.parse(post.footer as string))),
         ],
         NullableHelper.unwrap(post.signature),
-      ] satisfies PostSignal;
+      ] satisfies CreatePostSignal;
     });
 
     let nextCursor: string | null = null;

@@ -61,6 +61,10 @@ class Ephemera extends Application {
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService));
 
+    this.app.use((req: express.Request, res: express.Response) => {
+      res.status(404).json({ error: 'Not Found' } satisfies ApiResponse);
+    });
+
     this.app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (err instanceof ApiError) {
         res.status(err.statusCode).json({ error: err.message } satisfies ApiResponse);

@@ -35,7 +35,9 @@ export type Signal = [
   string // signature
 ];
 
+//
 // create_post signal
+//
 
 export type CreatePostSignalHeader = [
   Host, // host
@@ -55,8 +57,37 @@ export type CreatePostSignalPayload = [
   CreatePostSignalFooter // footer
 ];
 
-export type PostSignal = [
+export type CreatePostSignal = [
   CreatePostSignalPayload, // payload
+  string // signature
+];
+
+//
+// delete_post signal
+//
+
+export type DeletePostSignalHeader = [
+  Host, // host
+  Author, // author
+  Timestamp, // created_at
+  'delete_post' // type
+];
+
+export type DeletePostSignalBody = [
+  Hash // post_id
+];
+
+export type DeletePostSignalFooter = [];
+
+export type DeletePostSignalPayload = [
+  Version, // version
+  DeletePostSignalHeader, // header
+  DeletePostSignalBody, // body
+  DeletePostSignalFooter // footer
+];
+
+export type DeletePostSignal = [
+  DeletePostSignalPayload, // payload
   string // signature
 ];
 
@@ -81,7 +112,7 @@ export interface ApiResponse {
 
 // POST /api/v1/post
 export interface PostRequest extends ApiRequest {
-  post: PostSignal;
+  post: CreatePostSignal;
 }
 
 export interface PostResponse extends ApiResponse {
@@ -94,6 +125,14 @@ export interface GetPostsRequest extends ApiRequest {
 }
 
 export interface GetPostsResponse extends ApiResponse {
-  posts: PostSignal[];
+  posts: CreatePostSignal[];
   nextCursor: string | null;
+}
+
+// DELETE /api/v1/post
+export interface DeletePostRequest extends ApiRequest {
+  post: DeletePostSignal;
+}
+
+export interface DeletePostResponse extends ApiResponse {
 }

@@ -1,22 +1,26 @@
 
-import type { GetPostsRequest, PostSignal } from "@ephemera/shared/api/api";
+import type { GetPostsRequest, CreatePostSignal } from "@ephemera/shared/api/api";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader } from "lib/store";
 import React from "react";
-import { Card, ListGroup, Container, Row, Col } from "react-bootstrap";
+import { Card, ListGroup, Container, Row, Col, Dropdown } from "react-bootstrap";
 import { EphemeraStoreContext } from "~/store";
+import { BsThreeDots } from "react-icons/bs";
+import Hex from "@ephemera/shared/lib/hex";
+import Base37 from "@ephemera/shared/lib/base37";
 
 export interface TimelineProps {
 }
 
 export default function Timeline({ }: TimelineProps) {
-  const [posts, setPosts] = React.useState<PostSignal[]>([]);
+  const [posts, setPosts] = React.useState<CreatePostSignal[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
   const store = useReader(EphemeraStoreContext);
   const [cursor, setCursor] = React.useState<string | null>(null);
   const bottomRef = React.useRef<HTMLDivElement | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
 
   const fetchPosts = React.useCallback(async () => {
     if (loading || !hasMore) {
@@ -60,39 +64,66 @@ export default function Timeline({ }: TimelineProps) {
     };
   }, [fetchPosts, hasMore]);
 
+  const handleDeletePost = async (post: CreatePostSignal) => {
+    try {
+      const digest = await SignalCrypto.digest(post[0]);
+      await store.getClient().deletePost(Hex.fromUint8Array(digest));
+      setPosts((prevPosts) => prevPosts.filter((p) => p !== post));
+    } catch (e) {
+      store.addLog("danger", e instanceof Error ? e.message : "Failed to delete post.");
+    }
+  };
+
   return (
     <Container className="mt-4">
       <Row className="justify-content-center">
         <ListGroup>
-          {posts.map((post) => (
-            // Assumes signatures are unique.
-            <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
-              <Card>
-                <Card.Body>
-                  <Card.Title>
-                    <span
-                      className="text-secondary fs-6"
-                      style={{
-                        fontFamily: 'monospace',
-                        display: 'inline-block',
-                        maxWidth: '100%',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        verticalAlign: 'bottom'
-                      }}
-                    >
-                      @{post[0][1][1]}
-                    </span>
-                  </Card.Title>
-                  <Card.Text style={{ whiteSpace: 'pre-line' }}>{post[0][2]}</Card.Text>
-                </Card.Body>
-                <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
-                  {new Date(post[0][1][2]).toLocaleString()}
-                </Card.Footer>
-              </Card>
-            </ListGroup.Item>
-          ))}
+          {posts.map((post) => {
+            const postPublicKey = post[0][1][1];
+            const isMine = myPublicKeyBase37 === postPublicKey;
+            return (
+              <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
+                <Card>
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-start">
+                      <Card.Title className="mb-0">
+                        <span
+                          className="text-secondary fs-6"
+                          style={{
+                            fontFamily: 'monospace',
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            verticalAlign: 'bottom'
+                          }}
+                        >
+                          @{post[0][1][1]}
+                        </span>
+                      </Card.Title>
+                      <Dropdown align="end">
+                        <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
+                          <BsThreeDots className="text-secondary" />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          {isMine && (
+                            <Dropdown.Item onClick={() => handleDeletePost(post)}>
+                              Delete post
+                            </Dropdown.Item>
+                          )}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
+                    <Card.Text style={{ whiteSpace: 'pre-line' }}>{post[0][2]}</Card.Text>
+                  </Card.Body>
+                  <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
+                    {new Date(post[0][1][2]).toLocaleString()}
+                  </Card.Footer>
+                </Card>
+              </ListGroup.Item>
+            );
+          })}
           {
             <div ref={bottomRef} style={{ height: 1, display: hasMore ? 'block' : 'none' }}>
               {error ? (
