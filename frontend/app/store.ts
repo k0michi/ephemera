@@ -5,10 +5,18 @@ import Client from '@ephemera/shared/lib/client.js';
 import type { ExportedKeyPair, CreatePostSignal } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
 
+export interface LogEntry {
+  type: 'success' | 'danger' | 'warning' | 'info';
+  message: string;
+  id: number;
+}
+
 export class EphemeraStore extends Store {
   private _keyPair: KeyPair | null = null;
   private _kPublicKeyStorageKey = 'ephemera_publicKey';
   private _kPrivateKeyStorageKey = 'ephemera_privateKey';
+  private _logEntries: LogEntry[] = [];
+  private _nextLogId: number = 0;
 
   constructor() {
     super();
@@ -16,6 +24,29 @@ export class EphemeraStore extends Store {
 
   get keyPair(): KeyPair | null {
     return this._keyPair;
+  }
+
+  get logEntries(): LogEntry[] {
+    return this._logEntries;
+  }
+
+  addLog(type: 'success' | 'danger' | 'warning' | 'info', message: string) {
+    this._logEntries = [
+      ...this._logEntries,
+      {
+        type,
+        message,
+        id: this._nextLogId++,
+      }
+    ];
+
+    this.notifyListeners();
+  }
+
+  removeLog(id: number) {
+    this._logEntries = this._logEntries.filter((entry) => entry.id !== id);
+
+    this.notifyListeners();
   }
 
   getLocalStorage() {
