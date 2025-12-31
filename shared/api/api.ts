@@ -35,7 +35,9 @@ export type Signal = [
   string // signature
 ];
 
+//
 // create_post signal
+//
 
 export type CreatePostSignalHeader = [
   Host, // host
@@ -57,6 +59,35 @@ export type CreatePostSignalPayload = [
 
 export type CreatePostSignal = [
   CreatePostSignalPayload, // payload
+  string // signature
+];
+
+//
+// delete_post signal
+//
+
+export type DeletePostSignalHeader = [
+  Host, // host
+  Author, // author
+  Timestamp, // created_at
+  'delete_post' // type
+];
+
+export type DeletePostSignalBody = [
+  Hash // post_id
+];
+
+export type DeletePostSignalFooter = [];
+
+export type DeletePostSignalPayload = [
+  Version, // version
+  DeletePostSignalHeader, // header
+  DeletePostSignalBody, // body
+  DeletePostSignalFooter // footer
+];
+
+export type DeletePostSignal = [
+  DeletePostSignalPayload, // payload
   string // signature
 ];
 
