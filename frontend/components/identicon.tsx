@@ -207,7 +207,7 @@ export default function Identicon({
   };
 
   if (!imageUrl) {
-    return <div aria-hidden="true" style={imageStyle} />;
+    return <div aria-hidden="true" className={className} style={imageStyle} />;
   }
 
   return (
@@ -217,8 +217,6 @@ export default function Identicon({
       aria-hidden="true"
       className={className}
       style={imageStyle}
-      width={GRID_WIDTH * scale}
-      height={GRID_HEIGHT * scale}
     />
   );
 };
