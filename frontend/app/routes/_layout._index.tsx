@@ -1,16 +1,13 @@
 import { useReader, useSelector } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
-import type { Route } from "./+types/_index";
-import { useEffect, useMemo, useState } from "react";
+import type { Route } from "./+types/_layout._index";
+import { useEffect, useMemo } from "react";
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { Button, Container, Row, Col, Toast, ToastContainer } from 'react-bootstrap';
+import { Button, } from 'react-bootstrap';
 import Composer from "components/composer";
-import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import FileHelper from "~/file_helper";
 import Timeline from "components/timeline";
 import { exportedKeyPairSchema } from "@ephemera/shared/api/api_schema";
-import Notifier from "components/notifier";
-import { Link } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -72,37 +69,19 @@ export default function Home() {
 
   return (
     <>
-      <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
-        <Container>
-          <Row className="align-items-center" style={{ height: "56px" }}>
-            <Col>
-              <Link to="/" style={{ textDecoration: "none" }}>
-                <span style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#8939cb" }}>Ephemera</span>
-              </Link>
-            </Col>
-          </Row>
-        </Container>
-      </nav>
-      <Container style={{ paddingTop: "72px" }}>
-        <Row className="justify-content-md-center">
-          <Col md={8} lg={6}>
-            <Composer onSubmit={handleSubmit} />
-            <hr className="my-4" />
-            <div>Your public key: {publicKeyMem}</div>
-            <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
-              Revoke Key Pair
-            </Button>
-            <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
-              Export Key Pair
-            </Button>
-            <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
-              Import Key Pair
-            </Button>
-            <Timeline />
-          </Col>
-        </Row>
-      </Container>
-      <Notifier />
+      <Composer onSubmit={handleSubmit} />
+      <hr className="my-4" />
+      <div>Your public key: {publicKeyMem}</div>
+      <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
+        Revoke Key Pair
+      </Button>
+      <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
+        Export Key Pair
+      </Button>
+      <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
+        Import Key Pair
+      </Button>
+      <Timeline />
     </>
   );
 }
