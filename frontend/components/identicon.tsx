@@ -148,6 +148,7 @@ export function Identicon({
   useEffect(() => {
     const hex = Hex.fromUint8Array(data);
     const cached = cache.get(hex);
+    let ignore = false;
 
     if (cached !== undefined) {
       cache.set(hex, { url: cached.url, count: cached.count + 1 });
@@ -156,8 +157,15 @@ export function Identicon({
       const generateImage = async () => {
         try {
           const blob = await render(data);
+
+          // If the component was unmounted while rendering
+          if (ignore) {
+            return;
+          }
+
           const cached = cache.get(hex);
 
+          // There is another instance that created the same identicon while we were rendering
           if (cached !== undefined) {
             cache.set(hex, { url: cached.url, count: cached.count + 1 });
             setImageUrl(cached.url);
@@ -176,6 +184,9 @@ export function Identicon({
     }
 
     return () => {
+      // Prevent increasing reference count
+      ignore = true;
+
       const cached = cache.get(hex);
 
       if (cached !== undefined) {
