@@ -136,7 +136,7 @@ type CacheEntry = {
 
 const cache = new Map<string, CacheEntry>();
 
-export function Identicon({
+export default function Identicon({
   data,
   className,
   style,
@@ -222,5 +222,3 @@ export function Identicon({
     />
   );
 };
-
-export default React.memo(Identicon);
