@@ -86,7 +86,7 @@ describe('PostService', () => {
         await postService.create(signal);
       }
 
-      let result = await postService.find({ limit: 3, cursor: null });
+      let result = await postService.find({ limit: 3, cursor: null, author: null });
       expect(result.posts.length).toBe(3);
       expect(result.nextCursor).not.toBeNull();
 
@@ -94,7 +94,7 @@ describe('PostService', () => {
       expect(result?.posts?.[1]?.[0][2]).toBe('Post number 3');
       expect(result?.posts?.[2]?.[0][2]).toBe('Post number 2');
 
-      result = await postService.find({ limit: 3, cursor: result.nextCursor });
+      result = await postService.find({ limit: 3, cursor: result.nextCursor, author: null });
       expect(result.posts.length).toBe(2);
       expect(result.nextCursor).toBeNull();
 
@@ -113,7 +113,7 @@ describe('PostService', () => {
         await postService.create(signal);
       }
 
-      let result = await postService.find({ limit: 1, cursor: null });
+      let result = await postService.find({ limit: 1, cursor: null, author: null });
       expect(result.posts.length).toBe(1);
       expect(result.nextCursor).toBeNull();
 
@@ -121,13 +121,13 @@ describe('PostService', () => {
     });
 
     it('should return empty result when no posts exist', async () => {
-      const result = await postService.find({ limit: 3, cursor: null });
+      const result = await postService.find({ limit: 3, cursor: null, author: null });
       expect(result.posts.length).toBe(0);
       expect(result.nextCursor).toBeNull();
     });
 
     it('should throw error for invalid limit', async () => {
-      await expect(postService.find({ limit: 0, cursor: null })).rejects.toThrowError();
+      await expect(postService.find({ limit: 0, cursor: null, author: null })).rejects.toThrowError();
     });
   });
 });
