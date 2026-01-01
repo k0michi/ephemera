@@ -7,13 +7,11 @@ export interface IdenticonProps {
   data: Uint8Array;
   className?: string;
   style?: React.CSSProperties;
-  backgroundColor?: string;
 }
 
 const kGridWidth = 8;
 const kGridHeight = 8;
 const kScale = 1;
-const kDefaultBackground = '#101010';
 
 type GridCell = number[];
 
@@ -52,8 +50,6 @@ function computeDrunkenBishop(data: Uint8Array): GridCell[] {
 };
 
 async function render(data: Uint8Array): Promise<Blob> {
-  const backgroundColor = kDefaultBackground;
-
   const grid = computeDrunkenBishop(data);
 
   let canvas: OffscreenCanvas | HTMLCanvasElement;
@@ -78,8 +74,6 @@ async function render(data: Uint8Array): Promise<Blob> {
 
   const startHue = data.length >= 2 ? ArrayHelper.strictGet(data, 0) % 360 : 0;
   const endHue = data.length >= 2 ? ArrayHelper.strictGet(data, 1) % 360 : 120;
-  ctx.fillStyle = backgroundColor;
-  ctx.fillRect(0, 0, width, height);
   const maxOffset = data.length * 4;
 
   for (let y = 0; y < kGridHeight; y++) {
@@ -139,7 +133,6 @@ export default function Identicon({
   data,
   className,
   style,
-  backgroundColor = kDefaultBackground,
 }: IdenticonProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -196,7 +189,7 @@ export default function Identicon({
         }
       }
     };
-  }, [data, backgroundColor]);
+  }, [data]);
 
   const imageStyle: React.CSSProperties = {
     imageRendering: 'pixelated',
