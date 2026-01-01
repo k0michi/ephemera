@@ -135,9 +135,9 @@ export default function Identicon({
   style,
 }: IdenticonProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const hex = Hex.fromUint8Array(data);
 
   useEffect(() => {
-    const hex = Hex.fromUint8Array(data);
     const cached = cache.get(hex);
     let ignore = false;
 
@@ -189,7 +189,7 @@ export default function Identicon({
         }
       }
     };
-  }, [data]);
+  }, [hex]);
 
   const imageStyle: React.CSSProperties = {
     imageRendering: 'pixelated',
