@@ -126,7 +126,7 @@ export default function Timeline({ }: TimelineProps) {
                         </Dropdown.Menu>
                       </Dropdown>
                     </div>
-                    <Card.Text style={{ whiteSpace: 'pre-line' }}>{post[0][2]}</Card.Text>
+                    <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
                   </Card.Body>
                   <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
                     {new Date(post[0][1][2]).toLocaleString()}
