@@ -12,6 +12,7 @@ export interface IdenticonProps {
 
 const GRID_WIDTH = 8;
 const GRID_HEIGHT = 8;
+const SCALE = 1;
 
 const DEFAULT_BG = '#101010';
 
@@ -52,7 +53,6 @@ function computeDrunkenBishop(data: Uint8Array): GridCell[] {
 };
 
 async function render(data: Uint8Array): Promise<Blob> {
-  const scale = 1;
   const backgroundColor = DEFAULT_BG;
 
   const grid = computeDrunkenBishop(data);
@@ -60,8 +60,8 @@ async function render(data: Uint8Array): Promise<Blob> {
   let canvas: OffscreenCanvas | HTMLCanvasElement;
   let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
 
-  const width = GRID_WIDTH * scale;
-  const height = GRID_HEIGHT * scale;
+  const width = GRID_WIDTH * SCALE;
+  const height = GRID_HEIGHT * SCALE;
 
   if (typeof OffscreenCanvas !== 'undefined') {
     canvas = new OffscreenCanvas(width, height);
@@ -103,11 +103,11 @@ async function render(data: Uint8Array): Promise<Blob> {
         const currentHue = lerpHue(startHue, endHue, normalizedTime);
 
         ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
-        ctx.fillRect(x * scale, y * scale, scale, scale);
+        ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
       } else {
         const midHue = lerpHue(startHue, endHue, 0.5);
         ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
-        ctx.fillRect(x * scale, y * scale, scale, scale);
+        ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
       }
     }
   }
@@ -142,7 +142,6 @@ export default function Identicon({
   style,
   backgroundColor = DEFAULT_BG,
 }: IdenticonProps) {
-  const scale = 1;
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -198,7 +197,7 @@ export default function Identicon({
         }
       }
     };
-  }, [data, scale, backgroundColor]);
+  }, [data, backgroundColor]);
 
   const imageStyle: React.CSSProperties = {
     imageRendering: 'pixelated',
