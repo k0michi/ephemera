@@ -2,7 +2,7 @@ import ArrayHelper from '@ephemera/shared/lib/array_helper';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import React, { useEffect, useState } from 'react';
 
-interface IdenticonProps {
+export interface IdenticonProps {
   data: Uint8Array;
   scale?: number;
   className?: string;
