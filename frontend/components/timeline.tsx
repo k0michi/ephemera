@@ -9,11 +9,13 @@ import { BsThreeDots } from "react-icons/bs";
 import Hex from "@ephemera/shared/lib/hex";
 import Base37 from "@ephemera/shared/lib/base37";
 import Identicon from "./identicon";
+import { Link } from "react-router";
 
 export interface TimelineProps {
+  author?: string | undefined;
 }
 
-export default function Timeline({ }: TimelineProps) {
+export default function Timeline({ author }: TimelineProps) {
   const [posts, setPosts] = React.useState<CreatePostSignal[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
@@ -30,7 +32,7 @@ export default function Timeline({ }: TimelineProps) {
     setLoading(true);
 
     try {
-      const response = await store.getClient().fetchPosts({ cursor });
+      const response = await store.getClient().fetchPosts({ cursor, author });
       setPosts((prevPosts) => [...prevPosts, ...response.posts]);
       setCursor(response.nextCursor);
       setHasMore(!!response.nextCursor);
@@ -97,20 +99,22 @@ export default function Timeline({ }: TimelineProps) {
                             borderRadius: 4,
                             verticalAlign: 'middle',
                           }} />
-                          <span
-                            className="text-secondary fs-6"
-                            style={{
-                              fontFamily: 'monospace',
-                              display: 'inline-block',
-                              maxWidth: '100%',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              verticalAlign: 'bottom'
-                            }}
-                          >
-                            @{post[0][1][1]}
-                          </span>
+                          <Link to={`/${postPublicKey}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <span
+                              className="text-secondary fs-6"
+                              style={{
+                                fontFamily: 'monospace',
+                                display: 'inline-block',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                verticalAlign: 'bottom'
+                              }}
+                            >
+                              @{post[0][1][1]}
+                            </span>
+                          </Link>
                         </span>
                       </Card.Title>
                       <Dropdown align="end">

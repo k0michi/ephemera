@@ -67,7 +67,8 @@ export const postResponseSchema = apiResponseSchema;
 
 export const getPostsRequestSchema = apiRequestSchema.extend({
     cursor: z.string().optional(),
-    limit: z.string().optional()
+    limit: z.string().optional(),
+    author: z.string().optional()
 });
 
 export const getPostsResponseSchema = apiResponseSchema.extend({

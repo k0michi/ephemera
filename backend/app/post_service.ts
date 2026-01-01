@@ -22,6 +22,7 @@ export interface IPostService {
 export interface PostFindOptions {
   limit: number;
   cursor: string | null;
+  author: string | null;
 }
 
 export interface PostFindResult {
@@ -128,8 +129,12 @@ export default class PostService extends PostServiceBase {
     const kMaxLimit = 128;
     options.limit = Math.min(options.limit, kMaxLimit);
 
+    const cond = options.author !== null
+      ? and(lt(posts.seq, cursorNum), eq(posts.author, options.author))
+      : lt(posts.seq, cursorNum);
+
     const dbSignals = await this.database.select().from(posts)
-      .where(lt(posts.seq, cursorNum))
+      .where(cond)
       .orderBy(desc(posts.seq))
       .limit(options.limit + 1);
 
