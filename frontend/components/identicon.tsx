@@ -2,7 +2,7 @@ import ArrayHelper from '@ephemera/shared/lib/array_helper';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import React, { useEffect, useState } from 'react';
 
-interface DrunkenBishopIdenticonProps {
+interface IdenticonProps {
   data: Uint8Array;
   scale?: number;
   className?: string;
@@ -52,13 +52,13 @@ function computeDrunkenBishop(data: Uint8Array): GridCell[] {
   return grid;
 };
 
-export const DrunkenBishopIdenticon: React.FC<DrunkenBishopIdenticonProps> = ({
+export function Identicon({
   data,
   scale = 10,
   className,
   style,
   backgroundColor = DEFAULT_BG,
-}) => {
+}: IdenticonProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -168,4 +168,4 @@ export const DrunkenBishopIdenticon: React.FC<DrunkenBishopIdenticonProps> = ({
   );
 };
 
-export default React.memo(DrunkenBishopIdenticon);
+export default React.memo(Identicon);
