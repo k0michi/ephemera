@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 
 export interface IdenticonProps {
   data: Uint8Array;
-  scale?: number;
   className?: string;
   style?: React.CSSProperties;
   backgroundColor?: string;
@@ -53,11 +52,11 @@ function computeDrunkenBishop(data: Uint8Array): GridCell[] {
 
 export function Identicon({
   data,
-  scale = 10,
   className,
   style,
   backgroundColor = DEFAULT_BG,
 }: IdenticonProps) {
+  const scale = 1;
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
