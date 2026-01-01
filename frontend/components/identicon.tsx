@@ -146,7 +146,6 @@ export function Identicon({
 
   const imageStyle: React.CSSProperties = {
     imageRendering: 'pixelated',
-    // msInterpolationMode: 'nearest-neighbor',
     display: 'block',
     ...style,
   };
