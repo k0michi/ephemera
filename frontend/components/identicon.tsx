@@ -207,7 +207,7 @@ export function Identicon({
   };
 
   if (!imageUrl) {
-    return <div aria-hidden="true" style={{ width: GRID_WIDTH * scale, height: GRID_HEIGHT * scale, background: backgroundColor }} />;
+    return <div aria-hidden="true" style={imageStyle} />;
   }
 
   return (
