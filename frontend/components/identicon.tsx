@@ -1,4 +1,5 @@
 import ArrayHelper from '@ephemera/shared/lib/array_helper';
+import Hex from '@ephemera/shared/lib/hex';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import React, { useEffect, useState } from 'react';
 
@@ -50,6 +51,91 @@ function computeDrunkenBishop(data: Uint8Array): GridCell[] {
   return grid;
 };
 
+async function render(data: Uint8Array): Promise<Blob> {
+  const scale = 1;
+  const backgroundColor = DEFAULT_BG;
+
+  const grid = computeDrunkenBishop(data);
+
+  let canvas: OffscreenCanvas | HTMLCanvasElement;
+  let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
+
+  const width = GRID_WIDTH * scale;
+  const height = GRID_HEIGHT * scale;
+
+  if (typeof OffscreenCanvas !== 'undefined') {
+    canvas = new OffscreenCanvas(width, height);
+    ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+  } else {
+    canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    ctx = canvas.getContext('2d');
+  }
+
+  if (!ctx) {
+    throw new Error('Failed to get canvas context');
+  }
+
+  const startHue = data.length >= 2 ? ArrayHelper.strictGet(data, 0) % 360 : 0;
+  const endHue = data.length >= 2 ? ArrayHelper.strictGet(data, 1) % 360 : 120;
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(0, 0, width, height);
+  const maxOffset = data.length * 4;
+
+  for (let y = 0; y < GRID_HEIGHT; y++) {
+    for (let x = 0; x < GRID_WIDTH; x++) {
+      const cell = ArrayHelper.strictGet(grid, y * GRID_WIDTH + x);
+
+      if (cell.length > 0) {
+        const normalizedCount = Math.min(cell.length, 8) / 8;
+        // const lightness = 0.35 + (normalizedCount * 0.60);
+        const lightness = 0.15 + (normalizedCount * 0.80);
+
+        // const chroma = 0.12 + (normalizedCount * 0.1);
+        const chroma = Math.pow(normalizedCount, 2) * 0.28;
+
+        const sumOffset = cell.reduce((a, b) => a + b, 0);
+        const avgOffset = sumOffset / cell.length;
+        // Avoid division by zero
+        const normalizedTime = avgOffset / Math.max(maxOffset, 1);
+
+        const currentHue = lerpHue(startHue, endHue, normalizedTime);
+
+        ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+      } else {
+        const midHue = lerpHue(startHue, endHue, 0.5);
+        ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+      }
+    }
+  }
+
+  if (canvas instanceof OffscreenCanvas) {
+    return await canvas.convertToBlob({ type: 'image/png' });
+  } else if (canvas instanceof HTMLCanvasElement) {
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to create blob from canvas'));
+        }
+      }, 'image/png');
+    });
+  }
+
+  throw new Error('Unknown canvas type');
+}
+
+type CacheEntry = {
+  url: string;
+  count: number;
+};
+
+const cache = new Map<string, CacheEntry>();
+
 export function Identicon({
   data,
   className,
@@ -60,86 +146,45 @@ export function Identicon({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    let objectUrl: string | null = null;
+    const hex = Hex.fromUint8Array(data);
+    const cached = cache.get(hex);
 
-    const generateImage = async () => {
-      const grid = computeDrunkenBishop(data);
+    if (cached !== undefined) {
+      cache.set(hex, { url: cached.url, count: cached.count + 1 });
+      setImageUrl(cached.url);
+    } else {
+      const generateImage = async () => {
+        try {
+          const blob = await render(data);
+          const cached = cache.get(hex);
 
-      let canvas: OffscreenCanvas | HTMLCanvasElement;
-      let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
-
-      const width = GRID_WIDTH * scale;
-      const height = GRID_HEIGHT * scale;
-
-      if (typeof OffscreenCanvas !== 'undefined') {
-        canvas = new OffscreenCanvas(width, height);
-        ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
-      } else {
-        canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        ctx = canvas.getContext('2d');
-      }
-
-      if (!ctx) return;
-
-      const startHue = data.length >= 2 ? ArrayHelper.strictGet(data, 0) % 360 : 0;
-      const endHue = data.length >= 2 ? ArrayHelper.strictGet(data, 1) % 360 : 120;
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, width, height);
-      const maxOffset = data.length * 4;
-
-      for (let y = 0; y < GRID_HEIGHT; y++) {
-        for (let x = 0; x < GRID_WIDTH; x++) {
-          const cell = ArrayHelper.strictGet(grid, y * GRID_WIDTH + x);
-
-          if (cell.length > 0) {
-            const normalizedCount = Math.min(cell.length, 8) / 8;
-            // const lightness = 0.35 + (normalizedCount * 0.60);
-            const lightness = 0.15 + (normalizedCount * 0.80);
-
-            // const chroma = 0.12 + (normalizedCount * 0.1);
-            const chroma = Math.pow(normalizedCount, 2) * 0.28;
-
-            const sumOffset = cell.reduce((a, b) => a + b, 0);
-            const avgOffset = sumOffset / cell.length;
-            // Avoid division by zero
-            const normalizedTime = avgOffset / Math.max(maxOffset, 1);
-
-            const currentHue = lerpHue(startHue, endHue, normalizedTime);
-
-            ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
-            ctx.fillRect(x * scale, y * scale, scale, scale);
-          } else {
-            const midHue = lerpHue(startHue, endHue, 0.5);
-            ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
-            ctx.fillRect(x * scale, y * scale, scale, scale);
+          if (cached !== undefined) {
+            cache.set(hex, { url: cached.url, count: cached.count + 1 });
+            setImageUrl(cached.url);
+            return;
           }
+
+          const objectUrl = URL.createObjectURL(blob);
+          cache.set(hex, { url: objectUrl, count: 1 });
+          setImageUrl(objectUrl);
+        } catch (e) {
+          console.error('Failed to generate identicon:', e);
         }
-      }
+      };
 
-      let blob: Blob | null = null;
-      if (canvas instanceof OffscreenCanvas) {
-        blob = await canvas.convertToBlob({ type: 'image/png' });
-      } else {
-        blob = await new Promise<Blob | null>(resolve =>
-          (canvas as HTMLCanvasElement).toBlob(resolve, 'image/png')
-        );
-      }
-
-      if (blob && isMounted) {
-        objectUrl = URL.createObjectURL(blob);
-        setImageUrl(objectUrl);
-      }
-    };
-
-    generateImage();
+      generateImage();
+    }
 
     return () => {
-      isMounted = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+      const cached = cache.get(hex);
+
+      if (cached !== undefined) {
+        if (cached.count <= 1) {
+          URL.revokeObjectURL(cached.url);
+          cache.delete(hex);
+        } else {
+          cache.set(hex, { url: cached.url, count: cached.count - 1 });
+        }
       }
     };
   }, [data, scale, backgroundColor]);
