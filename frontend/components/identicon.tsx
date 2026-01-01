@@ -159,7 +159,8 @@ export function Identicon({
   return (
     <img
       src={imageUrl}
-      alt="Identicon"
+      alt=""
+      aria-hidden="true"
       className={className}
       style={imageStyle}
       width={GRID_WIDTH * scale}
