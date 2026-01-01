@@ -94,7 +94,7 @@ export function Identicon({
 
       for (let y = 0; y < GRID_HEIGHT; y++) {
         for (let x = 0; x < GRID_WIDTH; x++) {
-          const cell = NullableHelper.unwrap(ArrayHelper.strictGet(grid, y * GRID_WIDTH + x));
+          const cell = ArrayHelper.strictGet(grid, y * GRID_WIDTH + x);
 
           if (cell.length > 0) {
             const normalizedCount = Math.min(cell.length, 8) / 8;
