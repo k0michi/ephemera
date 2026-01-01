@@ -106,7 +106,8 @@ export function Identicon({
 
             const sumOffset = cell.reduce((a, b) => a + b, 0);
             const avgOffset = sumOffset / cell.length;
-            const normalizedTime = avgOffset / maxOffset;
+            // Avoid division by zero
+            const normalizedTime = avgOffset / Math.max(maxOffset, 1);
 
             const currentHue = lerpHue(startHue, endHue, normalizedTime);
 
