@@ -90,14 +90,6 @@ export default function Timeline({ }: TimelineProps) {
                     <div className="d-flex justify-content-between align-items-start">
                       <Card.Title className="mb-0">
                         <span className="d-inline-flex align-items-center gap-2">
-                          {/* <span style={{
-                              display: 'inline-block',
-                              width: 24,
-                              height: 24,
-                              background: '#dee2e6',
-                              borderRadius: 4,
-                              verticalAlign: 'middle',
-                            }} /> */}
                           <Identicon data={Base37.toUint8Array(post[0][1][1])} scale={4} style={{
                             display: 'inline-block',
                             // width: 24,
