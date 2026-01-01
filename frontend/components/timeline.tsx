@@ -8,6 +8,7 @@ import { EphemeraStoreContext } from "~/store";
 import { BsThreeDots } from "react-icons/bs";
 import Hex from "@ephemera/shared/lib/hex";
 import Base37 from "@ephemera/shared/lib/base37";
+import Identicon from "./identicon";
 
 export interface TimelineProps {
 }
@@ -88,19 +89,37 @@ export default function Timeline({ }: TimelineProps) {
                   <Card.Body>
                     <div className="d-flex justify-content-between align-items-start">
                       <Card.Title className="mb-0">
-                        <span
-                          className="text-secondary fs-6"
-                          style={{
-                            fontFamily: 'monospace',
+                        <span className="d-inline-flex align-items-center gap-2">
+                          {/* <span style={{
+                              display: 'inline-block',
+                              width: 24,
+                              height: 24,
+                              background: '#dee2e6',
+                              borderRadius: 4,
+                              verticalAlign: 'middle',
+                            }} /> */}
+                          <Identicon data={Base37.toUint8Array(post[0][1][1])} scale={4} style={{
                             display: 'inline-block',
-                            maxWidth: '100%',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            verticalAlign: 'bottom'
-                          }}
-                        >
-                          @{post[0][1][1]}
+                            // width: 24,
+                            // height: 24,
+                            background: '#dee2e6',
+                            borderRadius: 4,
+                            verticalAlign: 'middle',
+                          }} />
+                          <span
+                            className="text-secondary fs-6"
+                            style={{
+                              fontFamily: 'monospace',
+                              display: 'inline-block',
+                              maxWidth: '100%',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              verticalAlign: 'bottom'
+                            }}
+                          >
+                            @{post[0][1][1]}
+                          </span>
                         </span>
                       </Card.Title>
                       <Dropdown align="end">

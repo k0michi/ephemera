@@ -1,0 +1,171 @@
+import ArrayHelper from '@ephemera/shared/lib/array_helper';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper';
+import React, { useEffect, useState } from 'react';
+
+interface DrunkenBishopIdenticonProps {
+  data: Uint8Array;
+  scale?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  colors?: string[];
+  backgroundColor?: string;
+}
+
+const GRID_WIDTH = 8;
+const GRID_HEIGHT = 8;
+
+const DEFAULT_BG = '#101010';
+
+type GridCell = number[];
+
+function lerpHue(h1: number, h2: number, t: number): number {
+  let diff = h2 - h1;
+  if (diff > 180) diff -= 360;
+  else if (diff < -180) diff += 360;
+
+  let result = h1 + (diff * t);
+  return (result + 360) % 360;
+}
+
+function computeDrunkenBishop(data: Uint8Array): GridCell[] {
+  const grid: GridCell[] = Array(GRID_WIDTH * GRID_HEIGHT).fill(null).map(() => []);
+  let x = Math.floor(GRID_WIDTH / 2);
+  let y = Math.floor(GRID_HEIGHT / 2);
+
+  ArrayHelper.strictGet(grid, y * GRID_WIDTH + x).push(0);
+  for (let i = 0; i < data.length; i++) {
+    const byte = ArrayHelper.strictGet(data, i);
+
+    for (let step = 0; step < 4; step++) {
+      const pair = (byte >> (2 * step)) & 0x03;
+
+      const dx = (pair & 0x01) ? 1 : -1;
+      const dy = (pair & 0x02) ? 1 : -1;
+
+      x = Math.max(0, Math.min(GRID_WIDTH - 1, x + dx));
+      y = Math.max(0, Math.min(GRID_HEIGHT - 1, y + dy));
+
+      ArrayHelper.strictGet(grid, y * GRID_WIDTH + x).push(i * 4 + step + 1);
+    }
+  }
+
+  return grid;
+};
+
+export const DrunkenBishopIdenticon: React.FC<DrunkenBishopIdenticonProps> = ({
+  data,
+  scale = 10,
+  className,
+  style,
+  backgroundColor = DEFAULT_BG,
+}) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    let objectUrl: string | null = null;
+
+    const generateImage = async () => {
+      const grid = computeDrunkenBishop(data);
+
+      let canvas: OffscreenCanvas | HTMLCanvasElement;
+      let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
+
+      const width = GRID_WIDTH * scale;
+      const height = GRID_HEIGHT * scale;
+
+      if (typeof OffscreenCanvas !== 'undefined') {
+        canvas = new OffscreenCanvas(width, height);
+        ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+      } else {
+        canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        ctx = canvas.getContext('2d');
+      }
+
+      if (!ctx) return;
+
+      const startHue = data.length >= 2 ? ArrayHelper.strictGet(data, 0) % 360 : 0;
+      const endHue = data.length >= 2 ? ArrayHelper.strictGet(data, 1) % 360 : 120;
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, width, height);
+      const maxOffset = data.length * 4;
+
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        for (let x = 0; x < GRID_WIDTH; x++) {
+          const cell = NullableHelper.unwrap(ArrayHelper.strictGet(grid, y * GRID_WIDTH + x));
+
+          if (cell.length > 0) {
+            const normalizedCount = Math.min(cell.length, 8) / 8;
+            // const lightness = 0.35 + (normalizedCount * 0.60);
+            const lightness = 0.15 + (normalizedCount * 0.80);
+
+            // const chroma = 0.12 + (normalizedCount * 0.1);
+            const chroma = Math.pow(normalizedCount, 2) * 0.28;
+
+            const sumOffset = cell.reduce((a, b) => a + b, 0);
+            const avgOffset = sumOffset / cell.length;
+            const normalizedTime = avgOffset / maxOffset;
+
+            const currentHue = lerpHue(startHue, endHue, normalizedTime);
+
+            ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
+            ctx.fillRect(x * scale, y * scale, scale, scale);
+          } else {
+            const midHue = lerpHue(startHue, endHue, 0.5);
+            ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
+            ctx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+      }
+
+      let blob: Blob | null = null;
+      if (canvas instanceof OffscreenCanvas) {
+        blob = await canvas.convertToBlob({ type: 'image/png' });
+      } else {
+        blob = await new Promise<Blob | null>(resolve =>
+          (canvas as HTMLCanvasElement).toBlob(resolve, 'image/png')
+        );
+      }
+
+      if (blob && isMounted) {
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      }
+    };
+
+    generateImage();
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [data, scale, backgroundColor]);
+
+  const imageStyle: React.CSSProperties = {
+    imageRendering: 'pixelated',
+    // msInterpolationMode: 'nearest-neighbor',
+    display: 'block',
+    ...style,
+  };
+
+  if (!imageUrl) {
+    return <div style={{ width: GRID_WIDTH * scale, height: GRID_HEIGHT * scale, background: backgroundColor }} />;
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt="Identicon"
+      className={className}
+      style={imageStyle}
+      width={GRID_WIDTH * scale}
+      height={GRID_HEIGHT * scale}
+    />
+  );
+};
+
+export default React.memo(DrunkenBishopIdenticon);
