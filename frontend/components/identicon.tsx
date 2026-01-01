@@ -7,7 +7,6 @@ export interface IdenticonProps {
   scale?: number;
   className?: string;
   style?: React.CSSProperties;
-  colors?: string[];
   backgroundColor?: string;
 }
 
