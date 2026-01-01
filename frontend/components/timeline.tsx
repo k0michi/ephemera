@@ -79,7 +79,7 @@ export default function Timeline({ author }: TimelineProps) {
   };
 
   return (
-    <Container className="mt-4">
+    <Container>
       <Row className="justify-content-center">
         <ListGroup>
           {posts.map((post) => {
