@@ -37,6 +37,9 @@ describe('PostService', () => {
         dbUser: container.getUsername(),
         dbPassword: container.getUserPassword(),
         dbName: container.getDatabase(),
+        dbConnectionLimit: 5,
+        dbQueueLimit: 500,
+        dbConnectTimeout: 10000,
         allowedTimeSkewMillis: 5 * 60 * 1000,
       },
       database
