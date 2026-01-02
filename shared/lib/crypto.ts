@@ -6,6 +6,9 @@ export interface KeyPair {
 }
 
 export default class Crypto {
+  /**
+   * Generates a new Ed25519 key pair.
+   */
   static generateKeyPair(): KeyPair {
     const privateKey = ed25519.utils.randomSecretKey();
     const publicKey = ed25519.getPublicKey(privateKey);
@@ -15,10 +18,16 @@ export default class Crypto {
     };
   }
 
+  /**
+   * Signs the message with the given private key and returns the signature.
+   */
   static sign(message: Uint8Array, privateKey: Uint8Array): Uint8Array {
     return ed25519.sign(message, privateKey);
   }
 
+  /**
+   * Checks whether the signature is valid for the given message and public key.
+   */
   static verify(
     message: Uint8Array,
     signature: Uint8Array,
@@ -39,7 +48,7 @@ export default class Crypto {
   }
 
   /**
-   * Returns whether the given key pair is valid.
+   * Returns whether the given key pair is valid as Ed25519 keys.
    */
   static isValidKeyPair(keyPair: KeyPair): boolean {
     try {
@@ -53,6 +62,9 @@ export default class Crypto {
     }
   }
 
+  /**
+   * Returns whether the given byte array is a valid Ed25519 public key.
+   */
   static isValidPublicKey(publicKey: Uint8Array): boolean {
     try {
       ed25519.Point.fromBytes(publicKey);
