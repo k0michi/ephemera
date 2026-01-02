@@ -93,4 +93,18 @@ describe('Crypto', () => {
       expect(isValid).toBe(false);
     });
   });
+
+  describe('isValidPublicKey', () => {
+    it('should return true for a valid public key', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const isValid = Crypto.isValidPublicKey(keyPair.publicKey);
+      expect(isValid).toBe(true);
+    });
+
+    it('should return false for ill-formed public key', () => {
+      const illFormedKey = new Uint8Array(32).fill(0xff);
+      const isValid = Crypto.isValidPublicKey(illFormedKey);
+      expect(isValid).toBe(false);
+    });
+  });
 });
