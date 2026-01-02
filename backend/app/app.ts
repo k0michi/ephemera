@@ -73,8 +73,10 @@ class Ephemera extends Application {
       database: config.dbName,
 
       waitForConnections: true,
-      connectionLimit: 10,
       enableKeepAlive: true,
+      connectionLimit: config.dbConnectionLimit,
+      queueLimit: config.dbQueueLimit,
+      connectTimeout: config.dbConnectTimeout,
     }));
   }
 
