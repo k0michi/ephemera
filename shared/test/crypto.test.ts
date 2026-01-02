@@ -30,6 +30,14 @@ describe('Crypto', () => {
       const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
       expect(isValid).toBe(false);
     });
+
+    it('should return false for malformed public keys', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
+      const malformedPublicKey = new Uint8Array(0);
+      const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, malformedPublicKey);
+      expect(isValid).toBe(false);
+    });
   });
 
   describe('digest', () => {
