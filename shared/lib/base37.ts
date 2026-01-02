@@ -75,4 +75,18 @@ export default class Base37 {
 
     return result;
   }
+
+  /**
+   * Returns whether the given string is a valid Base37 encoded string.
+   */
+  public static isValid(str: string): boolean {
+    for (let i = 0; i < str.length; i++) {
+      const char = ArrayHelper.strictGet(str, i);
+      if (Base37.ALPHABET.indexOf(char) === -1) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

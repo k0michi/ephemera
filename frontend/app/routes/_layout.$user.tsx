@@ -9,7 +9,7 @@ export default function User() {
   const params = useParams();
   const { user } = params;
   let userKey = user || "";
-  const isValidKey = Crypto.isValidPublicKey(Base37.toUint8Array(userKey));
+  const isValidKey = Base37.isValid(userKey) && Crypto.isValidPublicKey(Base37.toUint8Array(userKey));
 
   let identiconData: Uint8Array | null = null;
   try {
