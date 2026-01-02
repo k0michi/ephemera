@@ -43,7 +43,7 @@ export default function Timeline({ author }: TimelineProps) {
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, store, cursor]);
+  }, [loading, hasMore, store, cursor, author]);
 
   React.useEffect(() => {
     const target = bottomRef.current;
