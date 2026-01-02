@@ -52,4 +52,13 @@ export default class Crypto {
       return false;
     }
   }
+
+  static isValidPublicKey(publicKey: Uint8Array): boolean {
+    try {
+      ed25519.Point.fromBytes(publicKey);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
