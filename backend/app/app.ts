@@ -20,43 +20,74 @@ class Ephemera extends Application {
     super();
   }
 
-  async initializeDatabase() {
-    const config = NullableHelper.unwrap(this.config);
-    let attempts = 0;
-    let delay = 1000;
-    const kMaxAttempts = 10;
-    let connection;
-    while (true) {
-      try {
-        connection = await mysql.createConnection({
-          host: config.dbHost,
-          port: config.dbPort,
-          user: config.dbUser,
-          password: config.dbPassword,
-          database: config.dbName,
-        });
-        break;
-      } catch (error) {
-        attempts++;
-        console.error(`Database configuration attempt ${attempts} failed:`, error);
-        if (attempts >= kMaxAttempts) {
-          throw new Error('Max database connection attempts exceeded');
+  async migrateDatabase() {
+    async function tryConnect(options: mysql.ConnectionOptions, maxAttempts: number, initialDelay: number): Promise<mysql.Connection> {
+      let attempts = 0;
+      let delay = initialDelay;
+
+      while (true) {
+        try {
+          return await mysql.createConnection(options);
+        } catch (error) {
+          attempts++;
+          console.error(`Database configuration attempt ${attempts} failed:`, error);
+
+          if (attempts >= maxAttempts) {
+            throw new Error('Max database connection attempts exceeded');
+          }
+
+          console.log(`Retrying in ${delay / 1000} seconds...`);
+          await new Promise(res => setTimeout(res, delay));
+          delay = Math.min(delay * 2, 30000);
         }
-        console.log(`Retrying in ${delay / 1000} seconds...`);
-        await new Promise(res => setTimeout(res, delay));
-        delay = Math.min(delay * 2, 30000);
       }
     }
-    this.db = drizzle(connection);
-    await migrate(this.db, { migrationsFolder: './drizzle' });
+
+    const config = NullableHelper.unwrap(this.config);
+
+    const kMaxAttempts = 10;
+    const kInitialDelay = 1000;
+
+    const connection = await tryConnect({
+      host: config.dbHost,
+      port: config.dbPort,
+      user: config.dbUser,
+      password: config.dbPassword,
+      database: config.dbName,
+    }, kMaxAttempts, kInitialDelay);
+
+    const db = drizzle(connection);
+    await migrate(db, { migrationsFolder: './drizzle' });
+
+    await connection.end();
+  }
+
+  async connectDatabase() {
+    const config = NullableHelper.unwrap(this.config);
+
+    this.db = drizzle(mysql.createPool({
+      host: config.dbHost,
+      port: config.dbPort,
+      user: config.dbUser,
+      password: config.dbPassword,
+      database: config.dbName,
+
+      waitForConnections: true,
+      connectionLimit: 10,
+      enableKeepAlive: true,
+    }));
   }
 
   async initialize() {
     this.config = Config.fromEnv();
-    await this.initializeDatabase();
-    console.log('Database initialized');
 
-    this.postService = new PostService(this.config, this.db!);
+    await this.migrateDatabase();
+    console.log('Database successfully migrated');
+
+    await this.connectDatabase();
+    console.log('Database connection established');
+
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db));
 
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService));
