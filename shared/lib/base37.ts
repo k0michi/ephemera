@@ -91,4 +91,8 @@ export default class Base37 {
 
     return true;
   }
+
+  public static normalize(str: string): string {
+    return str.toLowerCase();
+  }
 }
