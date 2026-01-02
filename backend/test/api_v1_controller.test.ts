@@ -17,6 +17,9 @@ function testConfig() {
     dbUser: 'test',
     dbPassword: 'test',
     dbName: 'test',
+    dbConnectionLimit: 5,
+    dbQueueLimit: 500,
+    dbConnectTimeout: 10000,
     allowedTimeSkewMillis: 5 * 60 * 1000,
   });
 }
