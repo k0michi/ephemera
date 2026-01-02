@@ -131,10 +131,12 @@ export default class Client {
   async fetchPosts(options: {
     cursor: string | null;
     limit?: number;
+    author?: string | undefined;
   }): Promise<GetPostsResponse> {
     const response = await Fetcher.get(`/api/v1/posts`, {
       ...(options.limit !== undefined ? { limit: String(options.limit) } : {}),
       ...(options.cursor !== null ? { cursor: options.cursor } : {}),
+      ...(options.author !== undefined ? { author: options.author } : {}),
     } satisfies GetPostsRequest);
 
     let parsed;

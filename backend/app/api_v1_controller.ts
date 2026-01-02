@@ -60,6 +60,7 @@ export default class ApiV1Controller implements IController {
     const options: PostFindOptions = {
       limit: limit,
       cursor: parsed.cursor ?? null,
+      author: parsed.author ?? null,
     };
 
     const result = await this.postService.find(options);

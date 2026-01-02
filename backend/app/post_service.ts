@@ -8,6 +8,8 @@ import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import { posts } from "./db/schema.js";
 import { and, desc, eq, lt } from "drizzle-orm";
+import Base37 from "@ephemera/shared/lib/base37.js";
+import Crypto from "@ephemera/shared/lib/crypto.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal): Promise<void>;
@@ -22,6 +24,7 @@ export interface IPostService {
 export interface PostFindOptions {
   limit: number;
   cursor: string | null;
+  author: string | null;
 }
 
 export interface PostFindResult {
@@ -125,11 +128,29 @@ export default class PostService extends PostServiceBase {
       throw new ApiError('Limit must be at least 1', 400);
     }
 
+    if (options.author !== null) {
+      if (!Base37.isValid(options.author)) {
+        throw new ApiError('Invalid author format', 400);
+      }
+
+      const bytes = Base37.toUint8Array(options.author);
+
+      if (!Crypto.isValidPublicKey(bytes)) {
+        throw new ApiError('Invalid author public key', 400);
+      }
+
+      options.author = Base37.normalize(options.author);
+    }
+
     const kMaxLimit = 128;
     options.limit = Math.min(options.limit, kMaxLimit);
 
+    const cond = options.author !== null
+      ? and(lt(posts.seq, cursorNum), eq(posts.author, options.author))
+      : lt(posts.seq, cursorNum);
+
     const dbSignals = await this.database.select().from(posts)
-      .where(lt(posts.seq, cursorNum))
+      .where(cond)
       .orderBy(desc(posts.seq))
       .limit(options.limit + 1);
 

@@ -9,11 +9,13 @@ import { BsThreeDots } from "react-icons/bs";
 import Hex from "@ephemera/shared/lib/hex";
 import Base37 from "@ephemera/shared/lib/base37";
 import Identicon from "./identicon";
+import { Link } from "react-router";
 
 export interface TimelineProps {
+  author?: string | undefined;
 }
 
-export default function Timeline({ }: TimelineProps) {
+export default function Timeline({ author }: TimelineProps) {
   const [posts, setPosts] = React.useState<CreatePostSignal[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
@@ -30,7 +32,7 @@ export default function Timeline({ }: TimelineProps) {
     setLoading(true);
 
     try {
-      const response = await store.getClient().fetchPosts({ cursor });
+      const response = await store.getClient().fetchPosts({ cursor, author });
       setPosts((prevPosts) => [...prevPosts, ...response.posts]);
       setCursor(response.nextCursor);
       setHasMore(!!response.nextCursor);
@@ -41,7 +43,7 @@ export default function Timeline({ }: TimelineProps) {
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, store, cursor]);
+  }, [loading, hasMore, store, cursor, author]);
 
   React.useEffect(() => {
     const target = bottomRef.current;
@@ -77,78 +79,76 @@ export default function Timeline({ }: TimelineProps) {
   };
 
   return (
-    <Container className="mt-4">
-      <Row className="justify-content-center">
-        <ListGroup>
-          {posts.map((post) => {
-            const postPublicKey = post[0][1][1];
-            const isMine = myPublicKeyBase37 === postPublicKey;
-            return (
-              <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
-                <Card>
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-start">
-                      <Card.Title className="mb-0">
-                        <span className="d-inline-flex align-items-center gap-2">
-                          <Identicon data={Base37.toUint8Array(post[0][1][1])} style={{
+    <ListGroup>
+      {posts.map((post) => {
+        const postPublicKey = post[0][1][1];
+        const isMine = myPublicKeyBase37 === postPublicKey;
+        return (
+          <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
+            <Card>
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-start">
+                  <Card.Title className="mb-0">
+                    <span className="d-inline-flex align-items-center gap-2">
+                      <Identicon data={Base37.toUint8Array(post[0][1][1])} style={{
+                        display: 'inline-block',
+                        width: 32,
+                        height: 32,
+                        borderRadius: 4,
+                        verticalAlign: 'middle',
+                      }} />
+                      <Link to={`/${postPublicKey}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <span
+                          className="text-secondary fs-6"
+                          style={{
+                            fontFamily: 'monospace',
                             display: 'inline-block',
-                            width: 32,
-                            height: 32,
-                            borderRadius: 4,
-                            verticalAlign: 'middle',
-                          }} />
-                          <span
-                            className="text-secondary fs-6"
-                            style={{
-                              fontFamily: 'monospace',
-                              display: 'inline-block',
-                              maxWidth: '100%',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              verticalAlign: 'bottom'
-                            }}
-                          >
-                            @{post[0][1][1]}
-                          </span>
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            verticalAlign: 'bottom'
+                          }}
+                        >
+                          @{post[0][1][1]}
                         </span>
-                      </Card.Title>
-                      <Dropdown align="end">
-                        <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
-                          <BsThreeDots className="text-secondary" />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          {isMine && (
-                            <Dropdown.Item onClick={() => handleDeletePost(post)}>
-                              Delete post
-                            </Dropdown.Item>
-                          )}
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    </div>
-                    <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
-                  </Card.Body>
-                  <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
-                    {new Date(post[0][1][2]).toLocaleString()}
-                  </Card.Footer>
-                </Card>
-              </ListGroup.Item>
-            );
-          })}
-          {
-            <div ref={bottomRef} style={{ height: 1, display: hasMore ? 'block' : 'none' }}>
-              {hasMore ? (
-                loading ? (
-                  <div className="d-flex align-items-center justify-content-center gap-2 alert alert-light p-2 my-2" role="status" style={{ minHeight: 40 }}>
-                    <span className="spinner-border spinner-border-sm text-secondary" aria-hidden="true"></span>
-                    Loading...
-                  </div>
-                ) : null
-              ) : null}
-            </div>
-          }
-        </ListGroup>
-      </Row>
-    </Container>
+                      </Link>
+                    </span>
+                  </Card.Title>
+                  <Dropdown align="end">
+                    <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
+                      <BsThreeDots className="text-secondary" />
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      {isMine && (
+                        <Dropdown.Item onClick={() => handleDeletePost(post)}>
+                          Delete post
+                        </Dropdown.Item>
+                      )}
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
+                <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
+              </Card.Body>
+              <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
+                {new Date(post[0][1][2]).toLocaleString()}
+              </Card.Footer>
+            </Card>
+          </ListGroup.Item>
+        );
+      })}
+      {
+        <div ref={bottomRef} style={{ height: 1, display: hasMore ? 'block' : 'none' }}>
+          {hasMore ? (
+            loading ? (
+              <div className="d-flex align-items-center justify-content-center gap-2 alert alert-light p-2 my-2" role="status" style={{ minHeight: 40 }}>
+                <span className="spinner-border spinner-border-sm text-secondary" aria-hidden="true"></span>
+                Loading...
+              </div>
+            ) : null
+          ) : null}
+        </div>
+      }
+    </ListGroup>
   );
 }

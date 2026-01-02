@@ -122,6 +122,7 @@ export interface PostResponse extends ApiResponse {
 export interface GetPostsRequest extends ApiRequest {
   cursor?: string;
   limit?: string;
+  author?: string;
 }
 
 export interface GetPostsResponse extends ApiResponse {

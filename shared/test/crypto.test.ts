@@ -3,52 +3,66 @@ import Crypto, { type KeyPair } from '../lib/crypto.js';
 import ArrayHelper from '../lib/array_helper.js';
 
 describe('Crypto', () => {
-  it('generateKeyPair should generate a valid key pair', () => {
-    const keyPair: KeyPair = Crypto.generateKeyPair();
-    expect(keyPair.publicKey).toBeInstanceOf(Uint8Array);
-    expect(keyPair.privateKey).toBeInstanceOf(Uint8Array);
+  describe('generateKeyPair', () => {
+    it('should generate a valid key pair', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      expect(keyPair.publicKey).toBeInstanceOf(Uint8Array);
+      expect(keyPair.privateKey).toBeInstanceOf(Uint8Array);
 
-    const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
-    const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
-    expect(isValid).toBe(true);
+      const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
+      const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
+      expect(isValid).toBe(true);
+    });
   });
 
-  it('verify should return false for invalid signatures', () => {
-    const keyPair: KeyPair = Crypto.generateKeyPair();
-    const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
-    const isValid = Crypto.verify(new Uint8Array([4, 5, 6]), signed, keyPair.publicKey);
-    expect(isValid).toBe(false);
+  describe('verify', () => {
+    it('should return false for invalid signatures', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
+      const isValid = Crypto.verify(new Uint8Array([4, 5, 6]), signed, keyPair.publicKey);
+      expect(isValid).toBe(false);
+    });
+
+    it('should return false for tampered signatures', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
+      ArrayHelper.strictSet(signed, 0, ArrayHelper.strictGet(signed, 0) ^ 0x01);
+      const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
+      expect(isValid).toBe(false);
+    });
+
+    it('should return false for malformed public keys', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
+      const malformedPublicKey = new Uint8Array(0);
+      const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, malformedPublicKey);
+      expect(isValid).toBe(false);
+    });
   });
 
-  it('verify should return false for tampered signatures', () => {
-    const keyPair: KeyPair = Crypto.generateKeyPair();
-    const signed = Crypto.sign(new Uint8Array([1, 2, 3]), keyPair.privateKey);
-    ArrayHelper.strictSet(signed, 0, ArrayHelper.strictGet(signed, 0) ^ 0x01);
-    const isValid = Crypto.verify(new Uint8Array([1, 2, 3]), signed, keyPair.publicKey);
-    expect(isValid).toBe(false);
-  });
+  describe('digest', () => {
+    it('should compute correct SHA-256 hash', async () => {
+      const data = new Uint8Array([97]); // 'a'
+      const hash = await Crypto.digest(data);
+      const expectedHex = 'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb';
+      const hashHex = Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
+      expect(hashHex).toBe(expectedHex);
+    });
 
-  it('digest should compute correct SHA-256 hash', async () => {
-    const data = new Uint8Array([97]); // 'a'
-    const hash = await Crypto.digest(data);
-    const expectedHex = 'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb';
-    const hashHex = Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
-    expect(hashHex).toBe(expectedHex);
-  });
+    it('should produce different hashes for different inputs', async () => {
+      const data1 = new Uint8Array([97]);
+      const data2 = new Uint8Array([98]);
+      const hash1 = await Crypto.digest(data1);
+      const hash2 = await Crypto.digest(data2);
+      expect(hash1).not.toEqual(hash2);
+    });
 
-  it('digest should produce different hashes for different inputs', async () => {
-    const data1 = new Uint8Array([97]);
-    const data2 = new Uint8Array([98]);
-    const hash1 = await Crypto.digest(data1);
-    const hash2 = await Crypto.digest(data2);
-    expect(hash1).not.toEqual(hash2);
-  });
-
-  it('digest should be consistent for the same input', async () => {
-    const data = new Uint8Array([97, 98, 99]);
-    const hash1 = await Crypto.digest(data);
-    const hash2 = await Crypto.digest(data);
-    expect(hash1).toEqual(hash2);
+    it('should be consistent for the same input', async () => {
+      const data = new Uint8Array([97, 98, 99]);
+      const hash1 = await Crypto.digest(data);
+      const hash2 = await Crypto.digest(data);
+      expect(hash1).toEqual(hash2);
+    });
   });
 
   describe('isValidKeyPair', () => {
@@ -76,6 +90,20 @@ describe('Crypto', () => {
         privateKey: new Uint8Array(0),
       };
       const isValid = Crypto.isValidKeyPair(malformedKeyPair);
+      expect(isValid).toBe(false);
+    });
+  });
+
+  describe('isValidPublicKey', () => {
+    it('should return true for a valid public key', () => {
+      const keyPair: KeyPair = Crypto.generateKeyPair();
+      const isValid = Crypto.isValidPublicKey(keyPair.publicKey);
+      expect(isValid).toBe(true);
+    });
+
+    it('should return false for ill-formed public key', () => {
+      const illFormedKey = new Uint8Array(32).fill(0xff);
+      const isValid = Crypto.isValidPublicKey(illFormedKey);
       expect(isValid).toBe(false);
     });
   });
