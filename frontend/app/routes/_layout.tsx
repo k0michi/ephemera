@@ -22,6 +22,9 @@ export default function Layout() {
             <Outlet />
           </Col>
         </Row>
+        <div style={{ textAlign: 'center', color: '#bbb', fontSize: '0.8rem', marginTop: `2rem`, marginBottom: `2rem` }}>
+          Ephemera {import.meta.env.EPHEMERA_COMMIT_HASH}
+        </div>
       </Container>
       <Notifier />
     </>

@@ -1,5 +1,6 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
+COPY .git ./.git
 COPY package.json package-lock.json ./
 COPY shared/package.json ./shared/
 COPY frontend/package.json ./frontend/
@@ -7,6 +8,7 @@ RUN npm ci
 COPY shared ./shared
 COPY frontend ./frontend
 
+RUN apk add --no-cache git
 RUN npm run build -w frontend
 
 FROM node:20-alpine AS runner
