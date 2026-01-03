@@ -31,7 +31,6 @@ export default function User() {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              fontFamily: 'monospace',
             }}
           >
             @{userKey}
