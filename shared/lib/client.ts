@@ -1,7 +1,9 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload } from "../api/api.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment } from "../api/api.js";
 import { apiResponseSchema, getPostsResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
+import Crypto from "./crypto.js";
+import Hex from "./hex.js";
 import PostUtil from "./post_util.js";
 import SignalCrypto from "./signal_crypto.js";
 
@@ -65,6 +67,14 @@ export class Fetcher {
     });
   }
 
+  static async postForm(path: string, formData: FormData, options: RequestInit = {}): Promise<ApiResponse> {
+    return this.fetch(path, {
+      method: "POST",
+      body: formData,
+      ...options,
+    });
+  }
+
   static async delete<T extends ApiRequest>(path: string, body: T, options: RequestInit = {}): Promise<ApiResponse> {
     return this.fetch(path, {
       method: "DELETE",
@@ -103,7 +113,7 @@ export default class Client {
    * 
    * @throws Error if the request fails or the post is invalid.
    */
-  async sendPost(post: string): Promise<void> {
+  async sendPost(post: string, attachments: File[] = []): Promise<void> {
     if (!this._keyPair) {
       throw new Error("Key pair does not exist");
     }
@@ -115,17 +125,33 @@ export default class Client {
     }
 
     const publicKeyBase37 = Base37.fromUint8Array(this._keyPair.publicKey);
+
+    const footers: Attachment[] = [];
+
+    for (const file of attachments) {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const digest = await Crypto.digest(bytes);
+      const digestHex = Hex.fromUint8Array(digest);
+
+      footers.push(['attachment', file.type, digestHex]);
+    }
+
     const payload = [
       this._version,
       [this._host, publicKeyBase37, Date.now(), "create_post"],
       post,
-      []
+      footers
     ] satisfies CreatePostSignalPayload;
     const signed: CreatePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
 
-    const response = await Fetcher.post(`/api/v1/post`, {
-      post: signed
-    } satisfies PostRequest);
+    const formData = new FormData();
+    formData.append("post", JSON.stringify(signed));
+
+    for (const attachment of attachments) {
+      formData.append("attachments", attachment);
+    }
+
+    const response = await Fetcher.postForm(`/api/v1/post`, formData);
   }
 
   async fetchPosts(options: {
@@ -168,5 +194,9 @@ export default class Client {
     const response = await Fetcher.delete(`/api/v1/post`, {
       post: signed
     } satisfies DeletePostRequest);
+  }
+
+  getAttachmentUrl(hash: string): string {
+    return `/api/v1/attachments/${hash}`;
   }
 }
