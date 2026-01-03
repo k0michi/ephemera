@@ -7,10 +7,6 @@ export type Timestamp = number;
 export type Host = string;
 export type Hash = string;
 export type ContentType = string;
-export type Dimension = {
-  width: number;
-  height: number;
-};
 
 export type SignalHeader = [
   Host, // host
@@ -36,6 +32,16 @@ export type Signal = [
 ];
 
 //
+// Attachments
+//
+
+export type Attachment = [
+  'attachment', // footer_type
+  ContentType, // type
+  Hash, // id
+];
+
+//
 // create_post signal
 //
 
@@ -48,7 +54,7 @@ export type CreatePostSignalHeader = [
 
 export type CreatePostSignalBody = string;
 
-export type CreatePostSignalFooter = [];
+export type CreatePostSignalFooter = Attachment[];
 
 export type CreatePostSignalPayload = [
   Version, // version
