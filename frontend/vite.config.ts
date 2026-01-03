@@ -3,7 +3,12 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { execSync } from 'child_process';
 
-const commitHash = execSync('git describe --tags --always --dirty').toString().trim();
+let commitHash = 'unknown';
+
+try {
+  commitHash = execSync('git describe --tags --always --dirty').toString().trim();
+} catch (e) {
+}
 
 export default defineConfig({
   plugins: [reactRouter(), tsconfigPaths()],
