@@ -35,6 +35,7 @@ export default function Composer({ onSubmit }: ComposerProps) {
                 setValue(PostUtil.sanitize(e.target.value))
               }}
               placeholder="What's happening?"
+              style={{ resize: 'none' }}
             />
             <div
               className={`text-end small mt-1 ${isOver ? "text-danger fw-bold" : "text-muted"}`}
