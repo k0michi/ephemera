@@ -1,4 +1,5 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
+import styles from "./post.module.css";
 import { Card, Dropdown } from "react-bootstrap";
 import Identicon from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
@@ -36,53 +37,102 @@ export default function Post({ post, onDelete }: PostProps) {
 
   return (
     <Card>
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-start">
-          <Card.Title className="mb-0">
-            <span className="d-inline-flex align-items-center gap-2">
+      <Card.Body style={{ padding: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+          {/* Icon */}
+          <div style={{ flexShrink: 0 }}>
+            <a href={`/${postPublicKey}`}>
               <Identicon data={Base37.toUint8Array(post[0][1][1])} style={{
-                display: 'inline-block',
-                width: 32,
-                height: 32,
-                borderRadius: 4,
+                display: 'block',
+                width: 48,
+                height: 48,
+                borderRadius: 8,
                 verticalAlign: 'middle',
               }} />
-              <Link to={`/${postPublicKey}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <span
-                  className="text-secondary fs-6"
-                  style={{
-                    fontFamily: 'monospace',
-                    display: 'inline-block',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    verticalAlign: 'bottom'
-                  }}
-                >
-                  @{post[0][1][1]}
-                </span>
+            </a>
+          </div>
+          {/* Content */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            {/* Username */}
+            <div className="text-secondary fs-6" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+              <Link
+                to={`/${postPublicKey}`}
+                className={styles.postUsernameLink}
+                style={{
+                  color: 'inherit',
+                  minWidth: 0,
+                  // fontFamily: 'monospace',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                }}
+              >
+                @{post[0][1][1]}
               </Link>
-            </span>
-          </Card.Title>
-          <Dropdown align="end">
-            <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
-              <BsThreeDots className="text-secondary" />
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {isMine && (
-                <Dropdown.Item onClick={() => handleDeletePost(post)}>
-                  Delete post
-                </Dropdown.Item>
-              )}
-            </Dropdown.Menu>
-          </Dropdown>
+              {'•'}
+              <span style={{ flexShrink: 0 }}>
+                {formatDate(post[0][1][2])}
+              </span>
+            </div>
+            {/* Body */}
+            <div style={{ marginBottom: 8 }}>
+              <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
+            </div>
+            {/* Footer */}
+            <div>
+              <Dropdown>
+                <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
+                  <BsThreeDots className="text-secondary" />
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {isMine && (
+                    <Dropdown.Item onClick={() => handleDeletePost(post)}>
+                      Delete post
+                    </Dropdown.Item>
+                  )}
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
+          </div>
         </div>
-        <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
       </Card.Body>
-      <Card.Footer className="text-end text-muted" style={{ fontSize: '0.9em' }}>
-        {new Date(post[0][1][2]).toLocaleString()}
-      </Card.Footer>
     </Card>
   );
+}
+
+function formatDate(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const diffSeconds = Math.floor(diff / 1000);
+
+  if (diffSeconds < 0) {
+    return '0s';
+  }
+
+  if (diffSeconds < 60) {
+    return `${diffSeconds}s`;
+  }
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffHours < 24) {
+    return `${diffHours}h`;
+  }
+
+  const date = new Date(timestamp);
+  const nowDate = new Date();
+  const isSameYear = date.getFullYear() === nowDate.getFullYear();
+
+  if (isSameYear) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else {
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
 }

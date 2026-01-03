@@ -1,0 +1,8 @@
+.postUsernameLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.postUsernameLink:hover {
+  text-decoration: underline;
+}
