@@ -33,7 +33,7 @@ export default function Composer({ onSubmit }: ComposerProps) {
               onChange={e => {
                 setValue(PostUtil.sanitize(e.target.value))
               }}
-              placeholder="What's happening?"
+              placeholder="What are you doing?"
               style={{ resize: 'none' }}
             />
             <div
