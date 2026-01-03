@@ -24,6 +24,7 @@
 		"start": "node ./dist/app.js",
 		"dev": "vite-node app/app.ts --watch",
 		"test": "vitest",
-		"typecheck": "tsc -b"
+		"typecheck": "tsc -b",
+		"gen-migration": "drizzle-kit generate"
 	}
 }
