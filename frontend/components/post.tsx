@@ -1,6 +1,6 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import styles from "./post.module.css";
-import { Card, Dropdown } from "react-bootstrap";
+import { Card, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
 import Identicon from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import { EphemeraStoreContext } from "~/store";
@@ -85,9 +85,19 @@ export default function Post({ post, onDelete }: PostProps) {
                 @{post[0][1][1]}
               </Link>
               {'•'}
-              <span style={{ flexShrink: 0 }}>
-                {formatDate(post[0][1][2])}
-              </span>
+              <OverlayTrigger
+                placement="top"
+                delay={{ show: 500, hide: 0 }}
+                overlay={(props) => {
+                  return <Tooltip {...props} placement="top">
+                    {new Date(post[0][1][2]).toLocaleString()}
+                  </Tooltip>;
+                }}
+              >
+                <span style={{ flexShrink: 0 }}>
+                  {formatDate(post[0][1][2])}
+                </span>
+              </OverlayTrigger>
             </div>
             {/* Body */}
             <div style={{ marginBottom: 8 }}>
