@@ -34,6 +34,7 @@ export default function Composer({ onSubmit }: ComposerProps) {
                 setValue(PostUtil.sanitize(e.target.value))
               }}
               placeholder="What are you doing?"
+              aria-label="Post content"
               style={{ resize: 'none' }}
             />
           </Form.Group>
