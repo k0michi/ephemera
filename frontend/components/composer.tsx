@@ -26,7 +26,6 @@ export default function Composer({ onSubmit }: ComposerProps) {
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group controlId="composerTextarea">
-            <Form.Label>Post</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
