@@ -76,7 +76,6 @@ export default function Post({ post, onDelete }: PostProps) {
                 style={{
                   color: 'inherit',
                   minWidth: 0,
-                  // fontFamily: 'monospace',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -163,7 +162,7 @@ function formatDate(timestamp: number): string {
 }
 
 /**
-  * Get the timeout duration until the next render update is needed.
+ * Get the timeout duration until the next render update is needed.
  */
 function getRenderTimeout(timestamp: number, now: number): number {
   const diff = now - timestamp;
