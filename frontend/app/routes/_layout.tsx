@@ -45,7 +45,7 @@ export default function Layout() {
 
   useEffect(() => {
     store.prepareKeyPair();
-  }, []);
+  }, [store]);
 
   return (
     <>
