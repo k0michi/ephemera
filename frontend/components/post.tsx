@@ -9,6 +9,7 @@ import { Link } from "react-router";
 import { BsThreeDots } from "react-icons/bs";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
+import React from "react";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -16,6 +17,20 @@ export interface PostProps {
 }
 
 export default function Post({ post, onDelete }: PostProps) {
+  const [now, setNow] = React.useState(Date.now());
+
+  React.useEffect(() => {
+    const frequency = getRenderFrequency(post[0][1][2]);
+
+    const timer = setTimeout(() => {
+      setNow(Date.now());
+    }, frequency);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [post, now]);
+
   const store = useReader(EphemeraStoreContext);
   const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
 
@@ -37,7 +52,7 @@ export default function Post({ post, onDelete }: PostProps) {
 
   return (
     <Card>
-      <Card.Body style={{ padding: 16 }}>
+      <Card.Body style={{ padding: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
           {/* Icon */}
           <div style={{ flexShrink: 0 }}>
@@ -135,4 +150,28 @@ function formatDate(timestamp: number): string {
   } else {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
+}
+
+/**
+ * Determine how frequently the timestamp display should be updated.
+ */
+function getRenderFrequency(timestamp: number): number {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const diffSeconds = Math.floor(diff / 1000);
+
+  if (diffSeconds < 60) {
+    return 1 * 1000;
+  }
+
+  if (diffSeconds < 60 * 60) {
+    return 60 * 1000;
+  }
+
+  if (diffSeconds < 24 * 60 * 60) {
+    return 60 * 60 * 1000;
+  }
+
+  return 24 * 60 * 60 * 1000;
 }
