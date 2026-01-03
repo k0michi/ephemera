@@ -56,7 +56,7 @@ export default function Post({ post, onDelete }: PostProps) {
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
           {/* Icon */}
           <div style={{ flexShrink: 0 }}>
-            <a href={`/${postPublicKey}`}>
+            <Link to={`/${postPublicKey}`}>
               <Identicon data={Base37.toUint8Array(post[0][1][1])} style={{
                 display: 'block',
                 width: 48,
@@ -64,7 +64,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 borderRadius: 6,
                 verticalAlign: 'middle',
               }} />
-            </a>
+            </Link>
           </div>
           {/* Content */}
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
