@@ -94,7 +94,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 }}
               >
                 <span style={{ flexShrink: 0 }}>
-                  {formatDate(post[0][1][2])}
+                  {formatDate(post[0][1][2], now)}
                 </span>
               </OverlayTrigger>
             </div>
@@ -124,8 +124,7 @@ export default function Post({ post, onDelete }: PostProps) {
   );
 }
 
-function formatDate(timestamp: number): string {
-  const now = Date.now();
+function formatDate(timestamp: number, now: number): string {
   const diff = now - timestamp;
 
   const diffSeconds = Math.floor(diff / 1000);
