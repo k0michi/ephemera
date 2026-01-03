@@ -19,9 +19,13 @@ export default function User() {
   }
 
   return (
-    <>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }}>
       {isValidKey ? <>
-        <Card className="mb-3 p-3 d-flex flex-row align-items-center gap-3">
+        <Card className="p-3 d-flex flex-row align-items-center gap-3">
           {identiconData && (
             <Identicon data={identiconData} style={{ width: 48, height: 48, borderRadius: 6 }} />
           )}
@@ -38,12 +42,12 @@ export default function User() {
         </Card>
         <Timeline author={userKey} />
       </> : <>
-        <Card className="mb-3 p-3">
+        <Card className="p-3">
           <div className="fw-bold fs-5">
             User does not exist
           </div>
         </Card>
       </>}
-    </>
+    </div>
   );
 }
