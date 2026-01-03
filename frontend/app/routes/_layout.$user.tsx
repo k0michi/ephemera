@@ -23,7 +23,7 @@ export default function User() {
       {isValidKey ? <>
         <Card className="mb-3 p-3 d-flex flex-row align-items-center gap-3">
           {identiconData && (
-            <Identicon data={identiconData} style={{ width: 48, height: 48, borderRadius: 8 }} />
+            <Identicon data={identiconData} style={{ width: 48, height: 48, borderRadius: 6 }} />
           )}
           <div
             className="fw-bold fs-5"

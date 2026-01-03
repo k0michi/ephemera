@@ -61,7 +61,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 display: 'block',
                 width: 48,
                 height: 48,
-                borderRadius: 8,
+                borderRadius: 6,
                 verticalAlign: 'middle',
               }} />
             </a>
