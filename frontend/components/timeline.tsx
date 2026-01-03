@@ -2,9 +2,10 @@
 import type { GetPostsRequest, CreatePostSignal } from "@ephemera/shared/api/api";
 import { useReader } from "lib/store";
 import React from "react";
-import { Card, ListGroup, Container, Row, Col, Dropdown } from "react-bootstrap";
 import { EphemeraStoreContext } from "~/store";
 import Post from "./post";
+import postStyles from "./post.module.css";
+import { Card } from "react-bootstrap";
 
 export interface TimelineProps {
   author?: string | undefined;
@@ -63,28 +64,29 @@ export default function Timeline({ author }: TimelineProps) {
   }, [fetchPosts, hasMore]);
 
   return (
-    <ListGroup>
+    <div>
       {posts.map((post) => {
         return (
-          <ListGroup.Item key={post[1]} className="mb-3 p-0 border-0">
-            <Post post={post} onDelete={(deletedPost) => {
-              setPosts((prevPosts) => prevPosts.filter((p) => p !== deletedPost));
-            }} />
-          </ListGroup.Item>
+          <Post post={post} key={post[1]} onDelete={(deletedPost) => {
+            setPosts((prevPosts) => prevPosts.filter((p) => p !== deletedPost));
+          }} />
         );
       })}
-      {
-        <div ref={bottomRef} style={{ height: 1, display: hasMore ? 'block' : 'none' }}>
-          {hasMore ? (
-            loading ? (
-              <div className="d-flex align-items-center justify-content-center gap-2 alert alert-light p-2 my-2" role="status" style={{ minHeight: 40 }}>
-                <span className="spinner-border spinner-border-sm text-secondary" aria-hidden="true"></span>
-                Loading...
-              </div>
-            ) : null
+      {hasMore ? (
+        <Card ref={bottomRef} style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 64,
+        }} className={postStyles.post}>
+          {loading ? (
+            <div>
+              <span className="spinner-border spinner-border-sm text-secondary" aria-hidden="true"></span>
+              {' '}Loading...
+            </div>
           ) : null}
-        </div>
-      }
-    </ListGroup>
+        </Card>
+      ) : null}
+    </div>
   );
 }
