@@ -20,11 +20,11 @@ export default function Post({ post, onDelete }: PostProps) {
   const [now, setNow] = React.useState(Date.now());
 
   React.useEffect(() => {
-    const frequency = getRenderFrequency(post[0][1][2]);
+    const timeout = getRenderTimeout(post[0][1][2], now);
 
     const timer = setTimeout(() => {
       setNow(Date.now());
-    }, frequency);
+    }, timeout);
 
     return () => {
       clearTimeout(timer);
@@ -153,25 +153,24 @@ function formatDate(timestamp: number): string {
 }
 
 /**
- * Determine how frequently the timestamp display should be updated.
+  * Get the timeout duration until the next render update is needed.
  */
-function getRenderFrequency(timestamp: number): number {
-  const now = Date.now();
+function getRenderTimeout(timestamp: number, now: number): number {
   const diff = now - timestamp;
 
   const diffSeconds = Math.floor(diff / 1000);
 
   if (diffSeconds < 60) {
-    return 1 * 1000;
+    return 1000 - (diff % 1000);
   }
 
   if (diffSeconds < 60 * 60) {
-    return 60 * 1000;
+    return 60 * 1000 - (diff % (60 * 1000));
   }
 
   if (diffSeconds < 24 * 60 * 60) {
-    return 60 * 60 * 1000;
+    return 60 * 60 * 1000 - (diff % (60 * 60 * 1000));
   }
 
-  return 24 * 60 * 60 * 1000;
+  return 24 * 60 * 60 * 1000 - (diff % (24 * 60 * 60 * 1000));
 }
