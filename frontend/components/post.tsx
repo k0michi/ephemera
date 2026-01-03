@@ -51,7 +51,7 @@ export default function Post({ post, onDelete }: PostProps) {
   };
 
   return (
-    <Card>
+    <Card className={styles.post}>
       <Card.Body style={{ padding: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
           {/* Icon */}

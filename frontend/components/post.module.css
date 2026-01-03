@@ -6,3 +6,19 @@
 .postUsernameLink:hover {
   text-decoration: underline;
 }
+
+.post {
+  border-radius: 0;
+}
+
+.post+.post {
+  border-top: 0 !important;
+}
+
+.post:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.post:last-child {
+  border-radius: 0 0 4px 4px;
+}
