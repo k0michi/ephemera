@@ -2,7 +2,51 @@ import Notifier from "components/notifier";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link, Outlet } from "react-router";
 
+import { Dropdown } from "react-bootstrap";
+import Identicon from "components/identicon";
+import { EphemeraStoreContext } from "~/store";
+import { useReader, useSelector } from "lib/store";
+import Base37 from "@ephemera/shared/lib/base37";
+import { useEffect } from "react";
+
+function UserMenu() {
+  const key = useSelector(EphemeraStoreContext, (store) => {
+    return store.keyPair?.publicKey || null;
+  });
+
+  return (
+    <Dropdown align="end">
+      <Dropdown.Toggle
+        variant="link"
+        bsPrefix="btn p-0 border-0"
+        id="user-menu"
+        aria-label="User menu"
+        style={{ padding: 0 }}
+      >
+        {key !== null ?
+          <Identicon data={key} style={{ width: 32, height: 32, borderRadius: 4 }} />
+          :
+          <div style={{ width: 32, height: 32, borderRadius: 4, backgroundColor: '#e0e0e0' }}></div>
+        }
+      </Dropdown.Toggle>
+      <Dropdown.Menu>
+        <Dropdown.Item disabled>{
+          key !== null ? `@${Base37.fromUint8Array(key)}` : 'Not signed in'
+        }</Dropdown.Item>
+        <Dropdown.Divider />
+        <Dropdown.Item href="/settings">Settings</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
+}
+
 export default function Layout() {
+  const store = useReader(EphemeraStoreContext);
+
+  useEffect(() => {
+    store.prepareKeyPair();
+  }, [store]);
+
   return (
     <>
       <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
@@ -12,6 +56,9 @@ export default function Layout() {
               <Link to="/" style={{ textDecoration: "none" }}>
                 <span style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#8939cb" }}>Ephemera</span>
               </Link>
+            </Col>
+            <Col xs="auto">
+              <UserMenu />
             </Col>
           </Row>
         </Container>

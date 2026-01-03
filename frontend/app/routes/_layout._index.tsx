@@ -1,13 +1,8 @@
 import { useReader, useSelector } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_layout._index";
-import { useEffect, useMemo } from "react";
-import Base37 from '@ephemera/shared/lib/base37.js';
-import { Button, } from 'react-bootstrap';
 import Composer from "components/composer";
-import FileHelper from "~/file_helper";
 import Timeline from "components/timeline";
-import { exportedKeyPairSchema } from "@ephemera/shared/api/api_schema";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -17,15 +12,7 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const publicKey = useSelector(EphemeraStoreContext, (store) => store.keyPair?.publicKey);
   const store = useReader(EphemeraStoreContext);
-
-  useEffect(() => {
-    store.prepareKeyPair();
-  }, [store]);
-
-
-  const publicKeyMem = useMemo(() => Base37.fromUint8Array(publicKey || new Uint8Array()), [publicKey]);
 
   const handleSubmit = async (value: string) => {
     try {
@@ -36,52 +23,14 @@ export default function Home() {
     }
   };
 
-  const handleExportKeyPair = () => {
-    const exported = store.exportKeyPair();
-
-    if (!exported) return;
-
-    FileHelper.downloadFile(
-      JSON.stringify(exported),
-      `${publicKeyMem}.json`,
-      'application/json'
-    );
-  };
-
-  const handleImportKeyPair = async () => {
-    try {
-      const file = await FileHelper.selectFile({ accept: 'application/json' });
-      const text = await file.text();
-      let parsed;
-
-      try {
-        parsed = exportedKeyPairSchema.parse(JSON.parse(text));
-      } catch {
-        throw new Error("Invalid key pair format");
-      }
-
-      store.importKeyPair(parsed);
-      store.addLog("success", "Key pair imported successfully!");
-    } catch (error) {
-      store.addLog("danger", error instanceof Error ? error.message : "Failed to import key pair.");
-    }
-  };
-
   return (
-    <>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8
+    }}>
       <Composer onSubmit={handleSubmit} />
-      <hr className="my-4" />
-      <div>Your public key: {publicKeyMem}</div>
-      <Button variant="secondary" className="mt-2" onClick={() => store.revokeKeyPair()}>
-        Revoke Key Pair
-      </Button>
-      <Button variant="secondary" className="mt-2" onClick={handleExportKeyPair}>
-        Export Key Pair
-      </Button>
-      <Button variant="secondary" className="mt-2" onClick={handleImportKeyPair}>
-        Import Key Pair
-      </Button>
       <Timeline />
-    </>
+    </div>
   );
 }
