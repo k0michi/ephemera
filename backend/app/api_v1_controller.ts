@@ -70,7 +70,7 @@ export default class ApiV1Controller implements IController {
     }
 
     for (const file of req.files as Express.Multer.File[]) {
-      await this.attachmentService.moveFrom(file.path, file.mimetype);
+      await this.attachmentService.copyFrom(file.path, file.mimetype);
     }
 
     await this.postService.create(parsed.post);

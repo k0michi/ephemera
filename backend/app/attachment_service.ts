@@ -14,7 +14,7 @@ export interface IAttachmentService {
 
   fileSize(filePath: string): Promise<number>;
 
-  moveFrom(srcFile: string, type: string): Promise<string>;
+  copyFrom(srcFile: string, type: string): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
 
@@ -70,7 +70,7 @@ export class AttachmentService implements IAttachmentService {
     return stats.size;
   }
 
-  async moveFrom(srcFile: string, type: string): Promise<string> {
+  async copyFrom(srcFile: string, type: string): Promise<string> {
     await fs.mkdir(this.attachmentsDir, { recursive: true });
 
     const hash = await this.fileDigest(srcFile);
@@ -86,7 +86,7 @@ export class AttachmentService implements IAttachmentService {
       throw new ApiError('Attachment type is not allowed', 400);
     }
 
-    await fs.rename(srcFile, destFile);
+    await fs.copyFile(srcFile, destFile);
 
     await this.database.insert(attachments).ignore().values({
       id: hash,
