@@ -26,7 +26,6 @@ export default function Composer({ onSubmit }: ComposerProps) {
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group controlId="composerTextarea">
-            <Form.Label>Post</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
@@ -34,18 +33,29 @@ export default function Composer({ onSubmit }: ComposerProps) {
               onChange={e => {
                 setValue(PostUtil.sanitize(e.target.value))
               }}
-              placeholder="What's happening?"
+              placeholder="What are you doing?"
+              aria-label="Post content"
+              style={{ resize: 'none' }}
             />
+          </Form.Group>
+          <div style={{
+            marginTop: 8,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 16,
+            justifyContent: 'flex-end',
+          }}>
             <div
-              className={`text-end small mt-1 ${isOver ? "text-danger fw-bold" : "text-muted"}`}
+              className={`text-end small ${isOver ? "text-danger fw-bold" : "text-muted"}`}
             >
               {count} / {maxLength}
             </div>
-          </Form.Group>
-          <div className="mt-2 text-end">
-            <Button type="submit" variant="primary" disabled={isUnder || isOver}>
-              Post
-            </Button>
+            <div className="text-end">
+              <Button type="submit" variant="primary" disabled={isUnder || isOver}>
+                Post
+              </Button>
+            </div>
           </div>
         </Form>
       </Card.Body>
