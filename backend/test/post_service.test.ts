@@ -9,6 +9,7 @@ import type { MySql2Database } from 'drizzle-orm/mysql2';
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import type { Pool } from 'mysql2';
+import Config from '../app/config.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -29,7 +30,7 @@ describe('PostService', () => {
     await migrate(db, { migrationsFolder: './drizzle' });
 
     postService = new PostService(
-      {
+      new Config({
         host: 'example.com',
         port: 3000,
         dbHost: container.getHost(),
@@ -41,7 +42,7 @@ describe('PostService', () => {
         dbQueueLimit: 500,
         dbConnectTimeout: 10000,
         allowedTimeSkewMillis: 5 * 60 * 1000,
-      },
+      }),
       database
     );
   }, 60_000);

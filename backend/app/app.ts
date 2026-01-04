@@ -6,14 +6,16 @@ import ApiV1Controller from './api_v1_controller.js';
 import Config from './config.js';
 import PostService from "./post_service.js";
 import { ApiError } from "./api_error.js";
-import type { ApiResponse } from "@ephemera/shared/api/api.js";
+import type { ApiResponse, Attachment } from "@ephemera/shared/api/api.js";
 import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
+import { AttachmentService } from './attachment_service.js';
 
 class Ephemera extends Application {
   config?: Config;
   postService?: PostService;
+  attachmentService?: AttachmentService;
   db?: MySql2Database;
 
   constructor() {
@@ -90,9 +92,10 @@ class Ephemera extends Application {
     console.log('Database connection established');
 
     this.postService = new PostService(this.config, NullableHelper.unwrap(this.db));
+    this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
 
     this.app.use(express.json());
-    this.useController(new ApiV1Controller(this.config, this.postService));
+    this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService));
 
     this.app.use((req: express.Request, res: express.Response) => {
       res.status(404).json({ error: 'Not Found' } satisfies ApiResponse);
