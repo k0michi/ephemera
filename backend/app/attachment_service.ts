@@ -8,6 +8,7 @@ import { eq, inArray, isNull } from 'drizzle-orm';
 import ArrayHelper from '@ephemera/shared/lib/array_helper.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { ApiError } from './api_error.js';
+import Hex from '@ephemera/shared/lib/hex.js';
 
 export interface IAttachmentService {
   fileDigest(filePath: string): Promise<string>;
@@ -129,6 +130,10 @@ export class AttachmentService implements IAttachmentService {
   }
 
   getFilePath(hash: string): string {
+    if (!Hex.isValid(hash) || hash.length !== 64) {
+      throw new ApiError('Invalid attachment hash', 400);
+    }
+
     return path.join(this.attachmentsDir, hash);
   }
 
