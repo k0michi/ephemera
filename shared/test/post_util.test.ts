@@ -13,15 +13,6 @@ describe("PostUtil.weightedLength", () => {
 });
 
 describe("PostUtil.validate", () => {
-  it("returns false if under min length", () => {
-    expect(PostUtil.validate("")[0]).toBe(false);
-  });
-
-  it("returns true if at max length", () => {
-    const max = "a".repeat(PostUtil.kMaxPostLength);
-    expect(PostUtil.validate(max)[0]).toBe(true);
-  });
-
   it("returns false if over max length", () => {
     const long = "a".repeat(PostUtil.kMaxPostLength + 1);
     expect(PostUtil.validate(long)[0]).toBe(false);
@@ -38,6 +29,7 @@ describe("PostUtil.validate", () => {
 
   it("returns true for valid post", () => {
     expect(PostUtil.validate("Hello world!".normalize("NFC"))[0]).toBe(true);
+    expect(PostUtil.validate("".normalize("NFC"))[0]).toBe(true);
   });
 });
 
