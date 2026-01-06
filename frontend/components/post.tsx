@@ -102,6 +102,20 @@ export default function Post({ post, onDelete }: PostProps) {
             <div style={{ marginBottom: 8 }}>
               <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
             </div>
+            <div>
+              {post[0][3]?.filter((footer) => footer[0] === 'attachment').map((footer) => {
+                const attachmentHash = footer[2];
+
+                return (
+                  <img
+                    key={attachmentHash}
+                    src={`${store.getClient().getAttachmentUrl(attachmentHash)}`}
+                    alt="post attachment"
+                    style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
+                  />
+                );
+              })}
+            </div>
             {/* Footer */}
             <div>
               <Dropdown>
