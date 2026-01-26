@@ -43,8 +43,9 @@ export default class Crypto {
   /**
    * Computes the SHA-256 digest of the input data.
    */
-  static async digest(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array> {
-    return new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+  static async digest(data: Uint8Array): Promise<Uint8Array> {
+    // crypto.subtle.digest takes TypedArray, so this is safe
+    return new Uint8Array(await crypto.subtle.digest('SHA-256', data as BufferSource));
   }
 
   /**

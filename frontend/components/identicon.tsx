@@ -5,7 +5,7 @@ import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import React, { useEffect, useState } from 'react';
 
 export interface IdenticonProps {
-  data: Uint8Array<ArrayBuffer>;
+  data: Uint8Array;
   className?: string;
   style?: React.CSSProperties;
 }
