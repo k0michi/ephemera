@@ -1,10 +1,11 @@
 import ArrayHelper from '@ephemera/shared/lib/array_helper';
+import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import React, { useEffect, useState } from 'react';
 
 export interface IdenticonProps {
-  data: Uint8Array;
+  data: Uint8Array<ArrayBuffer>;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -147,7 +148,8 @@ export default function Identicon({
     } else {
       const generateImage = async () => {
         try {
-          const blob = await render(data);
+          const digest = await Crypto.digest(data);
+          const blob = await render(digest);
 
           // If the component was unmounted while rendering
           if (ignore) {
