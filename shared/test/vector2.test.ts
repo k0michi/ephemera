@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Vector2 from "../vector2.js";
+import Vector2 from "../lib/vector2.js";
 
 describe("Vector2", () => {
   describe("add", () => {
