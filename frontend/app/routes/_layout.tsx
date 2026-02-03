@@ -8,6 +8,7 @@ import { EphemeraStoreContext } from "~/store";
 import { useReader, useSelector } from "lib/store";
 import Base37 from "@ephemera/shared/lib/base37";
 import { useEffect } from "react";
+import ServerIdenticon from "components/server_identicon";
 
 function UserMenu() {
   const key = useSelector(EphemeraStoreContext, (store) => {
@@ -53,9 +54,19 @@ export default function Layout() {
         <Container>
           <Row className="align-items-center" style={{ height: "56px" }}>
             <Col>
-              <Link to="/" style={{ textDecoration: "none" }}>
-                <span style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#8939cb" }}>Ephemera</span>
-              </Link>
+              <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                <Link to="/" style={{ textDecoration: "none" }}>
+                  <ServerIdenticon
+                    style={{
+                      width: 24
+                    }}
+                    data={new TextEncoder().encode(store.getHost() || '')}
+                  />
+                </Link>
+                <Link to="/" style={{ textDecoration: "none" }}>
+                  <div style={{ fontSize: "1.5rem", color: "black" }}>Ephemera</div>
+                </Link>
+              </div>
             </Col>
             <Col xs="auto">
               <UserMenu />
