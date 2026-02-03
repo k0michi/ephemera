@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { converter, clampGamut, formatRgb, parseOklch, oklch } from "culori";
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import MathHelper from '@ephemera/shared/lib/math_helper';
-import Vector2 from '@ephemera/shared/vector2';
+import Vector2 from '@ephemera/shared/lib/vector2';
 import DrunkenBishop from 'lib/drunken_bishop';
 
 export interface ServerIdenticonProps {
