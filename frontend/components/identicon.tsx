@@ -1,7 +1,7 @@
 import ArrayHelper from '@ephemera/shared/lib/array_helper';
 import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
-import NullableHelper from '@ephemera/shared/lib/nullable_helper';
+import DrunkenBishop from 'lib/drunken_bishop';
 import React, { useEffect, useState } from 'react';
 
 export interface IdenticonProps {
@@ -14,8 +14,6 @@ const kGridWidth = 8;
 const kGridHeight = 8;
 const kScale = 1;
 
-type GridCell = number[];
-
 function lerpHue(h1: number, h2: number, t: number): number {
   let diff = h2 - h1;
   if (diff > 180) diff -= 360;
@@ -25,33 +23,8 @@ function lerpHue(h1: number, h2: number, t: number): number {
   return (result + 360) % 360;
 }
 
-function computeDrunkenBishop(data: Uint8Array): GridCell[] {
-  const grid: GridCell[] = Array(kGridWidth * kGridHeight).fill(null).map(() => []);
-  let x = Math.floor(kGridWidth / 2);
-  let y = Math.floor(kGridHeight / 2);
-
-  ArrayHelper.strictGet(grid, y * kGridWidth + x).push(0);
-  for (let i = 0; i < data.length; i++) {
-    const byte = ArrayHelper.strictGet(data, i);
-
-    for (let step = 0; step < 4; step++) {
-      const pair = (byte >> (2 * step)) & 0x03;
-
-      const dx = (pair & 0x01) ? 1 : -1;
-      const dy = (pair & 0x02) ? 1 : -1;
-
-      x = Math.max(0, Math.min(kGridWidth - 1, x + dx));
-      y = Math.max(0, Math.min(kGridHeight - 1, y + dy));
-
-      ArrayHelper.strictGet(grid, y * kGridWidth + x).push(i * 4 + step + 1);
-    }
-  }
-
-  return grid;
-};
-
 async function render(data: Uint8Array): Promise<Blob> {
-  const grid = computeDrunkenBishop(data);
+  const grid = DrunkenBishop.compute2D(data, kGridWidth, kGridHeight);
 
   let canvas: OffscreenCanvas | HTMLCanvasElement;
   let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
