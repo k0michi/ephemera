@@ -23,14 +23,29 @@ export default class Vector2 {
     return v1.x * v2.x + v1.y * v2.y;
   }
 
+  static lengthSquared(v: Vector2): number {
+    return Vector2.dot(v, v);
+  }
+
+  static length(v: Vector2): number {
+    return Math.sqrt(Vector2.lengthSquared(v));
+  }
+
   static norm(v: Vector2): Vector2 {
-    const l = Math.sqrt(v.x * v.x + v.y * v.y);
+    const l = Vector2.length(v);
     return l === 0 ? new Vector2(0, 0) : new Vector2(v.x / l, v.y / l);
   }
 
   static angleBetween(v1: Vector2, v2: Vector2): number {
-    const dot = v1.x * v2.x + v1.y * v2.y;
-    const clamped = Math.max(-1, Math.min(1, dot));
+    const l1 = Vector2.length(v1);
+    const l2 = Vector2.length(v2);
+
+    if (l1 === 0 || l2 === 0) {
+      return 0;
+    }
+
+    const cosTheta = Vector2.dot(v1, v2) / (l1 * l2);
+    const clamped = Math.max(-1, Math.min(1, cosTheta));
     return Math.acos(clamped);
   }
 }
