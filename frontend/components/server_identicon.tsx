@@ -2,7 +2,8 @@ import ArrayHelper from '@ephemera/shared/lib/array_helper';
 import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
 import React, { useEffect, useState } from 'react';
-import { converter, clampGamut, formatRgb } from "culori";
+import { converter, clampGamut, formatRgb, parseOklch, oklch } from "culori";
+import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 
 export interface ServerIdenticonProps {
   data: Uint8Array;
@@ -98,12 +99,11 @@ function calculateInsetVertex(P: Vec2, P_prev: Vec2, P_next: Vec2, W: number): V
   return Vec2.add(P, Vec2.mul(b, dist));
 }
 
-function oklchToRgb(l: number, c: number, h: number): string {
-  const oklch = { mode: "oklch", l, c, h };
+function oklchToRgb(l: number, c: number, h: number) {
   const toRgb = converter("rgb");
   const clampToSRGB = clampGamut("rgb");
-  const rgb = toRgb(clampToSRGB(oklch));
-  return formatRgb(rgb);
+  const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
+  return NullableHelper.unwrap(formatRgb(rgb));
 }
 
 const kSize = 480;
