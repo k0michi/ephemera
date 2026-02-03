@@ -19,7 +19,6 @@
     "culori": "^4.0.2",
     "get-east-asian-width": "^1.4.0",
     "isbot": "^5",
-    "lru-cache": "^11.2.5",
     "png-to-ico": "^3.0.1",
     "react": "^19.2.3",
     "react-bootstrap": "^2.10.10",
