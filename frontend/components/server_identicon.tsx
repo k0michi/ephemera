@@ -14,15 +14,6 @@ export interface ServerIdenticonProps {
   style?: React.CSSProperties;
 }
 
-function lerpHue(h1: number, h2: number, t: number): number {
-  let diff = h2 - h1;
-  if (diff > 180) diff -= 360;
-  else if (diff < -180) diff += 360;
-
-  let result = h1 + (diff * t);
-  return (result + 360) % 360;
-}
-
 function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: number): Vector2 {
   if (W <= 0.01) return P;
   const v1 = Vector2.sub(P_prev, P);
@@ -108,11 +99,11 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
       const sumOffset = cellVisits.reduce((a, b) => a + b, 0);
       const avgOffset = sumOffset / count;
       const normalizedTime = avgOffset / Math.max(maxOffset, 1);
-      const hue = lerpHue(startHue, endHue, normalizedTime);
+      const hue = MathHelper.slerp(startHue, endHue, normalizedTime);
 
       color = oklchToRgb(lightness, chroma, hue);
     } else {
-      const midHue = lerpHue(startHue, endHue, 0.5);
+      const midHue = MathHelper.slerp(startHue, endHue, 0.5);
       color = oklchToRgb(0.2, 0.05, midHue);
     }
 

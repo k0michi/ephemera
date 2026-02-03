@@ -1,6 +1,7 @@
 import ArrayHelper from '@ephemera/shared/lib/array_helper';
 import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
+import MathHelper from '@ephemera/shared/lib/math_helper';
 import DrunkenBishop from 'lib/drunken_bishop';
 import React, { useEffect, useState } from 'react';
 
@@ -13,15 +14,6 @@ export interface IdenticonProps {
 const kGridWidth = 8;
 const kGridHeight = 8;
 const kScale = 1;
-
-function lerpHue(h1: number, h2: number, t: number): number {
-  let diff = h2 - h1;
-  if (diff > 180) diff -= 360;
-  else if (diff < -180) diff += 360;
-
-  let result = h1 + (diff * t);
-  return (result + 360) % 360;
-}
 
 async function render(data: Uint8Array): Promise<Blob> {
   const grid = DrunkenBishop.compute2D(data, kGridWidth, kGridHeight);
@@ -67,12 +59,12 @@ async function render(data: Uint8Array): Promise<Blob> {
         // Avoid division by zero
         const normalizedTime = avgOffset / Math.max(maxOffset, 1);
 
-        const currentHue = lerpHue(startHue, endHue, normalizedTime);
+        const currentHue = MathHelper.slerp(startHue, endHue, normalizedTime);
 
         ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       } else {
-        const midHue = lerpHue(startHue, endHue, 0.5);
+        const midHue = MathHelper.slerp(startHue, endHue, 0.5);
         ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
