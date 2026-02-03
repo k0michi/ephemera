@@ -106,7 +106,7 @@ function oklchToRgb(l: number, c: number, h: number) {
   return NullableHelper.unwrap(formatRgb(rgb));
 }
 
-const kSize = 480;
+const kSize = 400;
 
 export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegments: number, gapWidth: number }): string {
   const cx = kSize / 2;

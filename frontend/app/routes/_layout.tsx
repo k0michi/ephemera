@@ -58,7 +58,7 @@ export default function Layout() {
                 <Link to="/" style={{ textDecoration: "none" }}>
                   <ServerIdenticon
                     style={{
-                      width: 32
+                      width: 24
                     }}
                     data={new TextEncoder().encode(store.getHost() || '')}
                   />
