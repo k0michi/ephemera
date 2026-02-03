@@ -1,3 +1,5 @@
+import PromiseHelper from "./promise_helper.js";
+
 type CacheEntry<T> = {
   value: T;
   expiry: number | null;
@@ -49,14 +51,9 @@ export class Cache<T> {
 
     const value = valueFn();
 
-    if (value instanceof Promise) {
-      return value.then((resolvedValue) => {
-        this.set(resolvedValue, ttl);
-        return resolvedValue;
-      });
-    } else {
-      this.set(value, ttl);
-      return value;
-    }
+    return PromiseHelper.then(value, (resolvedValue) => {
+      this.set(resolvedValue, ttl);
+      return resolvedValue;
+    });
   }
 }
