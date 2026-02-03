@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { converter, clampGamut, formatRgb, parseOklch, oklch } from "culori";
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import MathHelper from '@ephemera/shared/lib/math_helper';
+import Vector2 from '@ephemera/shared/vector2';
 
 export interface ServerIdenticonProps {
   data: Uint8Array;
@@ -44,56 +45,19 @@ function computeDrunkenBishopLooped1D(data: Uint8Array, numSegments: number): Gr
   return grid;
 }
 
-class Vec2 {
-  x: number;
-  y: number;
-
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-
-  static add(v1: Vec2, v2: Vec2): Vec2 {
-    return new Vec2(v1.x + v2.x, v1.y + v2.y);
-  }
-
-  static sub(v1: Vec2, v2: Vec2): Vec2 {
-    return new Vec2(v1.x - v2.x, v1.y - v2.y);
-  }
-
-  static mul(v: Vec2, s: number): Vec2 {
-    return new Vec2(v.x * s, v.y * s);
-  }
-
-  static dot(v1: Vec2, v2: Vec2): number {
-    return v1.x * v2.x + v1.y * v2.y;
-  }
-
-  static norm(v: Vec2): Vec2 {
-    const l = Math.sqrt(v.x * v.x + v.y * v.y);
-    return l === 0 ? new Vec2(0, 0) : new Vec2(v.x / l, v.y / l);
-  }
-
-  static angleBetween(v1: Vec2, v2: Vec2): number {
-    const dot = v1.x * v2.x + v1.y * v2.y;
-    const clamped = Math.max(-1, Math.min(1, dot));
-    return Math.acos(clamped);
-  }
-}
-
-function calculateInsetVertex(P: Vec2, P_prev: Vec2, P_next: Vec2, W: number): Vec2 {
+function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: number): Vector2 {
   if (W <= 0.01) return P;
-  const v1 = Vec2.sub(P_prev, P);
-  const v2 = Vec2.sub(P_next, P);
-  const u1 = Vec2.norm(v1);
-  const u2 = Vec2.norm(v2);
-  const theta = Vec2.angleBetween(u1, u2);
+  const v1 = Vector2.sub(P_prev, P);
+  const v2 = Vector2.sub(P_next, P);
+  const u1 = Vector2.norm(v1);
+  const u2 = Vector2.norm(v2);
+  const theta = Vector2.angleBetween(u1, u2);
   if (theta < 0.01 || Math.abs(theta - Math.PI) < 0.01) return P;
 
-  const b = Vec2.norm(Vec2.add(u1, u2));
+  const b = Vector2.norm(Vector2.add(u1, u2));
   const dist = W / (2 * Math.sin(theta / 2));
 
-  return Vec2.add(P, Vec2.mul(b, dist));
+  return Vector2.add(P, Vector2.mul(b, dist));
 }
 
 function oklchToRgb(l: number, c: number, h: number) {
@@ -127,16 +91,16 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
     const cellVisits = ArrayHelper.strictGet(grid, i);
     const count = cellVisits.length;
 
-    const points: Vec2[] = [];
+    const points: Vector2[] = [];
     // {
     //   const ang1 = i * radPerSeg - (Math.PI / 2);
     //   const ang2 = (i + 1) * radPerSeg - (Math.PI / 2);
     //   const r1 = (i % 2 === 0) ? R_OUTER : R_INNER;
     //   const r2 = ((i + 1) % 2 === 0) ? R_OUTER : R_INNER;
 
-    //   points.push(new Vec2(cx, cy));
-    //   points.push(new Vec2(cx + r1 * Math.cos(ang1), cy + r1 * Math.sin(ang1)));
-    //   points.push(new Vec2(cx + r2 * Math.cos(ang2), cy + r2 * Math.sin(ang2)));
+    //   points.push(new Vector2(cx, cy));
+    //   points.push(new Vector2(cx + r1 * Math.cos(ang1), cy + r1 * Math.sin(ang1)));
+    //   points.push(new Vector2(cx + r2 * Math.cos(ang2), cy + r2 * Math.sin(ang2)));
     // }
 
     {
@@ -145,10 +109,10 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
       const startAngle = midAngle - (radPerSeg / 2);
       const endAngle = midAngle + (radPerSeg / 2);
 
-      points.push(new Vec2(cx, cy));
-      points.push(new Vec2(cx + R_INNER * Math.cos(startAngle), cy + R_INNER * Math.sin(startAngle)));
-      points.push(new Vec2(cx + R_OUTER * Math.cos(midAngle), cy + R_OUTER * Math.sin(midAngle)));
-      points.push(new Vec2(cx + R_INNER * Math.cos(endAngle), cy + R_INNER * Math.sin(endAngle)));
+      points.push(new Vector2(cx, cy));
+      points.push(new Vector2(cx + R_INNER * Math.cos(startAngle), cy + R_INNER * Math.sin(startAngle)));
+      points.push(new Vector2(cx + R_OUTER * Math.cos(midAngle), cy + R_OUTER * Math.sin(midAngle)));
+      points.push(new Vector2(cx + R_INNER * Math.cos(endAngle), cy + R_INNER * Math.sin(endAngle)));
     }
 
     for (let j = 0; j < points.length; j++) {
