@@ -8,6 +8,13 @@
       "when": 1767143861358,
       "tag": "0000_soft_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1767447594898,
+      "tag": "0001_clever_triathlon",
+      "breakpoints": true
     }
   ]
 }

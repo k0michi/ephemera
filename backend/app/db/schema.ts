@@ -46,3 +46,31 @@ export const posts = mysqlTable('posts', {
 }, (table) => [
   uniqueIndex('posts_seq_idx').on(table.seq),
 ]);
+
+export const attachments = mysqlTable('attachments', {
+  /**
+   * Attachment ID in hex encoding. This is always 32 bytes (64 hex characters).
+   */
+  id: char('id', { length: 64 }).primaryKey(),
+
+  /**
+   * Mime type of the attachment.
+   */
+  type: varchar('type', { length: 255 }),
+
+  size: bigint('size', { mode: 'number' }),
+
+  insertedAt: timestamp('insertedAt', { mode: 'string', fsp: 6 }).default(sql`CURRENT_TIMESTAMP(6)`),
+
+  seq: int('seq').autoincrement(),
+}, (table) => [
+  uniqueIndex('attachments_seq_idx').on(table.seq),
+]);
+
+export const postAttachments = mysqlTable('post_attachments', {
+  postId: char('postId', { length: 64 }).references(() => posts.id, { onDelete: 'cascade' }),
+  attachmentId: char('attachmentId', { length: 64 }).references(() => attachments.id),
+}, (table) => [
+  index('post_attachments_postId_idx').on(table.postId),
+  index('post_attachments_attachmentId_idx').on(table.attachmentId),
+]);
