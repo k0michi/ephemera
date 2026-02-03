@@ -1,5 +1,4 @@
 import { render } from "components/server_identicon";
-import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import sharp from "sharp";
 import pngToIco from "png-to-ico";
 import Crypto from "@ephemera/shared/lib/crypto";
@@ -22,7 +21,12 @@ async function renderToIco(svgString: string): Promise<Buffer> {
 }
 
 export async function loader() {
-  const host = NullableHelper.unwrap(process.env.EPHEMERA_HOST);
+  const host = process.env.EPHEMERA_HOST;
+
+  if (host === undefined) {
+    return new Response("Not Found", { status: 404 });
+  }
+
   const digest = await Crypto.digest(new TextEncoder().encode(host));
   const svgString = render(digest, { numSegments: 7, gapWidth: 16 });
   const icoBuffer = await renderToIco(svgString);
