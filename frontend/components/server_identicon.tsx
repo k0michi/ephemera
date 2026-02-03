@@ -4,6 +4,7 @@ import Hex from '@ephemera/shared/lib/hex';
 import React, { useEffect, useState } from 'react';
 import { converter, clampGamut, formatRgb, parseOklch, oklch } from "culori";
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
+import MathHelper from '@ephemera/shared/lib/math_helper';
 
 export interface ServerIdenticonProps {
   data: Uint8Array;
@@ -22,10 +23,6 @@ function lerpHue(h1: number, h2: number, t: number): number {
   return (result + 360) % 360;
 }
 
-function floorMod(a: number, b: number): number {
-  return a - b * Math.floor(a / b);
-}
-
 function computeDrunkenBishopLooped1D(data: Uint8Array, numSegments: number): GridCell[] {
   const grid: GridCell[] = Array(numSegments).fill(null).map(() => []);
   let x = 0;
@@ -38,7 +35,7 @@ function computeDrunkenBishopLooped1D(data: Uint8Array, numSegments: number): Gr
       const bit = (byte >> step) & 0x01;
       const dx = bit ? 1 : -1;
 
-      x = floorMod(x + dx, numSegments);
+      x = MathHelper.floorMod(x + dx, numSegments);
 
       ArrayHelper.strictGet(grid, x).push(i * 8 + step + 1);
     }
