@@ -3,7 +3,7 @@ import { Form, Button, Card } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 
 export interface ComposerProps {
-  onSubmit?: (value: string, event: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit?: (value: string, event: React.FormEvent<HTMLFormElement>) => boolean | Promise<boolean>;
 }
 
 export default function Composer({ onSubmit }: ComposerProps) {
@@ -12,10 +12,14 @@ export default function Composer({ onSubmit }: ComposerProps) {
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(value, e);
-    setValue("");
+
+    const result = await onSubmit?.(value, e);
+
+    if (result) {
+      setValue("");
+    }
   };
 
   const isUnder = count < minLength;

@@ -18,8 +18,10 @@ export default function Home() {
     try {
       await store.sendPost(value);
       store.addLog("success", "Post submitted successfully!");
+      return true;
     } catch (error) {
       store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
+      return false;
     }
   };
 
