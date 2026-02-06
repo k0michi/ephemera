@@ -18,13 +18,17 @@ export default function Composer({ onSubmit }: ComposerProps) {
 
     setSubmitting(true);
 
-    const result = await onSubmit?.(value, e);
+    let result = false;
+
+    try {
+      result = await onSubmit?.(value, e) ?? false;
+    } finally {
+      setSubmitting(false);
+    }
 
     if (result) {
       setValue("");
     }
-
-    setSubmitting(false);
   };
 
   const isUnder = count < minLength;
