@@ -8,6 +8,7 @@ export interface ComposerProps {
 
 export default function Composer({ onSubmit }: ComposerProps) {
   const [value, setValue] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
@@ -15,11 +16,15 @@ export default function Composer({ onSubmit }: ComposerProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    setSubmitting(true);
+
     const result = await onSubmit?.(value, e);
 
     if (result) {
       setValue("");
     }
+
+    setSubmitting(false);
   };
 
   const isUnder = count < minLength;
@@ -56,7 +61,7 @@ export default function Composer({ onSubmit }: ComposerProps) {
               {count} / {maxLength}
             </div>
             <div className="text-end">
-              <Button type="submit" variant="primary" disabled={isUnder || isOver}>
+              <Button type="submit" variant="primary" disabled={isUnder || isOver || submitting}>
                 Post
               </Button>
             </div>
