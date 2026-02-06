@@ -7,7 +7,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc -b",
-    "test": "vitest"
+    "test": "vitest",
+    "ladle": "ladle serve --viteConfig ./vite.ladle.config.ts"
   },
   "dependencies": {
     "@ephemera/shared": "*",
@@ -29,6 +30,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@ladle/react": "^5.1.1",
     "@react-router/dev": "^7.11.0",
     "@types/culori": "^4.0.1",
     "@types/node": "^22",
