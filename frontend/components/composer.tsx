@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Button, Card } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
-import { useMutex } from "~/hooks/lock";
+import { useMutex } from "~/hooks/mutex";
 
 export interface ComposerProps {
   onSubmit?: (value: string, event: React.FormEvent<HTMLFormElement>) => boolean | Promise<boolean>;
