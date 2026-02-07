@@ -52,9 +52,9 @@ async function render(data: Uint8Array): Promise<Blob> {
     }
   }
 
-  const startHue = ArrayHelper.getOrDefault(data, 0, 0) / 255 * 360;
+  const startHue = ArrayHelper.getOrDefault(data, 0, 0) / 255 * 2 * Math.PI;
   const startChroma = ArrayHelper.getOrDefault(data, 1, 0) / 255 * 0.1;
-  const endHue = ArrayHelper.getOrDefault(data, 2, 0) / 255 * 360;
+  const endHue = ArrayHelper.getOrDefault(data, 2, 0) / 255 * 2 * Math.PI;
   const endChroma = ArrayHelper.getOrDefault(data, 3, 0) / 255 * 0.1;
   const maxOffset = data.length * 4;
 
@@ -64,13 +64,13 @@ async function render(data: Uint8Array): Promise<Blob> {
 
       for (let i = 0; i < cell.length; i++) {
         const t = ArrayHelper.strictGet(cell, i);
-        const normalizedT = t / maxOffset;
+        const normalizedT = MathHelper.normalize(t, 0, maxOffset);
         const lightness = 0.25;
         const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
         const hue = MathHelper.slerp(startHue, endHue, normalizedT);
         const alpha = 1;
 
-        ctx.fillStyle = `oklch(${lightness} ${chroma} ${hue} / ${alpha})`;
+        ctx.fillStyle = `oklch(${lightness} ${chroma} ${MathHelper.toDegrees(hue)} / ${alpha})`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
     }

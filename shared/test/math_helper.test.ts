@@ -21,9 +21,9 @@ describe("MathHelper", () => {
 
   describe("slerp", () => {
     it("should interpolate angles correctly", () => {
-      expect(MathHelper.slerp(30, 90, 0.5)).toBe(60);
-      expect(MathHelper.slerp(90, 0, 0.5)).toBe(45);
-      expect(MathHelper.slerp(0, 270, 0.5)).toBe(315);
+      expect(MathHelper.slerp(Math.PI / 6, Math.PI / 2, 0.5)).toBeCloseTo(Math.PI / 3);
+      expect(MathHelper.slerp(Math.PI / 2, 0, 0.5)).toBeCloseTo(Math.PI / 4);
+      expect(MathHelper.slerp(0, (3 * Math.PI) / 2, 0.5)).toBeCloseTo((7 * Math.PI) / 4);
     });
   });
 
@@ -41,6 +41,38 @@ describe("MathHelper", () => {
       expect(MathHelper.reflect(-1, 0, 10)).toBe(1);
       expect(MathHelper.reflect(25, 0, 10)).toBe(5);
       expect(MathHelper.reflect(0, 0, 0)).toBe(0);
+    });
+  });
+
+  describe("clamp", () => {
+    it("should clamp values within the specified range", () => {
+      expect(MathHelper.clamp(5, 0, 10)).toBe(5);
+      expect(MathHelper.clamp(-5, 0, 10)).toBe(0);
+      expect(MathHelper.clamp(15, 0, 10)).toBe(10);
+    });
+  });
+
+  describe("normalize", () => {
+    it("should normalize values within the specified range", () => {
+      expect(MathHelper.normalize(5, 0, 10)).toBe(0.5);
+      expect(MathHelper.normalize(0, 0, 10)).toBe(0);
+      expect(MathHelper.normalize(10, 0, 10)).toBe(1);
+      expect(MathHelper.normalize(15, 0, 10)).toBe(1.5);
+      expect(MathHelper.normalize(5, 5, 5)).toBe(0);
+    });
+  });
+
+  describe("toDegrees", () => {
+    it("should convert radians to degrees", () => {
+      expect(MathHelper.toDegrees(Math.PI)).toBeCloseTo(180);
+      expect(MathHelper.toDegrees(Math.PI / 2)).toBeCloseTo(90);
+    });
+  });
+
+  describe("toRadians", () => {
+    it("should convert degrees to radians", () => {
+      expect(MathHelper.toRadians(180)).toBeCloseTo(Math.PI);
+      expect(MathHelper.toRadians(90)).toBeCloseTo(Math.PI / 2);
     });
   });
 });
