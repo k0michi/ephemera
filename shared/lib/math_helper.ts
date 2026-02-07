@@ -19,7 +19,7 @@ export default class MathHelper {
   static reflect(x: number, min: number, max: number): number {
     const range = max - min;
 
-    if (range <= 0) {
+    if (range === 0) {
       return min;
     }
 
