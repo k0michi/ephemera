@@ -29,11 +29,26 @@ function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: n
   return Vector2.add(P, Vector2.mul(b, dist));
 }
 
-function oklchToRgb(l: number, c: number, h: number) {
+function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b: number } {
   const toRgb = converter("rgb");
   const clampToSRGB = clampGamut("rgb");
   const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
-  return NullableHelper.unwrap(formatRgb(rgb));
+  const r = NullableHelper.unwrap(rgb?.r);
+  const g = NullableHelper.unwrap(rgb?.g);
+  const b = NullableHelper.unwrap(rgb?.b);
+  return { r, g, b };
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function addRgb(c1: { r: number, g: number, b: number }, c2: { r: number, g: number, b: number }): { r: number, g: number, b: number } {
+  return {
+    r: clamp01(c1.r + c2.r),
+    g: clamp01(c1.g + c2.g),
+    b: clamp01(c1.b + c2.b),
+  };
 }
 
 const kSize = 400;
@@ -44,14 +59,14 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
   const R_OUTER = 200;
   const R_INNER = R_OUTER * (1 / Math.sqrt(3));
 
-  const startHue = bytes.length >= 2 ? ArrayHelper.strictGet(bytes, 0) % 360 : 0;
-  const endHue = bytes.length >= 2 ? ArrayHelper.strictGet(bytes, 1) % 360 : 120;
+  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 360;
+  const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
+  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 360;
+  const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
 
   const grid = DrunkenBishop.computeLooped1D(bytes, numSegments);
 
   const maxOffset = bytes.length * 8;
-  // const threshold = 32;
-  const threshold = 54;
   const radPerSeg = (2 * Math.PI) / numSegments;
 
   let svgPaths = [];
@@ -61,19 +76,8 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
     const count = cellVisits.length;
 
     const points: Vector2[] = [];
-    // {
-    //   const ang1 = i * radPerSeg - (Math.PI / 2);
-    //   const ang2 = (i + 1) * radPerSeg - (Math.PI / 2);
-    //   const r1 = (i % 2 === 0) ? R_OUTER : R_INNER;
-    //   const r2 = ((i + 1) % 2 === 0) ? R_OUTER : R_INNER;
-
-    //   points.push(new Vector2(cx, cy));
-    //   points.push(new Vector2(cx + r1 * Math.cos(ang1), cy + r1 * Math.sin(ang1)));
-    //   points.push(new Vector2(cx + r2 * Math.cos(ang2), cy + r2 * Math.sin(ang2)));
-    // }
 
     {
-
       const midAngle = i * radPerSeg - (Math.PI / 2);
       const startAngle = midAngle - (radPerSeg / 2);
       const endAngle = midAngle + (radPerSeg / 2);
@@ -92,20 +96,19 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
     }
 
     let color;
-    if (count > 0) {
-      const normalizedCount = Math.min(count, threshold) / threshold;
-      const lightness = 0.15 + (normalizedCount * 0.80);
-      const chroma = Math.pow(normalizedCount, 2) * 0.28;
-      const sumOffset = cellVisits.reduce((a, b) => a + b, 0);
-      const avgOffset = sumOffset / count;
-      const normalizedTime = avgOffset / Math.max(maxOffset, 1);
-      const hue = MathHelper.slerp(startHue, endHue, normalizedTime);
+    let rgb = { r: 0, g: 0, b: 0 };
 
-      color = oklchToRgb(lightness, chroma, hue);
-    } else {
-      const midHue = MathHelper.slerp(startHue, endHue, 0.5);
-      color = oklchToRgb(0.2, 0.05, midHue);
+    for (let visitIndex = 0; visitIndex < count; visitIndex++) {
+      const t = ArrayHelper.strictGet(cellVisits, visitIndex);
+      const normalizedT = t / maxOffset;
+      const hue = MathHelper.slerp(startHue, endHue, normalizedT);
+      const lightness = 0.1;
+      const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
+      const visitColor = oklchToRgb(lightness, chroma, hue);
+      rgb = addRgb(rgb, visitColor);
     }
+
+    color = `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
 
     let d = '';
 
