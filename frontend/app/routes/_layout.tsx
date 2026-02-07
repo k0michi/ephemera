@@ -1,6 +1,6 @@
 import Notifier from "components/notifier";
 import { Col, Container, Row } from "react-bootstrap";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useNavigate } from "react-router";
 
 import { Dropdown } from "react-bootstrap";
 import Identicon from "components/identicon";
@@ -11,6 +11,8 @@ import { useEffect } from "react";
 import ServerIdenticon from "components/server_identicon";
 
 function UserMenu() {
+  const navigate = useNavigate();
+
   const key = useSelector(EphemeraStoreContext, (store) => {
     return store.keyPair?.publicKey || null;
   });
@@ -35,7 +37,11 @@ function UserMenu() {
           key !== null ? `@${Base37.fromUint8Array(key)}` : 'Not signed in'
         }</Dropdown.Item>
         <Dropdown.Divider />
-        <Dropdown.Item href="/settings">Settings</Dropdown.Item>
+        <Dropdown.Item onClick={
+          () => {
+            navigate('/settings');
+          }
+        }>Settings</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );
