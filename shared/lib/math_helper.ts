@@ -18,6 +18,11 @@ export default class MathHelper {
 
   static reflect(x: number, min: number, max: number): number {
     const range = max - min;
+
+    if (range <= 0) {
+      return min;
+    }
+
     const relativeX = x - min;
     const mod = this.floorMod(relativeX, 2 * range);
     return min + (range - Math.abs(range - mod));

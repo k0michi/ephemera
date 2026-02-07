@@ -40,6 +40,7 @@ describe("MathHelper", () => {
       expect(MathHelper.reflect(12, 0, 10)).toBe(8);
       expect(MathHelper.reflect(-1, 0, 10)).toBe(1);
       expect(MathHelper.reflect(25, 0, 10)).toBe(5);
+      expect(MathHelper.reflect(0, 0, 0)).toBe(0);
     });
   });
 });
