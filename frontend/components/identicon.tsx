@@ -71,7 +71,6 @@ async function render(data: Uint8Array): Promise<Blob> {
         const alpha = 1;
 
         ctx.fillStyle = `oklch(${lightness * 100}% ${chroma} ${hue} / ${alpha})`;
-        console.log(hue, chroma, lightness);
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
     }
