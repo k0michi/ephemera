@@ -61,4 +61,18 @@ describe("MathHelper", () => {
       expect(MathHelper.normalize(5, 5, 5)).toBe(0);
     });
   });
+
+  describe("toDegrees", () => {
+    it("should convert radians to degrees", () => {
+      expect(MathHelper.toDegrees(Math.PI)).toBeCloseTo(180);
+      expect(MathHelper.toDegrees(Math.PI / 2)).toBeCloseTo(90);
+    });
+  });
+
+  describe("toRadians", () => {
+    it("should convert degrees to radians", () => {
+      expect(MathHelper.toRadians(180)).toBeCloseTo(Math.PI);
+      expect(MathHelper.toRadians(90)).toBeCloseTo(Math.PI / 2);
+    });
+  });
 });
