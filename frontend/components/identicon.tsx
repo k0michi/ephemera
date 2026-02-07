@@ -39,14 +39,14 @@ async function render(data: Uint8Array): Promise<Blob> {
   }
 
   ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = '#202020';
+  ctx.fillStyle = 'oklch(0.2 0 0)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.globalCompositeOperation = 'lighter';
   for (let y = 0; y < kGridHeight; y++) {
     for (let x = 0; x < kGridWidth; x++) {
       if ((x + y) % 2 === 0) {
-        ctx.fillStyle = `oklch(10% 0 0 / 1)`;
+        ctx.fillStyle = `oklch(0.1 0 0 / 1)`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
     }
