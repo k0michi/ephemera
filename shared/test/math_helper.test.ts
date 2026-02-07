@@ -21,9 +21,9 @@ describe("MathHelper", () => {
 
   describe("slerp", () => {
     it("should interpolate angles correctly", () => {
-      expect(MathHelper.slerp(30, 90, 0.5)).toBe(60);
-      expect(MathHelper.slerp(90, 0, 0.5)).toBe(45);
-      expect(MathHelper.slerp(0, 270, 0.5)).toBe(315);
+      expect(MathHelper.slerp(Math.PI / 6, Math.PI / 2, 0.5)).toBeCloseTo(Math.PI / 3);
+      expect(MathHelper.slerp(Math.PI / 2, 0, 0.5)).toBeCloseTo(Math.PI / 4);
+      expect(MathHelper.slerp(0, (3 * Math.PI) / 2, 0.5)).toBeCloseTo((7 * Math.PI) / 4);
     });
   });
 

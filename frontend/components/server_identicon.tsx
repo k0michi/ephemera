@@ -33,6 +33,7 @@ const toRgb = converter("rgb");
 const clampToSRGB = clampGamut("rgb");
 
 function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b: number } {
+  h = MathHelper.toDegrees(h);
   const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
   const r = NullableHelper.unwrap(rgb?.r);
   const g = NullableHelper.unwrap(rgb?.g);
@@ -56,9 +57,9 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
   const R_OUTER = 200;
   const R_INNER = R_OUTER * (1 / Math.sqrt(3));
 
-  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 360;
+  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 2 * Math.PI;
   const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
-  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 360;
+  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 2 * Math.PI;
   const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
 
   const grid = DrunkenBishop.computeLooped1D(bytes, numSegments);

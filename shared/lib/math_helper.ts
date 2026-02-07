@@ -5,11 +5,11 @@ export default class MathHelper {
 
   static slerp(a1: number, a2: number, t: number): number {
     let diff = a2 - a1;
-    if (diff > 180) diff -= 360;
-    else if (diff < -180) diff += 360;
+    if (diff > Math.PI) diff -= 2 * Math.PI;
+    else if (diff < -Math.PI) diff += 2 * Math.PI;
 
     let result = a1 + (diff * t);
-    return (result + 360) % 360;
+    return (result + 2 * Math.PI) % (2 * Math.PI);
   }
 
   static lerp(a: number, b: number, t: number): number {
@@ -38,5 +38,13 @@ export default class MathHelper {
     }
 
     return (value - min) / (max - min);
+  }
+
+  static toDegrees(radians: number): number {
+    return radians * (180 / Math.PI);
+  }
+
+  static toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 }
