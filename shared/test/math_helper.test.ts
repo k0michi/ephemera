@@ -26,4 +26,21 @@ describe("MathHelper", () => {
       expect(MathHelper.slerp(0, 270, 0.5)).toBe(315);
     });
   });
+
+  describe("lerp", () => {
+    it("should perform linear interpolation", () => {
+      expect(MathHelper.lerp(0, 1, 0.5)).toBe(0.5);
+      expect(MathHelper.lerp(10, 20, 0.25)).toBe(12.5);
+    });
+  });
+
+  describe("reflect", () => {
+    it("should reflect values within the specified range", () => {
+      expect(MathHelper.reflect(7, 0, 10)).toBe(7);
+      expect(MathHelper.reflect(12, 0, 10)).toBe(8);
+      expect(MathHelper.reflect(-1, 0, 10)).toBe(1);
+      expect(MathHelper.reflect(25, 0, 10)).toBe(5);
+      expect(MathHelper.reflect(0, 0, 0)).toBe(0);
+    });
+  });
 });

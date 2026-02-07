@@ -11,12 +11,12 @@ export interface IdenticonProps {
   style?: React.CSSProperties;
 }
 
-const kGridWidth = 8;
-const kGridHeight = 8;
+const kGridWidth = 16;
+const kGridHeight = 16;
 const kScale = 1;
 
 async function render(data: Uint8Array): Promise<Blob> {
-  const grid = DrunkenBishop.compute2D(data, kGridWidth, kGridHeight);
+  const grid = DrunkenBishop.compute2DReflect(data, kGridWidth, kGridHeight);
 
   let canvas: OffscreenCanvas | HTMLCanvasElement;
   let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
@@ -38,34 +38,39 @@ async function render(data: Uint8Array): Promise<Blob> {
     throw new Error('Failed to get canvas context');
   }
 
-  const startHue = data.length >= 2 ? ArrayHelper.strictGet(data, 0) % 360 : 0;
-  const endHue = data.length >= 2 ? ArrayHelper.strictGet(data, 1) % 360 : 120;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'oklch(0.2 0 0)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.globalCompositeOperation = 'lighter';
+  for (let y = 0; y < kGridHeight; y++) {
+    for (let x = 0; x < kGridWidth; x++) {
+      if ((x + y) % 2 === 0) {
+        ctx.fillStyle = `oklch(0.1 0 0 / 1)`;
+        ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
+      }
+    }
+  }
+
+  const startHue = ArrayHelper.getOrDefault(data, 0, 0) / 255 * 360;
+  const startChroma = ArrayHelper.getOrDefault(data, 1, 0) / 255 * 0.1;
+  const endHue = ArrayHelper.getOrDefault(data, 2, 0) / 255 * 360;
+  const endChroma = ArrayHelper.getOrDefault(data, 3, 0) / 255 * 0.1;
   const maxOffset = data.length * 4;
 
   for (let y = 0; y < kGridHeight; y++) {
     for (let x = 0; x < kGridWidth; x++) {
       const cell = ArrayHelper.strictGet(grid, y * kGridWidth + x);
 
-      if (cell.length > 0) {
-        const normalizedCount = Math.min(cell.length, 8) / 8;
-        // const lightness = 0.35 + (normalizedCount * 0.60);
-        const lightness = 0.15 + (normalizedCount * 0.80);
+      for (let i = 0; i < cell.length; i++) {
+        const t = ArrayHelper.strictGet(cell, i);
+        const normalizedT = t / maxOffset;
+        const lightness = 0.25;
+        const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
+        const hue = MathHelper.slerp(startHue, endHue, normalizedT);
+        const alpha = 1;
 
-        // const chroma = 0.12 + (normalizedCount * 0.1);
-        const chroma = Math.pow(normalizedCount, 2) * 0.28;
-
-        const sumOffset = cell.reduce((a, b) => a + b, 0);
-        const avgOffset = sumOffset / cell.length;
-        // Avoid division by zero
-        const normalizedTime = avgOffset / Math.max(maxOffset, 1);
-
-        const currentHue = MathHelper.slerp(startHue, endHue, normalizedTime);
-
-        ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
-        ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
-      } else {
-        const midHue = MathHelper.slerp(startHue, endHue, 0.5);
-        ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
+        ctx.fillStyle = `oklch(${lightness} ${chroma} ${hue} / ${alpha})`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
     }

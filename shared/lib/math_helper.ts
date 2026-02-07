@@ -11,4 +11,20 @@ export default class MathHelper {
     let result = a1 + (diff * t);
     return (result + 360) % 360;
   }
+
+  static lerp(a: number, b: number, t: number): number {
+    return a + (b - a) * t;
+  }
+
+  static reflect(x: number, min: number, max: number): number {
+    const range = max - min;
+
+    if (range <= 0) {
+      return min;
+    }
+
+    const relativeX = x - min;
+    const mod = this.floorMod(relativeX, 2 * range);
+    return min + (range - Math.abs(range - mod));
+  }
 }

@@ -4,7 +4,7 @@ import MathHelper from "@ephemera/shared/lib/math_helper";
 export type Cell = number[];
 
 export default class DrunkenBishop {
-  static compute2D(data: Uint8Array, width: number, height: number): Cell[] {
+  static compute2DReflect(data: Uint8Array, width: number, height: number): Cell[] {
     const grid: Cell[] = Array(width * height).fill(null).map(() => []);
     let x = Math.floor(width / 2);
     let y = Math.floor(height / 2);
@@ -19,8 +19,8 @@ export default class DrunkenBishop {
         const dx = (pair & 0x01) ? 1 : -1;
         const dy = (pair & 0x02) ? 1 : -1;
 
-        x = Math.max(0, Math.min(width - 1, x + dx));
-        y = Math.max(0, Math.min(height - 1, y + dy));
+        x = MathHelper.reflect(x + dx, 0, width - 1);
+        y = MathHelper.reflect(y + dy, 0, height - 1);
 
         ArrayHelper.strictGet(grid, y * width + x).push(i * 4 + step + 1);
       }
