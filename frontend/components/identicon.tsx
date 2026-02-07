@@ -70,7 +70,7 @@ async function render(data: Uint8Array): Promise<Blob> {
         const hue = MathHelper.slerp(startHue, endHue, normalizedT);
         const alpha = 1;
 
-        ctx.fillStyle = `oklch(${lightness * 100}% ${chroma} ${hue} / ${alpha})`;
+        ctx.fillStyle = `oklch(${lightness} ${chroma} ${hue} / ${alpha})`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
     }
