@@ -43,4 +43,12 @@ describe("MathHelper", () => {
       expect(MathHelper.reflect(0, 0, 0)).toBe(0);
     });
   });
+
+  describe("clamp", () => {
+    it("should clamp values within the specified range", () => {
+      expect(MathHelper.clamp(5, 0, 10)).toBe(5);
+      expect(MathHelper.clamp(-5, 0, 10)).toBe(0);
+      expect(MathHelper.clamp(15, 0, 10)).toBe(10);
+    });
+  });
 });
