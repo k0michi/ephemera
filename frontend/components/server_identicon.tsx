@@ -39,15 +39,11 @@ function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b:
   return { r, g, b };
 }
 
-function clamp01(value: number): number {
-  return Math.max(0, Math.min(1, value));
-}
-
 function addRgb(c1: { r: number, g: number, b: number }, c2: { r: number, g: number, b: number }): { r: number, g: number, b: number } {
   return {
-    r: clamp01(c1.r + c2.r),
-    g: clamp01(c1.g + c2.g),
-    b: clamp01(c1.b + c2.b),
+    r: MathHelper.clamp(c1.r + c2.r, 0, 1),
+    g: MathHelper.clamp(c1.g + c2.g, 0, 1),
+    b: MathHelper.clamp(c1.b + c2.b, 0, 1),
   };
 }
 

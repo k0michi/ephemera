@@ -27,4 +27,8 @@ export default class MathHelper {
     const mod = this.floorMod(relativeX, 2 * range);
     return min + (range - Math.abs(range - mod));
   }
+
+  static clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+  }
 }
