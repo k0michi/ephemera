@@ -12,26 +12,13 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const store = useReader(EphemeraStoreContext);
-
-  const handleSubmit = async (value: string) => {
-    try {
-      await store.sendPost(value);
-      store.addLog("success", "Post submitted successfully!");
-      return true;
-    } catch (error) {
-      store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
-      return false;
-    }
-  };
-
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }}>
-      <Composer onSubmit={handleSubmit} />
+      <Composer />
       <Timeline />
     </div>
   );

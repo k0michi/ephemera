@@ -1,7 +1,7 @@
 import { eastAsianWidth } from 'get-east-asian-width';
 
 export default class PostUtil {
-  static kMinPostLength = 1;
+  static kMinPostLength = 0;
   static kMaxPostLength = 320;
   /**
    * U+0000 to U+001F, U+007F to U+009F
