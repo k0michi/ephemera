@@ -148,6 +148,14 @@ export class EphemeraStore extends Store {
 
     this.notifyListeners();
   }
+
+  getHost(): string | null {
+    if (!globalThis.location) {
+      return null;
+    }
+
+    return window.location.host;
+  }
 }
 
 export const EphemeraStoreContext = createStoreContext(EphemeraStore);

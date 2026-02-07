@@ -1,7 +1,8 @@
 import ArrayHelper from '@ephemera/shared/lib/array_helper';
 import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
-import NullableHelper from '@ephemera/shared/lib/nullable_helper';
+import MathHelper from '@ephemera/shared/lib/math_helper';
+import DrunkenBishop from 'lib/drunken_bishop';
 import React, { useEffect, useState } from 'react';
 
 export interface IdenticonProps {
@@ -10,48 +11,12 @@ export interface IdenticonProps {
   style?: React.CSSProperties;
 }
 
-const kGridWidth = 8;
-const kGridHeight = 8;
+const kGridWidth = 16;
+const kGridHeight = 16;
 const kScale = 1;
 
-type GridCell = number[];
-
-function lerpHue(h1: number, h2: number, t: number): number {
-  let diff = h2 - h1;
-  if (diff > 180) diff -= 360;
-  else if (diff < -180) diff += 360;
-
-  let result = h1 + (diff * t);
-  return (result + 360) % 360;
-}
-
-function computeDrunkenBishop(data: Uint8Array): GridCell[] {
-  const grid: GridCell[] = Array(kGridWidth * kGridHeight).fill(null).map(() => []);
-  let x = Math.floor(kGridWidth / 2);
-  let y = Math.floor(kGridHeight / 2);
-
-  ArrayHelper.strictGet(grid, y * kGridWidth + x).push(0);
-  for (let i = 0; i < data.length; i++) {
-    const byte = ArrayHelper.strictGet(data, i);
-
-    for (let step = 0; step < 4; step++) {
-      const pair = (byte >> (2 * step)) & 0x03;
-
-      const dx = (pair & 0x01) ? 1 : -1;
-      const dy = (pair & 0x02) ? 1 : -1;
-
-      x = Math.max(0, Math.min(kGridWidth - 1, x + dx));
-      y = Math.max(0, Math.min(kGridHeight - 1, y + dy));
-
-      ArrayHelper.strictGet(grid, y * kGridWidth + x).push(i * 4 + step + 1);
-    }
-  }
-
-  return grid;
-};
-
 async function render(data: Uint8Array): Promise<Blob> {
-  const grid = computeDrunkenBishop(data);
+  const grid = DrunkenBishop.compute2DReflect(data, kGridWidth, kGridHeight);
 
   let canvas: OffscreenCanvas | HTMLCanvasElement;
   let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
@@ -73,34 +38,39 @@ async function render(data: Uint8Array): Promise<Blob> {
     throw new Error('Failed to get canvas context');
   }
 
-  const startHue = data.length >= 2 ? ArrayHelper.strictGet(data, 0) % 360 : 0;
-  const endHue = data.length >= 2 ? ArrayHelper.strictGet(data, 1) % 360 : 120;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'oklch(0.2 0 0)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.globalCompositeOperation = 'lighter';
+  for (let y = 0; y < kGridHeight; y++) {
+    for (let x = 0; x < kGridWidth; x++) {
+      if ((x + y) % 2 === 0) {
+        ctx.fillStyle = `oklch(0.1 0 0 / 1)`;
+        ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
+      }
+    }
+  }
+
+  const startHue = ArrayHelper.getOrDefault(data, 0, 0) / 255 * 2 * Math.PI;
+  const startChroma = ArrayHelper.getOrDefault(data, 1, 0) / 255 * 0.1;
+  const endHue = ArrayHelper.getOrDefault(data, 2, 0) / 255 * 2 * Math.PI;
+  const endChroma = ArrayHelper.getOrDefault(data, 3, 0) / 255 * 0.1;
   const maxOffset = data.length * 4;
 
   for (let y = 0; y < kGridHeight; y++) {
     for (let x = 0; x < kGridWidth; x++) {
       const cell = ArrayHelper.strictGet(grid, y * kGridWidth + x);
 
-      if (cell.length > 0) {
-        const normalizedCount = Math.min(cell.length, 8) / 8;
-        // const lightness = 0.35 + (normalizedCount * 0.60);
-        const lightness = 0.15 + (normalizedCount * 0.80);
+      for (let i = 0; i < cell.length; i++) {
+        const t = ArrayHelper.strictGet(cell, i);
+        const normalizedT = MathHelper.normalize(t, 0, maxOffset);
+        const lightness = 0.25;
+        const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
+        const hue = MathHelper.slerp(startHue, endHue, normalizedT);
+        const alpha = 1;
 
-        // const chroma = 0.12 + (normalizedCount * 0.1);
-        const chroma = Math.pow(normalizedCount, 2) * 0.28;
-
-        const sumOffset = cell.reduce((a, b) => a + b, 0);
-        const avgOffset = sumOffset / cell.length;
-        // Avoid division by zero
-        const normalizedTime = avgOffset / Math.max(maxOffset, 1);
-
-        const currentHue = lerpHue(startHue, endHue, normalizedTime);
-
-        ctx.fillStyle = `oklch(${lightness} ${chroma} ${currentHue})`;
-        ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
-      } else {
-        const midHue = lerpHue(startHue, endHue, 0.5);
-        ctx.fillStyle = `oklch(0.1 0.02 ${midHue})`;
+        ctx.fillStyle = `oklch(${lightness} ${chroma} ${MathHelper.toDegrees(hue)} / ${alpha})`;
         ctx.fillRect(x * kScale, y * kScale, kScale, kScale);
       }
     }

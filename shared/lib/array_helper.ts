@@ -28,4 +28,12 @@ export default class ArrayHelper {
 
     return true;
   }
+
+  static getOrDefault<T>(array: ArrayLike<T>, index: number, defaultValue: T): T {
+    if (index < 0 || index >= array.length) {
+      return defaultValue;
+    }
+
+    return array[index] as T;
+  }
 }

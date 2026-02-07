@@ -43,4 +43,18 @@ describe("ArrayHelper", () => {
       expect(ArrayHelper.equals(['a', 'b'], ['a', 'c'])).toBe(false);
     });
   });
+
+  describe("getOrDefault", () => {
+    it("should return the element at the given index", () => {
+      const arr = [10, 20, 30];
+      expect(ArrayHelper.getOrDefault(arr, 0, 99)).toBe(10);
+      expect(ArrayHelper.getOrDefault(arr, 2, 99)).toBe(30);
+    });
+
+    it("should return the default value if index is out of bounds", () => {
+      const arr = [1, 2, 3];
+      expect(ArrayHelper.getOrDefault(arr, -1, 99)).toBe(99);
+      expect(ArrayHelper.getOrDefault(arr, 3, 99)).toBe(99);
+    });
+  });
 });

@@ -4,6 +4,7 @@ import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { useReader } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
 import { BsImage } from "react-icons/bs";
+import { useMutex } from "~/hooks/mutex";
 
 export interface ComposerProps {
 }
@@ -13,6 +14,7 @@ export default function Composer({ }: ComposerProps) {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { isLocked, tryLock } = useMutex();
 
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
@@ -39,6 +41,8 @@ export default function Composer({ }: ComposerProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    using lock = tryLock();
+
     try {
       if (attachment) {
         await store.getClient().sendPost(value, [attachment]);
@@ -46,12 +50,11 @@ export default function Composer({ }: ComposerProps) {
         await store.getClient().sendPost(value);
       }
       store.addLog("success", "Post submitted successfully!");
+      setValue("");
+      handleRemoveAttachment();
     } catch (error) {
       store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
     }
-
-    setValue("");
-    handleRemoveAttachment();
   };
 
   const isUnder = count < minLength;
@@ -114,7 +117,7 @@ export default function Composer({ }: ComposerProps) {
               {count} / {maxLength}
             </div>
             <div className="text-end">
-              <Button type="submit" variant="primary" disabled={isUnder || isOver}>
+              <Button type="submit" variant="primary" disabled={isUnder || isOver || isLocked}>
                 Post
               </Button>
             </div>
