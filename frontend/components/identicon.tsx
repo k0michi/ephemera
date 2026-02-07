@@ -64,7 +64,7 @@ async function render(data: Uint8Array): Promise<Blob> {
 
       for (let i = 0; i < cell.length; i++) {
         const t = ArrayHelper.strictGet(cell, i);
-        const normalizedT = t / maxOffset;
+        const normalizedT = MathHelper.normalize(t, 0, maxOffset);
         const lightness = 0.25;
         const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
         const hue = MathHelper.slerp(startHue, endHue, normalizedT);

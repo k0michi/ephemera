@@ -31,4 +31,12 @@ export default class MathHelper {
   static clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
   }
+
+  static normalize(value: number, min: number, max: number): number {
+    if (max - min === 0) {
+      return 0;
+    }
+
+    return (value - min) / (max - min);
+  }
 }

@@ -51,4 +51,14 @@ describe("MathHelper", () => {
       expect(MathHelper.clamp(15, 0, 10)).toBe(10);
     });
   });
+
+  describe("normalize", () => {
+    it("should normalize values within the specified range", () => {
+      expect(MathHelper.normalize(5, 0, 10)).toBe(0.5);
+      expect(MathHelper.normalize(0, 0, 10)).toBe(0);
+      expect(MathHelper.normalize(10, 0, 10)).toBe(1);
+      expect(MathHelper.normalize(15, 0, 10)).toBe(1.5);
+      expect(MathHelper.normalize(5, 5, 5)).toBe(0);
+    });
+  });
 });

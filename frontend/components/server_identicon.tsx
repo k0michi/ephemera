@@ -97,7 +97,7 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
 
     for (let visitIndex = 0; visitIndex < count; visitIndex++) {
       const t = ArrayHelper.strictGet(cellVisits, visitIndex);
-      const normalizedT = t / maxOffset;
+      const normalizedT = MathHelper.normalize(t, 0, maxOffset);
       const hue = MathHelper.slerp(startHue, endHue, normalizedT);
       const lightness = 0.1;
       const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
