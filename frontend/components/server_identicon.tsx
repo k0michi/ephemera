@@ -86,7 +86,7 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
 
     for (let j = 0; j < points.length; j++) {
       const P = ArrayHelper.strictGet(points, j);
-      const P_prev = ArrayHelper.strictGet(points, (j - 1 + points.length) % points.length);
+      const P_prev = ArrayHelper.strictGet(points, MathHelper.floorMod(j - 1, points.length));
       const P_next = ArrayHelper.strictGet(points, (j + 1) % points.length);
       points[j] = calculateInsetVertex(P, P_prev, P_next, gapWidth);
     }
