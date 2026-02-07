@@ -29,9 +29,10 @@ function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: n
   return Vector2.add(P, Vector2.mul(b, dist));
 }
 
+const toRgb = converter("rgb");
+const clampToSRGB = clampGamut("rgb");
+
 function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b: number } {
-  const toRgb = converter("rgb");
-  const clampToSRGB = clampGamut("rgb");
   const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
   const r = NullableHelper.unwrap(rgb?.r);
   const g = NullableHelper.unwrap(rgb?.g);
