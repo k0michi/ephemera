@@ -10,6 +10,12 @@ import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { ApiError } from './api_error.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import { fileTypeFromFile } from 'file-type';
+import mime from 'mime-types';
+
+export interface AttachmentType {
+  type: string;
+  ext: string;
+}
 
 export interface IAttachmentService {
   fileDigest(filePath: string): Promise<string>;
@@ -20,7 +26,7 @@ export interface IAttachmentService {
 
   open(hash: string): Promise<fs.FileHandle>;
 
-  getType(hash: string): Promise<string>;
+  getType(hash: string): Promise<AttachmentType>;
 
   linkPost(postId: string, attachmentIds: string[]): Promise<void>;
 
@@ -111,7 +117,7 @@ export class AttachmentService implements IAttachmentService {
     return await fs.open(filePath, 'r');
   }
 
-  async getType(hash: string): Promise<string> {
+  async getType(hash: string): Promise<AttachmentType> {
     // Read the attachment type from the database to prevent spoofing
 
     const result = await this.database
@@ -127,7 +133,15 @@ export class AttachmentService implements IAttachmentService {
       throw new Error('Attachment not found');
     }
 
-    return NullableHelper.unwrap(result[0]?.type);
+    // return NullableHelper.unwrap(result[0]?.type);
+    const type = NullableHelper.unwrap(result[0]?.type);
+    const ext = mime.extension(type);
+
+    if (!ext) {
+      throw new Error('Could not determine file extension');
+    }
+
+    return { type, ext };
   }
 
   async linkPost(postId: string, attachmentIds: string[]): Promise<void> {

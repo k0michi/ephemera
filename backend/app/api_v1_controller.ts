@@ -151,7 +151,9 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Attachment not found', 404);
     }
 
-    res.setHeader('Content-Type', type);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', `inline; filename=${hash}.${type.ext}`);
+    res.setHeader('Content-Type', type.type);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
     const readStream = file.createReadStream();

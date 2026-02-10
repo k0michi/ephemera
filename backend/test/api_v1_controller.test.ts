@@ -7,7 +7,7 @@ import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { PostServiceBase, type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
-import type { IAttachmentService } from '../app/attachment_service.js';
+import type { AttachmentType, IAttachmentService } from '../app/attachment_service.js';
 import fs from 'fs/promises';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 
@@ -65,8 +65,8 @@ class MockAttachmentService implements IAttachmentService {
     throw new Error('Method not implemented.');
   }
 
-  async getType(hash: string): Promise<string> {
-    return 'image/png';
+  async getType(hash: string): Promise<AttachmentType> {
+    return { type: 'image/png', ext: 'png' };
   }
 
   async linkPost(postId: string, attachmentIds: string[]): Promise<void> {
