@@ -10,11 +10,13 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import type { Pool } from 'mysql2';
 import Config from '../app/config.js';
+import { AttachmentService } from '../app/attachment_service.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
   let database: MySql2Database;
   let pool: Pool;
+  let attachmentService: AttachmentService;
   let postService: PostService;
 
   beforeEach(async () => {
@@ -29,21 +31,23 @@ describe('PostService', () => {
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
 
-    postService = new PostService(
-      new Config({
-        host: 'example.com',
-        port: 3000,
-        dbHost: container.getHost(),
-        dbPort: container.getPort(),
-        dbUser: container.getUsername(),
-        dbPassword: container.getUserPassword(),
-        dbName: container.getDatabase(),
-        dbConnectionLimit: 5,
-        dbQueueLimit: 500,
-        dbConnectTimeout: 10000,
-        allowedTimeSkewMillis: 5 * 60 * 1000,
-      }),
-      database
+    const config = new Config({
+      host: 'example.com',
+      port: 3000,
+      dbHost: container.getHost(),
+      dbPort: container.getPort(),
+      dbUser: container.getUsername(),
+      dbPassword: container.getUserPassword(),
+      dbName: container.getDatabase(),
+      dbConnectionLimit: 5,
+      dbQueueLimit: 500,
+      dbConnectTimeout: 10000,
+      allowedTimeSkewMillis: 5 * 60 * 1000,
+    });
+    attachmentService = new AttachmentService(config, database);
+    postService = new PostService(config,
+      database,
+      attachmentService
     );
   }, 60_000);
 
@@ -64,7 +68,7 @@ describe('PostService', () => {
     const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
     const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
 
-    await expect(postService.create(signal)).resolves.toBeUndefined();
+    await expect(postService.create(signal, [])).resolves.toBeUndefined();
   });
 
   it('should reject a duplicate post signal', async () => {
@@ -74,8 +78,8 @@ describe('PostService', () => {
     const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
     const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
 
-    await expect(postService.create(signal)).resolves.toBeUndefined();
-    await expect(postService.create(signal)).rejects.toThrowError('Post already exists');
+    await expect(postService.create(signal, [])).resolves.toBeUndefined();
+    await expect(postService.create(signal, [])).rejects.toThrowError('Post already exists');
   });
 
   describe('find', () => {
@@ -87,7 +91,7 @@ describe('PostService', () => {
       for (let i = 0; i < 5; i++) {
         const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], `Post number ${i}`, []] satisfies CreatePostSignalPayload;
         const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
-        await postService.create(signal);
+        await postService.create(signal, []);
       }
 
       let result = await postService.find({ limit: 3, cursor: null, author: null });
@@ -114,7 +118,7 @@ describe('PostService', () => {
       for (let i = 0; i < 1; i++) {
         const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], `Post number ${i}`, []] satisfies CreatePostSignalPayload;
         const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
-        await postService.create(signal);
+        await postService.create(signal, []);
       }
 
       let result = await postService.find({ limit: 1, cursor: null, author: null });

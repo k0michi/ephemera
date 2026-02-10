@@ -91,8 +91,8 @@ class Ephemera extends Application {
     await this.connectDatabase();
     console.log('Database connection established');
 
-    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db));
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService);
 
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService));

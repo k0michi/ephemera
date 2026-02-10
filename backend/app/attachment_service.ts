@@ -23,13 +23,13 @@ export interface IAttachmentService {
 
   fileSize(filePath: string): Promise<number>;
 
-  copyFrom(srcFile: string, declaredType: string): Promise<string>;
+  copyFrom(srcFile: string, tx: MySql2Database): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
 
   getType(hash: string): Promise<AttachmentType>;
 
-  linkPost(postId: string, attachmentIds: string[]): Promise<void>;
+  linkPost(postId: string, attachmentIds: string[], tx: MySql2Database): Promise<void>;
 
   getFilePath(hash: string): string;
 
@@ -79,7 +79,7 @@ export class AttachmentService implements IAttachmentService {
     return stats.size;
   }
 
-  async copyFrom(srcFile: string, declaredType: string): Promise<string> {
+  async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
     // Validation
 
     const size = await this.fileSize(srcFile);
@@ -91,8 +91,7 @@ export class AttachmentService implements IAttachmentService {
     const detected = await fileTypeFromFile(srcFile);
 
     if (detected === undefined
-      || detected.mime !== declaredType
-      || !AttachmentService._kAllowedAttachmentTypes.has(declaredType)) {
+      || !AttachmentService._kAllowedAttachmentTypes.has(detected.mime)) {
       throw new ApiError('Attachment type is not allowed', 400);
     }
 
@@ -113,9 +112,9 @@ export class AttachmentService implements IAttachmentService {
     await fs.mkdir(this.attachmentsDir, { recursive: true });
     await fs.copyFile(srcFile, destFile);
 
-    await this.database.insert(attachments).ignore().values({
+    await tx.insert(attachments).ignore().values({
       id: hash,
-      type: declaredType,
+      type: detected.mime,
       size: size,
     }).execute();
 
@@ -158,14 +157,14 @@ export class AttachmentService implements IAttachmentService {
     return { type, ext };
   }
 
-  async linkPost(postId: string, attachmentIds: string[]): Promise<void> {
+  async linkPost(postId: string, attachmentIds: string[], tx: MySql2Database): Promise<void> {
     const rows = attachmentIds.map((attachmentId) => ({
       postId: postId,
       attachmentId: attachmentId,
     }));
 
     if (rows.length > 0) {
-      await this.database.insert(postAttachments).values(rows).execute();
+      await tx.insert(postAttachments).values(rows).execute();
     }
   }
 

@@ -10,6 +10,7 @@ import { PostServiceBase, type IPostService, type PostFindOptions, type PostFind
 import type { AttachmentType, IAttachmentService } from '../app/attachment_service.js';
 import fs from 'fs/promises';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import type { MySql2Database } from 'drizzle-orm/mysql2';
 
 function testConfig() {
   return new Config({
@@ -57,7 +58,7 @@ class MockAttachmentService implements IAttachmentService {
     return 0;
   }
 
-  async copyFrom(srcFile: string, declaredType: string): Promise<string> {
+  async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
     return 'hash';
   }
 

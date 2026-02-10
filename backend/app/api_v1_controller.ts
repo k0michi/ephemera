@@ -13,6 +13,7 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import ArrayHelper from '@ephemera/shared/lib/array_helper.js';
 import { pipeline } from 'node:stream/promises';
+import { fileTypeFromFile } from 'file-type';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -33,6 +34,14 @@ export default class ApiV1Controller implements IController {
     this.router.get('/posts', this.handleGetPosts.bind(this));
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
+  }
+
+  async validateType(filePath: string, expectedMimeType: string): Promise<void> {
+    const detectedType = await fileTypeFromFile(filePath);
+
+    if (detectedType?.mime !== expectedMimeType) {
+      throw new ApiError('Attachment MIME type mismatch', 400);
+    }
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -56,31 +65,14 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Invalid request', 400);
     }
 
-    const expectedAttachments = parsed.post[0][3].filter((footer) => footer[0] === 'attachment').map((footer) => footer[2]);
-    const actualAttachments: string[] = [];
+    const files = req.files as Express.Multer.File[];
 
-    if (req.files && Array.isArray(req.files)) {
-      for (const file of req.files) {
-        actualAttachments.push(await this.attachmentService.fileDigest(file.path));
-      }
+    for (const file of files) {
+      await this.validateType(file.path, file.mimetype);
     }
 
-    // Check if the referenced attachments match the uploaded attachments
-    if (ArrayHelper.equals(expectedAttachments.sort(), actualAttachments.sort()) === false) {
-      throw new ApiError('Attachment mismatch', 400);
-    }
-
-    for (const file of req.files as Express.Multer.File[]) {
-      await this.attachmentService.copyFrom(file.path, file.mimetype);
-    }
-
-    await this.postService.create(parsed.post);
-
-    await this.attachmentService.linkPost(
-      Hex.fromUint8Array(await SignalCrypto.digest(parsed.post[0])),
-      actualAttachments
-    );
-
+    const paths = files.map((file) => file.path);
+    await this.postService.create(parsed.post, paths);
     res.status(200).json({});
   }
 
