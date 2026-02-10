@@ -140,7 +140,7 @@ export class AttachmentService implements IAttachmentService {
       .execute();
 
     if (result.length === 0) {
-      throw new Error('Attachment not found');
+      throw new ApiError('Attachment not found', 404);
     }
 
     // return NullableHelper.unwrap(result[0]?.type);
@@ -148,7 +148,7 @@ export class AttachmentService implements IAttachmentService {
     const ext = mime.extension(type);
 
     if (!ext) {
-      throw new Error('Could not determine file extension');
+      throw new ApiError('Could not determine file extension', 500);
     }
 
     return { type, ext };
