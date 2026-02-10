@@ -12,6 +12,7 @@ import Hex from '@ephemera/shared/lib/hex.js';
 import { fileTypeFromFile } from 'file-type';
 import mime from 'mime-types';
 import sharp from 'sharp';
+import FSHelper from './fs_helper.js';
 
 export interface AttachmentType {
   type: string;
@@ -19,10 +20,6 @@ export interface AttachmentType {
 }
 
 export interface IAttachmentService {
-  fileDigest(filePath: string): Promise<string>;
-
-  fileSize(filePath: string): Promise<number>;
-
   copyFrom(srcFile: string, tx: MySql2Database): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
@@ -55,34 +52,10 @@ export class AttachmentService implements IAttachmentService {
     return path.join(this.config.dataDir, 'attachments');
   }
 
-  async fileDigest(filePath: string): Promise<string> {
-    const stream = await fs.open(filePath, 'r');
-    const hash = crypto.createHash('sha256');
-    const buffer = Buffer.alloc(8192);
-    let bytesRead: number;
-
-    do {
-      const { bytesRead: br } = await stream.read(buffer, 0, buffer.length, null);
-      bytesRead = br;
-
-      if (bytesRead > 0) {
-        hash.update(buffer.subarray(0, bytesRead));
-      }
-    } while (bytesRead > 0);
-
-    await stream.close();
-    return hash.digest('hex');
-  }
-
-  async fileSize(filePath: string): Promise<number> {
-    const stats = await fs.stat(filePath);
-    return stats.size;
-  }
-
   async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
     // Validation
 
-    const size = await this.fileSize(srcFile);
+    const size = await FSHelper.size(srcFile);
 
     if (size > AttachmentService._kMaxAttachmentSize) {
       throw new ApiError('Attachment size exceeds maximum allowed size', 400);
@@ -106,7 +79,7 @@ export class AttachmentService implements IAttachmentService {
 
     // Validation complete
 
-    const hash = await this.fileDigest(srcFile);
+    const hash = await FSHelper.digest(srcFile, 'sha256');
     const destFile = this.getFilePath(hash);
 
     await fs.mkdir(this.attachmentsDir, { recursive: true });

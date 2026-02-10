@@ -12,6 +12,7 @@ import Base37 from "@ephemera/shared/lib/base37.js";
 import Crypto from "@ephemera/shared/lib/crypto.js";
 import type { IAttachmentService } from "./attachment_service.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
+import FSHelper from "./fs_helper.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -97,7 +98,7 @@ export default class PostService extends PostServiceBase {
     const actualAttachments: string[] = [];
 
     for (const path of attachmentPaths) {
-      actualAttachments.push(await this.attachmentService.fileDigest(path));
+      actualAttachments.push(await FSHelper.digest(path, 'sha256'));
     }
 
     if (ArrayHelper.equals(expectedAttachments.sort(), actualAttachments.sort()) === false) {
