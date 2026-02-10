@@ -9,7 +9,8 @@ import {
   bigint,
   int,
   index,
-  uniqueIndex
+  uniqueIndex,
+  primaryKey
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -71,6 +72,6 @@ export const postAttachments = mysqlTable('post_attachments', {
   postId: char('postId', { length: 64 }).references(() => posts.id, { onDelete: 'cascade' }),
   attachmentId: char('attachmentId', { length: 64 }).references(() => attachments.id),
 }, (table) => [
-  index('post_attachments_postId_idx').on(table.postId),
+  primaryKey({ columns: [table.postId, table.attachmentId] }),
   index('post_attachments_attachmentId_idx').on(table.attachmentId),
 ]);
