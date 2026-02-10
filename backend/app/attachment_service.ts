@@ -37,6 +37,7 @@ export class AttachmentService implements IAttachmentService {
   private config: Config;
   private database: MySql2Database;
   private static _kMaxAttachmentSize: number = 16 * 1024 * 1024; // 16 MB
+  private static _kMaxAttachmentWidth: number = 4096; // 4096 pixels
   private static _kAllowedAttachmentTypes: Set<string> = new Set([
     'image/png',
     'image/jpeg',
@@ -71,8 +72,14 @@ export class AttachmentService implements IAttachmentService {
 
     // Only images are allowed for now
     try {
-      const image = sharp(srcFile, { failOn: 'error' });
-      await image.metadata();
+      const image = sharp(srcFile, { failOn: 'error', limitInputPixels: AttachmentService._kMaxAttachmentWidth ** 2 });
+      const metadata = await image.metadata();
+
+      if (metadata.width > AttachmentService._kMaxAttachmentWidth
+        || metadata.height > AttachmentService._kMaxAttachmentWidth) {
+        throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
+      }
+
       await image.stats();
     } catch (e) {
       throw new ApiError('Attachment is not a valid image', 400);
