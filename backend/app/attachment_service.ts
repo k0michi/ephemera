@@ -41,6 +41,7 @@ export class AttachmentService implements IAttachmentService {
     'image/png',
     'image/jpeg',
     'image/gif',
+    'image/webp',
   ]);
 
   constructor(config: Config, database: MySql2Database) {
