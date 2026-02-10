@@ -11,6 +11,7 @@ import { ApiError } from './api_error.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import { fileTypeFromFile } from 'file-type';
 import mime from 'mime-types';
+import sharp from 'sharp';
 
 export interface AttachmentType {
   type: string;
@@ -93,6 +94,15 @@ export class AttachmentService implements IAttachmentService {
       || detected.mime !== declaredType
       || !AttachmentService._kAllowedAttachmentTypes.has(declaredType)) {
       throw new ApiError('Attachment type is not allowed', 400);
+    }
+
+    // Only images are allowed for now
+    try {
+      const image = sharp(srcFile, { failOn: 'error' });
+      await image.metadata();
+      await image.stats();
+    } catch (e) {
+      throw new ApiError('Attachment is not a valid image', 400);
     }
 
     // Validation complete
