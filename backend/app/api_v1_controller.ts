@@ -10,7 +10,6 @@ import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import multer from 'multer';
 import type { IAttachmentService } from './attachment_service.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import Hex from '@ephemera/shared/lib/hex.js';
 import { pipeline } from 'node:stream/promises';
 import { fileTypeFromFile } from 'file-type';
 import fsPromises from 'fs/promises';
