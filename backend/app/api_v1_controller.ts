@@ -37,14 +37,6 @@ export default class ApiV1Controller implements IController {
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
   }
 
-  async validateType(filePath: string, expectedMimeType: string): Promise<void> {
-    const detectedType = await fileTypeFromFile(filePath);
-
-    if (detectedType?.mime !== expectedMimeType) {
-      throw new ApiError('Attachment MIME type mismatch', 400);
-    }
-  }
-
   async handlePost(req: express.Request, res: express.Response) {
     const files = req.files as Express.Multer.File[];
 
@@ -67,10 +59,6 @@ export default class ApiV1Controller implements IController {
         parsed = postRequestSchema.parse({ post: postData });
       } catch (e) {
         throw new ApiError('Invalid request', 400);
-      }
-
-      for (const file of files) {
-        await this.validateType(file.path, file.mimetype);
       }
 
       const paths = files.map((file) => file.path);
