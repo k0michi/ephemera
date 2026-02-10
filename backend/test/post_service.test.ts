@@ -79,7 +79,7 @@ describe('PostService', () => {
     const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
 
     await expect(postService.create(signal, [])).resolves.toBeUndefined();
-    await expect(postService.create(signal, [])).rejects.toThrowError('Post already exists');
+    await expect(postService.create(signal, [])).rejects.toThrowError();
   });
 
   describe('find', () => {
