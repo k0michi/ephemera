@@ -98,6 +98,7 @@ describe('ApiV1Controller', () => {
         method: 'POST',
         url: '/api/v1/post',
         body: createFormData({ post: JSON.stringify({ invalid: 'data' }) }),
+        files: [] as any,
       });
       const res = createResponse();
 
