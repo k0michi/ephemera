@@ -118,7 +118,7 @@ export default class PostService extends PostServiceBase {
 
         const digest = await SignalCrypto.digest(signal[0]);
 
-        await this.database.insert(posts).values({
+        await tx.insert(posts).values({
           id: Hex.fromUint8Array(digest),
           version: signal[0][0],
           host: signal[0][1][0],
