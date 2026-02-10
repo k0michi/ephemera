@@ -5,6 +5,8 @@ import { useReader } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
 import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
+import { useDisposableState } from "~/hooks/disposable_state";
+import { DisposableURL } from "lib/disposable_url";
 
 export interface ComposerProps {
 }
@@ -12,7 +14,7 @@ export interface ComposerProps {
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked, tryLock } = useMutex();
 
@@ -25,7 +27,7 @@ export default function Composer({ }: ComposerProps) {
     const file = e.target.files?.[0] || null;
     setAttachment(file);
     if (file) {
-      const url = URL.createObjectURL(file);
+      const url = new DisposableURL(file);
       setPreviewUrl(url);
     } else {
       setPreviewUrl(null);
@@ -80,7 +82,7 @@ export default function Composer({ }: ComposerProps) {
           {/* TODO: Redesign */}
           {previewUrl && (
             <div style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-              <img src={previewUrl} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+              <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
               <Button size="sm" variant="light" onClick={handleRemoveAttachment} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
             </div>
           )}
