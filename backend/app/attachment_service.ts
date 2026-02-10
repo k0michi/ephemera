@@ -112,6 +112,8 @@ export class AttachmentService implements IAttachmentService {
   }
 
   async getType(hash: string): Promise<string> {
+    // Read the attachment type from the database to prevent spoofing
+
     const result = await this.database
       .select({
         type: attachments.type,
