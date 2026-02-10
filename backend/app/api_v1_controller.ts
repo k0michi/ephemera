@@ -12,6 +12,7 @@ import type { IAttachmentService } from './attachment_service.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import ArrayHelper from '@ephemera/shared/lib/array_helper.js';
+import { pipeline } from 'node:stream/promises';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -141,22 +142,17 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Invalid request', 400);
     }
 
-    let file;
-    let type;
-
-    try {
-      file = await this.attachmentService.open(hash);
-      type = await this.attachmentService.getType(hash);
-    } catch (e) {
-      throw new ApiError('Attachment not found', 404);
-    }
+    await using file = await this.attachmentService.open(hash);
+    const type = await this.attachmentService.getType(hash);
 
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `inline; filename=${hash}.${type.ext}`);
     res.setHeader('Content-Type', type.type);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
-    const readStream = file.createReadStream();
-    readStream.pipe(res);
+    await pipeline(
+      file.createReadStream(),
+      res
+    );
   }
 }

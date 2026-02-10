@@ -124,7 +124,11 @@ export class AttachmentService implements IAttachmentService {
 
   async open(hash: string): Promise<fs.FileHandle> {
     const filePath = this.getFilePath(hash);
-    return await fs.open(filePath, 'r');
+    try {
+      return await fs.open(filePath, 'r');
+    } catch (e) {
+      throw new ApiError('Attachment not found', 404);
+    }
   }
 
   async getType(hash: string): Promise<AttachmentType> {
