@@ -14,6 +14,7 @@ import Hex from '@ephemera/shared/lib/hex.js';
 import ArrayHelper from '@ephemera/shared/lib/array_helper.js';
 import { pipeline } from 'node:stream/promises';
 import { fileTypeFromFile } from 'file-type';
+import fsPromises from 'fs/promises';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -45,35 +46,40 @@ export default class ApiV1Controller implements IController {
   }
 
   async handlePost(req: express.Request, res: express.Response) {
-    let parsed;
-
-    let postData: any;
-
-    if (typeof req.body.post === 'string') {
-      try {
-        postData = JSON.parse(req.body.post);
-      } catch (e) {
-        throw new ApiError('Invalid request: malformed JSON', 400);
-      }
-    } else {
-      throw new ApiError('Invalid request: missing post data', 400);
-    }
-
-    try {
-      parsed = postRequestSchema.parse({ post: postData });
-    } catch (e) {
-      throw new ApiError('Invalid request', 400);
-    }
-
     const files = req.files as Express.Multer.File[];
 
-    for (const file of files) {
-      await this.validateType(file.path, file.mimetype);
-    }
+    try {
+      let parsed;
 
-    const paths = files.map((file) => file.path);
-    await this.postService.create(parsed.post, paths);
-    res.status(200).json({});
+      let postData: any;
+
+      if (typeof req.body.post === 'string') {
+        try {
+          postData = JSON.parse(req.body.post);
+        } catch (e) {
+          throw new ApiError('Invalid request: malformed JSON', 400);
+        }
+      } else {
+        throw new ApiError('Invalid request: missing post data', 400);
+      }
+
+      try {
+        parsed = postRequestSchema.parse({ post: postData });
+      } catch (e) {
+        throw new ApiError('Invalid request', 400);
+      }
+
+      for (const file of files) {
+        await this.validateType(file.path, file.mimetype);
+      }
+
+      const paths = files.map((file) => file.path);
+      await this.postService.create(parsed.post, paths);
+
+      res.status(200).json({});
+    } finally {
+      await Promise.allSettled(files.map((file) => fsPromises.unlink(file.path)));
+    }
   }
 
   static parseInt(string: string): number {
