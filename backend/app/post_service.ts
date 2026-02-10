@@ -83,11 +83,18 @@ export abstract class PostServiceBase implements IPostService {
 export default class PostService extends PostServiceBase {
   private database: MySql2Database;
   private attachmentService: IAttachmentService;
+  private static _kMaxAttachmentsPerPost: number = 4;
 
   constructor(config: Config, database: MySql2Database, attachmentService: IAttachmentService) {
     super(config);
     this.database = database;
     this.attachmentService = attachmentService;
+  }
+
+  async validateAttachmentCount(attachmentPaths: string[]): Promise<void> {
+    if (attachmentPaths.length > PostService._kMaxAttachmentsPerPost) {
+      throw new ApiError('Too many attachments', 400);
+    }
   }
 
   async validateAttachmentDigests(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
@@ -107,6 +114,7 @@ export default class PostService extends PostServiceBase {
   }
 
   async createImpl(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
+    await this.validateAttachmentCount(attachmentPaths);
     await this.validateAttachmentDigests(signal, attachmentPaths);
 
     try {
