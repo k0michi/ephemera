@@ -119,16 +119,24 @@ export default class PostService extends PostServiceBase {
 
         const digest = await SignalCrypto.digest(signal[0]);
 
-        await tx.insert(posts).values({
-          id: Hex.fromUint8Array(digest),
-          version: signal[0][0],
-          host: signal[0][1][0],
-          author: signal[0][1][1],
-          content: signal[0][2],
-          footer: signal[0][3],
-          signature: signal[1],
-          createdAt: signal[0][1][2],
-        });
+        try {
+          await tx.insert(posts).values({
+            id: Hex.fromUint8Array(digest),
+            version: signal[0][0],
+            host: signal[0][1][0],
+            author: signal[0][1][1],
+            content: signal[0][2],
+            footer: signal[0][3],
+            signature: signal[1],
+            createdAt: signal[0][1][2],
+          });
+        } catch (e: any) {
+          if (e?.cause?.code === 'ER_DUP_ENTRY') {
+            throw new ApiError('Post already exists', 409);
+          }
+
+          throw e;
+        }
 
         await this.attachmentService.linkPost(
           Hex.fromUint8Array(digest),
@@ -137,9 +145,9 @@ export default class PostService extends PostServiceBase {
         );
       });
     } catch (e: any) {
-      // if (e?.cause?.code === 'ER_DUP_ENTRY') {
-      //   throw new ApiError('Post already exists', 409);
-      // }
+      if (e instanceof ApiError) {
+        throw e;
+      }
 
       console.error('Error saving post:', e);
       throw new ApiError('Failed to save post', 500);
