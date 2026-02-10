@@ -31,8 +31,8 @@ export interface IAttachmentService {
 export class AttachmentService implements IAttachmentService {
   private config: Config;
   private database: MySql2Database;
-  private _kMaxAttachmentSize: number = 16 * 1024 * 1024; // 16 MB
-  private _kAllowedAttachmentTypes: Set<string> = new Set([
+  private static _kMaxAttachmentSize: number = 16 * 1024 * 1024; // 16 MB
+  private static _kAllowedAttachmentTypes: Set<string> = new Set([
     'image/png',
     'image/jpeg',
     'image/gif',
@@ -78,12 +78,12 @@ export class AttachmentService implements IAttachmentService {
     const destFile = this.getFilePath(hash);
     const size = await this.fileSize(srcFile);
 
-    if (size > this._kMaxAttachmentSize) {
+    if (size > AttachmentService._kMaxAttachmentSize) {
       throw new ApiError('Attachment size exceeds maximum allowed size', 400);
     }
 
     // TODO: Use file-type
-    if (!this._kAllowedAttachmentTypes.has(type)) {
+    if (!AttachmentService._kAllowedAttachmentTypes.has(type)) {
       throw new ApiError('Attachment type is not allowed', 400);
     }
 
