@@ -13,6 +13,7 @@ import { fileTypeFromFile } from 'file-type';
 import mime from 'mime-types';
 import sharp from 'sharp';
 import FSHelper from './fs_helper.js';
+import ffmpeg from 'fluent-ffmpeg';
 
 export interface AttachmentType {
   type: string;
@@ -43,6 +44,7 @@ export class AttachmentService implements IAttachmentService {
     'image/jpeg',
     'image/gif',
     'image/webp',
+    'video/mp4',
   ]);
 
   constructor(config: Config, database: MySql2Database) {
@@ -52,6 +54,18 @@ export class AttachmentService implements IAttachmentService {
 
   get attachmentsDir(): string {
     return path.join(this.config.dataDir, 'attachments');
+  }
+
+  ffprobe(filePath: string): Promise<ffmpeg.FfprobeData> {
+    return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(filePath, (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    });
   }
 
   async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
@@ -71,18 +85,54 @@ export class AttachmentService implements IAttachmentService {
     }
 
     // Only images are allowed for now
-    try {
-      const image = sharp(srcFile, { failOn: 'error', limitInputPixels: AttachmentService._kMaxAttachmentWidth ** 2 });
-      const metadata = await image.metadata();
+    if (detected.mime.startsWith('image/')) {
+      try {
+        const image = sharp(srcFile, { failOn: 'error', limitInputPixels: AttachmentService._kMaxAttachmentWidth ** 2 });
+        const metadata = await image.metadata();
 
-      if (metadata.width > AttachmentService._kMaxAttachmentWidth
-        || metadata.height > AttachmentService._kMaxAttachmentWidth) {
-        throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
+        if (metadata.width > AttachmentService._kMaxAttachmentWidth
+          || metadata.height > AttachmentService._kMaxAttachmentWidth) {
+          throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
+        }
+
+        await image.stats();
+      } catch (e) {
+        throw new ApiError('Attachment is not a valid image', 400);
       }
+    } else if (detected.mime === 'video/mp4') {
+      try {
+        const metadata = await this.ffprobe(srcFile);
 
-      await image.stats();
-    } catch (e) {
-      throw new ApiError('Attachment is not a valid image', 400);
+        const videoStream = metadata.streams.find(s => s.codec_type === 'video');
+
+        if (!videoStream) {
+          throw new ApiError('Attachment does not contain a video stream', 400);
+        }
+
+        const width = videoStream.width;
+        const height = videoStream.height;
+
+        if (width === undefined || height === undefined) {
+          throw new ApiError('Could not determine video dimensions', 400);
+        }
+
+        if (width > AttachmentService._kMaxAttachmentWidth
+          || height > AttachmentService._kMaxAttachmentWidth) {
+          throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
+        }
+
+        const codec = videoStream.codec_name;
+
+        if (codec !== 'h264') {
+          throw new ApiError('Only H.264 encoded videos are allowed', 400);
+        }
+      } catch (e) {
+        if (e instanceof ApiError) {
+          throw e;
+        }
+
+        throw new ApiError('Attachment is not a valid video', 400);
+      }
     }
 
     // Validation complete

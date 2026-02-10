@@ -84,9 +84,13 @@ export default function Composer({ }: ComposerProps) {
             />
           </Form.Group>
           {/* TODO: Redesign */}
-          {previewUrl && (
+          {previewUrl && attachment && (
             <div style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-              <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+              {attachment.type.startsWith('video/') ? (
+                <video src={previewUrl.url} controls style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+              ) : (
+                <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+              )}
               <Button size="sm" variant="light" onClick={handleRemoveAttachment} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
             </div>
           )}
@@ -102,7 +106,7 @@ export default function Composer({ }: ComposerProps) {
               style={{ flexGrow: 1 }}>
               <input
                 type="file"
-                accept="image/png, image/jpeg, image/gif, image/webp"
+                accept="image/png, image/jpeg, image/gif, image/webp, video/mp4"
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAttachmentChange}
