@@ -45,6 +45,10 @@ export default function Composer({ }: ComposerProps) {
 
     using lock = tryLock();
 
+    if (lock === null) {
+      return;
+    }
+
     try {
       if (attachment) {
         await store.getClient().sendPost(value, [attachment]);
