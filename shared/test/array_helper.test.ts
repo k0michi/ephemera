@@ -30,6 +30,20 @@ describe("ArrayHelper", () => {
     });
   });
 
+  describe("equals", () => {
+    it("should return true for equal arrays", () => {
+      expect(ArrayHelper.equals([1, 2, 3], [1, 2, 3])).toBe(true);
+      expect(ArrayHelper.equals([], [])).toBe(true);
+      expect(ArrayHelper.equals(['a', 'b'], ['a', 'b'])).toBe(true);
+    });
+
+    it("should return false for non-equal arrays", () => {
+      expect(ArrayHelper.equals([1, 2, 3], [1, 2, 4])).toBe(false);
+      expect(ArrayHelper.equals([1, 2], [1, 2, 3])).toBe(false);
+      expect(ArrayHelper.equals(['a', 'b'], ['a', 'c'])).toBe(false);
+    });
+  });
+
   describe("getOrDefault", () => {
     it("should return the element at the given index", () => {
       const arr = [10, 20, 30];

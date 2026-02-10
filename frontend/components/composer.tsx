@@ -1,32 +1,65 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Form, Button, Card } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
+import { useReader } from "lib/store";
+import { EphemeraStoreContext } from "~/store";
+import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
+import { useDisposableState } from "~/hooks/disposable_state";
+import { DisposableURL } from "lib/disposable_url";
 
 export interface ComposerProps {
-  onSubmit?: (value: string, event: React.FormEvent<HTMLFormElement>) => boolean | Promise<boolean>;
 }
 
-export default function Composer({ onSubmit }: ComposerProps) {
+export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked, tryLock } = useMutex();
+
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
+  const store = useReader(EphemeraStoreContext);
+
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setAttachment(file);
+    if (file) {
+      const url = new DisposableURL(file);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachment(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     using lock = tryLock();
 
-    if (!lock) {
+    if (lock === null) {
       return;
     }
 
-    const result = await onSubmit?.(value, e) ?? false;
-
-    if (result) {
+    try {
+      if (attachment) {
+        await store.getClient().sendPost(value, [attachment]);
+      } else {
+        await store.getClient().sendPost(value);
+      }
+      store.addLog("success", "Post submitted successfully!");
       setValue("");
+      handleRemoveAttachment();
+    } catch (error) {
+      store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
     }
   };
 
@@ -50,6 +83,13 @@ export default function Composer({ onSubmit }: ComposerProps) {
               style={{ resize: 'none' }}
             />
           </Form.Group>
+          {/* TODO: Redesign */}
+          {previewUrl && (
+            <div style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
+              <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+              <Button size="sm" variant="light" onClick={handleRemoveAttachment} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
+            </div>
+          )}
           <div style={{
             marginTop: 8,
             display: 'flex',
@@ -58,6 +98,25 @@ export default function Composer({ onSubmit }: ComposerProps) {
             gap: 16,
             justifyContent: 'flex-end',
           }}>
+            <div
+              style={{ flexGrow: 1 }}>
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/gif, image/webp"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleAttachmentChange}
+              />
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!!attachment}
+                aria-label="Attach image"
+              >
+                <BsImage />
+              </Button>
+            </div>
             <div
               className={`text-end small ${isOver ? "text-danger fw-bold" : "text-muted"}`}
             >

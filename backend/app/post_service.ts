@@ -10,9 +10,12 @@ import { posts } from "./db/schema.js";
 import { and, desc, eq, lt } from "drizzle-orm";
 import Base37 from "@ephemera/shared/lib/base37.js";
 import Crypto from "@ephemera/shared/lib/crypto.js";
+import type { IAttachmentService } from "./attachment_service.js";
+import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
+import FSHelper from "./fs_helper.js";
 
 export interface IPostService {
-  create(signal: CreatePostSignal): Promise<void>;
+  create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
 
   validate<T extends Signal>(signal: T): Promise<[boolean, string?]>;
 
@@ -39,17 +42,17 @@ export abstract class PostServiceBase implements IPostService {
     this.config = config;
   }
 
-  async create(signal: CreatePostSignal): Promise<void> {
+  async create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
     const validation = await this.validate(signal);
 
     if (!validation[0]) {
       throw new ApiError(validation[1] || 'Invalid post signal', 400);
     }
 
-    await this.createImpl(signal);
+    await this.createImpl(signal, attachmentPaths);
   }
 
-  abstract createImpl(signal: CreatePostSignal): Promise<void>;
+  abstract createImpl(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
 
   async validate<T extends Signal>(signal: T): Promise<[boolean, string?]> {
     const verified = await SignalCrypto.verify(signal);
@@ -79,29 +82,79 @@ export abstract class PostServiceBase implements IPostService {
 
 export default class PostService extends PostServiceBase {
   private database: MySql2Database;
+  private attachmentService: IAttachmentService;
+  private static _kMaxAttachmentsPerPost: number = 4;
 
-  constructor(config: Config, database: MySql2Database) {
+  constructor(config: Config, database: MySql2Database, attachmentService: IAttachmentService) {
     super(config);
     this.database = database;
+    this.attachmentService = attachmentService;
   }
 
-  async createImpl(signal: CreatePostSignal) {
-    const digest = await SignalCrypto.digest(signal[0]);
+  async validateAttachmentCount(attachmentPaths: string[]): Promise<void> {
+    if (attachmentPaths.length > PostService._kMaxAttachmentsPerPost) {
+      throw new ApiError('Too many attachments', 400);
+    }
+  }
+
+  async validateAttachmentDigests(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
+    const expectedAttachments = signal[0][3]
+      .filter((footer) => footer[0] === 'attachment')
+      .map((footer) => footer[2]);
+
+    const actualAttachments: string[] = [];
+
+    for (const path of attachmentPaths) {
+      actualAttachments.push(await FSHelper.digest(path, 'sha256'));
+    }
+
+    if (ArrayHelper.equals(expectedAttachments.sort(), actualAttachments.sort()) === false) {
+      throw new ApiError('Missing or extra attachments', 400);
+    }
+  }
+
+  async createImpl(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
+    await this.validateAttachmentCount(attachmentPaths);
+    await this.validateAttachmentDigests(signal, attachmentPaths);
 
     try {
-      await this.database.insert(posts).values({
-        id: Hex.fromUint8Array(digest),
-        version: signal[0][0],
-        host: signal[0][1][0],
-        author: signal[0][1][1],
-        content: signal[0][2],
-        footer: signal[0][3],
-        signature: signal[1],
-        createdAt: signal[0][1][2],
+      await this.database.transaction(async (tx) => {
+        const attachmentIds: string[] = [];
+
+        for (const path of attachmentPaths) {
+          attachmentIds.push(await this.attachmentService.copyFrom(path, tx));
+        }
+
+        const digest = await SignalCrypto.digest(signal[0]);
+
+        try {
+          await tx.insert(posts).values({
+            id: Hex.fromUint8Array(digest),
+            version: signal[0][0],
+            host: signal[0][1][0],
+            author: signal[0][1][1],
+            content: signal[0][2],
+            footer: signal[0][3],
+            signature: signal[1],
+            createdAt: signal[0][1][2],
+          });
+        } catch (e: any) {
+          if (e?.cause?.code === 'ER_DUP_ENTRY') {
+            throw new ApiError('Post already exists', 409);
+          }
+
+          throw e;
+        }
+
+        await this.attachmentService.linkPost(
+          Hex.fromUint8Array(digest),
+          attachmentIds,
+          tx
+        );
       });
     } catch (e: any) {
-      if (e?.cause?.code === 'ER_DUP_ENTRY') {
-        throw new ApiError('Post already exists', 409);
+      if (e instanceof ApiError) {
+        throw e;
       }
 
       console.error('Error saving post:', e);

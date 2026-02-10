@@ -18,4 +18,8 @@ export default class Hex {
 
     return bytes;
   }
+
+  static isValid(hex: string): boolean {
+    return /^[0-9a-fA-F]*$/.test(hex) && hex.length % 2 === 0;
+  }
 }

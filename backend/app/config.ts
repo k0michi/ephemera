@@ -17,14 +17,42 @@ export default class Config {
   dbConnectionLimit: number;
   dbQueueLimit: number;
   dbConnectTimeout: number;
+  dataDir: string;
   allowedTimeSkewMillis: number;
 
   static _kDefaultDBConnectionLimit = 5;
   static _kDefaultDBQueueLimit = 500;
   static _kDefaultDBConnectTimeout = 10000;
+  static _kDefaultDataDir = './data';
   static _kDefaultAllowedTimeSkewMillis = 5 * 60 * 1000;
 
-  constructor({ host, port, dbHost, dbPort, dbUser, dbPassword, dbName, dbConnectionLimit, dbQueueLimit, dbConnectTimeout, allowedTimeSkewMillis }: { host: string; port: number; dbHost: string; dbPort: number; dbUser: string; dbPassword: string; dbName: string; dbConnectionLimit: number; dbQueueLimit: number; dbConnectTimeout: number; allowedTimeSkewMillis: number }) {
+  constructor({
+    host,
+    port,
+    dbHost,
+    dbPort,
+    dbUser,
+    dbPassword,
+    dbName,
+    dbConnectionLimit,
+    dbQueueLimit,
+    dbConnectTimeout,
+    dataDir,
+    allowedTimeSkewMillis,
+  }: {
+    host: string;
+    port: number;
+    dbHost: string;
+    dbPort: number;
+    dbUser: string;
+    dbPassword: string;
+    dbName: string;
+    dbConnectionLimit?: number | undefined;
+    dbQueueLimit?: number | undefined;
+    dbConnectTimeout?: number | undefined;
+    dataDir?: string | undefined;
+    allowedTimeSkewMillis: number;
+  }) {
     this.host = host;
     this.port = port;
     this.dbHost = dbHost;
@@ -32,9 +60,10 @@ export default class Config {
     this.dbUser = dbUser;
     this.dbPassword = dbPassword;
     this.dbName = dbName;
-    this.dbConnectionLimit = dbConnectionLimit;
-    this.dbQueueLimit = dbQueueLimit;
-    this.dbConnectTimeout = dbConnectTimeout;
+    this.dbConnectionLimit = dbConnectionLimit ?? Config._kDefaultDBConnectionLimit;
+    this.dbQueueLimit = dbQueueLimit ?? Config._kDefaultDBQueueLimit;
+    this.dbConnectTimeout = dbConnectTimeout ?? Config._kDefaultDBConnectTimeout;
+    this.dataDir = dataDir ?? Config._kDefaultDataDir;
     this.allowedTimeSkewMillis = allowedTimeSkewMillis;
   }
 
@@ -50,7 +79,21 @@ export default class Config {
     const dbConnectionLimit = envParser.getNumberOptional('EPHEMERA_DB_CONNECTION_LIMIT', Config._kDefaultDBConnectionLimit);
     const dbQueueLimit = envParser.getNumberOptional('EPHEMERA_DB_QUEUE_LIMIT', Config._kDefaultDBQueueLimit);
     const dbConnectTimeout = envParser.getNumberOptional('EPHEMERA_DB_CONNECT_TIMEOUT', Config._kDefaultDBConnectTimeout);
+    const dataDir = envParser.getStringOptional('EPHEMERA_DATA_DIR', Config._kDefaultDataDir);
     const allowedTimeSkewMillis = envParser.getNumberOptional('EPHEMERA_ALLOWED_TIME_SKEW_MILLIS', Config._kDefaultAllowedTimeSkewMillis);
-    return new Config({ host, port, dbHost, dbPort, dbUser, dbPassword, dbName, dbConnectionLimit, dbQueueLimit, dbConnectTimeout, allowedTimeSkewMillis });
+    return new Config({
+      host,
+      port,
+      dbHost,
+      dbPort,
+      dbUser,
+      dbPassword,
+      dbName,
+      dbConnectionLimit,
+      dbQueueLimit,
+      dbConnectTimeout,
+      dataDir,
+      allowedTimeSkewMillis,
+    });
   }
 }

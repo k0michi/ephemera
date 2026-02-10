@@ -18,8 +18,7 @@ describe("Client", () => {
         "/api/v1/post",
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({ "Content-Type": "application/json" }),
-          body: expect.stringContaining("post")
+          body: expect.any(FormData),
         })
       );
     });

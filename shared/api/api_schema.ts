@@ -13,11 +13,6 @@ export const hashSchema = z.string();
 
 export const contentTypeSchema = z.string();
 
-export const dimensionSchema = z.object({
-    width: z.number(),
-    height: z.number()
-});
-
 export const signalHeaderSchema = z.tuple([hostSchema, authorSchema, timestampSchema, z.string()]);
 
 export const signalBodySchema = z.unknown();
@@ -28,11 +23,13 @@ export const signalPayloadSchema = z.tuple([versionSchema, signalHeaderSchema, s
 
 export const signalSchema = z.tuple([signalPayloadSchema, z.string()]);
 
+export const attachmentSchema = z.tuple([z.literal("attachment"), contentTypeSchema, hashSchema]);
+
 export const createPostSignalHeaderSchema = z.tuple([hostSchema, authorSchema, timestampSchema, z.literal("create_post")]);
 
 export const createPostSignalBodySchema = z.string();
 
-export const createPostSignalFooterSchema = z.tuple([]);
+export const createPostSignalFooterSchema = z.array(attachmentSchema);
 
 export const createPostSignalPayloadSchema = z.tuple([versionSchema, createPostSignalHeaderSchema, createPostSignalBodySchema, createPostSignalFooterSchema]);
 
