@@ -155,11 +155,13 @@ export class AttachmentService implements IAttachmentService {
   }
 
   async linkPost(postId: string, attachmentIds: string[]): Promise<void> {
-    for (const attachmentId of attachmentIds) {
-      await this.database.insert(postAttachments).values({
-        postId: postId,
-        attachmentId: attachmentId,
-      }).execute();
+    const rows = attachmentIds.map((attachmentId) => ({
+      postId: postId,
+      attachmentId: attachmentId,
+    }));
+
+    if (rows.length > 0) {
+      await this.database.insert(postAttachments).values(rows).execute();
     }
   }
 
