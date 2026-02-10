@@ -112,11 +112,11 @@ export class AttachmentService implements IAttachmentService {
     await fs.mkdir(this.attachmentsDir, { recursive: true });
     await fs.copyFile(srcFile, destFile);
 
-    await tx.insert(attachments).ignore().values({
+    await tx.insert(attachments).values({
       id: hash,
       type: detected.mime,
       size: size,
-    }).execute();
+    }).onDuplicateKeyUpdate({ set: { id: hash } });
 
     return hash;
   }
