@@ -102,7 +102,7 @@ export default function Composer({ }: ComposerProps) {
               style={{ flexGrow: 1 }}>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/png, image/jpeg, image/gif, image/webp"
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAttachmentChange}
