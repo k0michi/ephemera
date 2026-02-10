@@ -7,6 +7,7 @@
     "shared"
   ],
   "dependencies": {
-    "core-js": "^3.48.0"
+    "core-js": "^3.48.0",
+    "file-type": "^21.3.0"
   }
 }

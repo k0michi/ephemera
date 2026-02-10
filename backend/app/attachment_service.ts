@@ -9,13 +9,14 @@ import ArrayHelper from '@ephemera/shared/lib/array_helper.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { ApiError } from './api_error.js';
 import Hex from '@ephemera/shared/lib/hex.js';
+import { fileTypeFromFile } from 'file-type';
 
 export interface IAttachmentService {
   fileDigest(filePath: string): Promise<string>;
 
   fileSize(filePath: string): Promise<number>;
 
-  copyFrom(srcFile: string, type: string): Promise<string>;
+  copyFrom(srcFile: string, declaredType: string): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
 
@@ -71,27 +72,34 @@ export class AttachmentService implements IAttachmentService {
     return stats.size;
   }
 
-  async copyFrom(srcFile: string, type: string): Promise<string> {
-    await fs.mkdir(this.attachmentsDir, { recursive: true });
+  async copyFrom(srcFile: string, declaredType: string): Promise<string> {
+    // Validation
 
-    const hash = await this.fileDigest(srcFile);
-    const destFile = this.getFilePath(hash);
     const size = await this.fileSize(srcFile);
 
     if (size > AttachmentService._kMaxAttachmentSize) {
       throw new ApiError('Attachment size exceeds maximum allowed size', 400);
     }
 
-    // TODO: Use file-type
-    if (!AttachmentService._kAllowedAttachmentTypes.has(type)) {
+    const detected = await fileTypeFromFile(srcFile);
+
+    if (detected === undefined
+      || detected.mime !== declaredType
+      || !AttachmentService._kAllowedAttachmentTypes.has(declaredType)) {
       throw new ApiError('Attachment type is not allowed', 400);
     }
 
+    // Validation complete
+
+    const hash = await this.fileDigest(srcFile);
+    const destFile = this.getFilePath(hash);
+
+    await fs.mkdir(this.attachmentsDir, { recursive: true });
     await fs.copyFile(srcFile, destFile);
 
     await this.database.insert(attachments).ignore().values({
       id: hash,
-      type: type,
+      type: declaredType,
       size: size,
     }).execute();
 

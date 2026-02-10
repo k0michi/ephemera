@@ -57,7 +57,7 @@ class MockAttachmentService implements IAttachmentService {
     return 0;
   }
 
-  async copyFrom(srcFile: string, type: string): Promise<string> {
+  async copyFrom(srcFile: string, declaredType: string): Promise<string> {
     return 'hash';
   }
 
