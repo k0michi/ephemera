@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 
 export default class FSHelper {
   static async digest(filePath: string, algorithm: string) {
-    const stream = await fs.open(filePath, 'r');
+    await using stream = await fs.open(filePath, 'r');
     const hash = crypto.createHash(algorithm);
     const buffer = Buffer.alloc(8192);
     let bytesRead: number;
@@ -17,7 +17,6 @@ export default class FSHelper {
       }
     } while (bytesRead > 0);
 
-    await stream.close();
     return hash.digest('hex');
   }
 
