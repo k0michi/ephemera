@@ -52,7 +52,7 @@ export default class TestHelper {
     return filePath;
   }
 
-  static async newDummyImage(width: number, height: number, format: 'png' | 'jpeg' | 'webp' | 'gif', alpha: boolean): Promise<string> {
+  static async newDummyImage({ width, height, format, alpha }: { width: number, height: number, format: 'png' | 'jpeg' | 'webp' | 'gif', alpha: boolean }): Promise<string> {
     const size = width * height * (alpha ? 4 : 3);
     const randomBuffer = Buffer.alloc(size);
 

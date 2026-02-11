@@ -34,10 +34,12 @@ describe('AttachmentService', () => {
   it('should create a new attachment from a file', async () => {
     await database.transaction(async (tx) => {
       const testImage = await TestHelper.newDummyImage(
-        800,
-        600,
-        'png',
-        true
+        {
+          width: 800,
+          height: 600,
+          format: 'png',
+          alpha: true
+        }
       );
 
       const attachmentId = await attachmentService.copyFrom(testImage, tx);
@@ -51,10 +53,12 @@ describe('AttachmentService', () => {
   it('should reject an oversized attachment', async () => {
     await database.transaction(async (tx) => {
       const testImage = await TestHelper.newDummyImage(
-        10000,
-        10000,
-        'png',
-        true
+        {
+          width: 10000,
+          height: 10000,
+          format: 'png',
+          alpha: true
+        }
       );
 
       await expect(attachmentService.copyFrom(testImage, tx)).rejects.toThrow();
