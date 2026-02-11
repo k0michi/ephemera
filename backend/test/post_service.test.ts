@@ -11,6 +11,7 @@ import { migrate } from 'drizzle-orm/mysql2/migrator';
 import type { Pool } from 'mysql2';
 import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
+import TestHelper from './test_helper.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -31,19 +32,7 @@ describe('PostService', () => {
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
 
-    const config = new Config({
-      host: 'example.com',
-      port: 3000,
-      dbHost: container.getHost(),
-      dbPort: container.getPort(),
-      dbUser: container.getUsername(),
-      dbPassword: container.getUserPassword(),
-      dbName: container.getDatabase(),
-      dbConnectionLimit: 5,
-      dbQueueLimit: 500,
-      dbConnectTimeout: 10000,
-      allowedTimeSkewMillis: 5 * 60 * 1000,
-    });
+    const config = TestHelper.getConfig(container);
     attachmentService = new AttachmentService(config, database);
     postService = new PostService(config,
       database,
