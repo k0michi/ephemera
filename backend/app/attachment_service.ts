@@ -56,7 +56,7 @@ export class AttachmentService implements IAttachmentService {
     return path.join(this.config.dataDir, 'attachments');
   }
 
-  ffprobe(filePath: string): Promise<ffmpeg.FfprobeData> {
+  private ffprobe(filePath: string): Promise<ffmpeg.FfprobeData> {
     return new Promise((resolve, reject) => {
       ffmpeg.ffprobe(filePath, (err, data) => {
         if (err) {
@@ -66,6 +66,58 @@ export class AttachmentService implements IAttachmentService {
         }
       });
     });
+  }
+
+  private async validateImage(srcFile: string): Promise<void> {
+    try {
+      const image = sharp(srcFile, { failOn: 'error', limitInputPixels: AttachmentService._kMaxAttachmentWidth ** 2 });
+      const metadata = await image.metadata();
+
+      if (metadata.width > AttachmentService._kMaxAttachmentWidth
+        || metadata.height > AttachmentService._kMaxAttachmentWidth) {
+        throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
+      }
+
+      await image.stats();
+    } catch (e) {
+      throw new ApiError('Attachment is not a valid image', 400);
+    }
+  }
+
+  private async validateVideo(srcFile: string): Promise<void> {
+    try {
+      const metadata = await this.ffprobe(srcFile);
+
+      const videoStream = metadata.streams.find(s => s.codec_type === 'video');
+
+      if (!videoStream) {
+        throw new ApiError('Attachment does not contain a video stream', 400);
+      }
+
+      const width = videoStream.width;
+      const height = videoStream.height;
+
+      if (width === undefined || height === undefined) {
+        throw new ApiError('Could not determine video dimensions', 400);
+      }
+
+      if (width > AttachmentService._kMaxAttachmentWidth
+        || height > AttachmentService._kMaxAttachmentWidth) {
+        throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
+      }
+
+      const codec = videoStream.codec_name;
+
+      if (codec !== 'h264') {
+        throw new ApiError('Only H.264 encoded videos are allowed', 400);
+      }
+    } catch (e) {
+      if (e instanceof ApiError) {
+        throw e;
+      }
+
+      throw new ApiError('Attachment is not a valid video', 400);
+    }
   }
 
   async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
@@ -84,55 +136,10 @@ export class AttachmentService implements IAttachmentService {
       throw new ApiError('Attachment type is not allowed', 400);
     }
 
-    // Only images are allowed for now
     if (detected.mime.startsWith('image/')) {
-      try {
-        const image = sharp(srcFile, { failOn: 'error', limitInputPixels: AttachmentService._kMaxAttachmentWidth ** 2 });
-        const metadata = await image.metadata();
-
-        if (metadata.width > AttachmentService._kMaxAttachmentWidth
-          || metadata.height > AttachmentService._kMaxAttachmentWidth) {
-          throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
-        }
-
-        await image.stats();
-      } catch (e) {
-        throw new ApiError('Attachment is not a valid image', 400);
-      }
-    } else if (detected.mime === 'video/mp4') {
-      try {
-        const metadata = await this.ffprobe(srcFile);
-
-        const videoStream = metadata.streams.find(s => s.codec_type === 'video');
-
-        if (!videoStream) {
-          throw new ApiError('Attachment does not contain a video stream', 400);
-        }
-
-        const width = videoStream.width;
-        const height = videoStream.height;
-
-        if (width === undefined || height === undefined) {
-          throw new ApiError('Could not determine video dimensions', 400);
-        }
-
-        if (width > AttachmentService._kMaxAttachmentWidth
-          || height > AttachmentService._kMaxAttachmentWidth) {
-          throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
-        }
-
-        const codec = videoStream.codec_name;
-
-        if (codec !== 'h264') {
-          throw new ApiError('Only H.264 encoded videos are allowed', 400);
-        }
-      } catch (e) {
-        if (e instanceof ApiError) {
-          throw e;
-        }
-
-        throw new ApiError('Attachment is not a valid video', 400);
-      }
+      await this.validateImage(srcFile);
+    } else if (detected.mime.startsWith('video/')) {
+      await this.validateVideo(srcFile);
     }
 
     // Validation complete
