@@ -1,7 +1,15 @@
-import type { StartedMariaDbContainer } from "@testcontainers/mariadb";
+import { MariaDbContainer, type StartedMariaDbContainer } from "@testcontainers/mariadb";
 import Config from "../app/config.js";
 
 export default class TestHelper {
+  static startDbContainer() {
+    return new MariaDbContainer('mariadb:11')
+      .withDatabase('test_db')
+      .withUsername('test_user')
+      .withUserPassword('test_pw')
+      .start();
+  }
+
   static getConfig(container: StartedMariaDbContainer) {
     const config = new Config({
       host: 'example.com',

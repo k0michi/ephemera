@@ -21,11 +21,7 @@ describe('PostService', () => {
   let postService: PostService;
 
   beforeEach(async () => {
-    container = await new MariaDbContainer('mariadb:11')
-      .withDatabase('test_db')
-      .withUsername('test_user')
-      .withUserPassword('test_pw')
-      .start();
+    container = await TestHelper.startDbContainer();
 
     const db = drizzle(container.getConnectionUri());
     pool = db.$client;
