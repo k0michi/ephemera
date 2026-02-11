@@ -6,6 +6,7 @@ import type { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import TestHelper from "./test_helper.js";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import FSHelper from "../app/fs_helper.js";
+import fsPromises from "fs/promises";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;
@@ -44,6 +45,27 @@ describe('AttachmentService', () => {
       const filePath = attachmentService.getFilePath(attachmentId);
 
       await TestHelper.assertFileEquals(testImage, filePath);
+    });
+  }, 60_000);
+
+  it('should reject an oversized attachment', async () => {
+    await database.transaction(async (tx) => {
+      const testImage = await TestHelper.newDummyImage(
+        10000,
+        10000,
+        'png',
+        true
+      );
+
+      await expect(attachmentService.copyFrom(testImage, tx)).rejects.toThrow();
+    });
+  }, 60_000);
+
+  it('should reject an unsupported attachment type', async () => {
+    await database.transaction(async (tx) => {
+      const tempFile = await TestHelper.newTempFile();
+      await fsPromises.writeFile(tempFile, 'This is a text file.');
+      await expect(attachmentService.copyFrom(tempFile, tx)).rejects.toThrow();
     });
   }, 60_000);
 });
