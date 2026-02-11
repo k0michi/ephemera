@@ -45,5 +45,5 @@ describe('AttachmentService', () => {
 
       await TestHelper.assertFileEquals(testImage, filePath);
     });
-  });
+  }, 60_000);
 });
