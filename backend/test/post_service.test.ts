@@ -37,12 +37,7 @@ describe('PostService', () => {
   }, 60_000);
 
   afterEach(async () => {
-    await new Promise<void>((resolve, reject) => {
-      pool.end(err => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    await TestHelper.endPool(pool);
     await container.stop();
   });
 

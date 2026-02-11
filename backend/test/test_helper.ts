@@ -1,5 +1,6 @@
 import { MariaDbContainer, type StartedMariaDbContainer } from "@testcontainers/mariadb";
 import Config from "../app/config.js";
+import type { Pool } from "mysql2";
 
 export default class TestHelper {
   static startDbContainer() {
@@ -25,5 +26,17 @@ export default class TestHelper {
       allowedTimeSkewMillis: 5 * 60 * 1000,
     });
     return config;
+  }
+
+  static endPool(pool: Pool): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      pool.end(err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 }
