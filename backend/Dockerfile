@@ -10,6 +10,7 @@ RUN npm run build -w backend
 
 FROM node:20-alpine
 WORKDIR /app
+RUN apk add --no-cache ffmpeg
 COPY package.json package-lock.json ./
 COPY backend/package.json ./backend/
 COPY backend/drizzle ./backend/drizzle

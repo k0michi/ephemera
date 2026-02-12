@@ -104,15 +104,25 @@ export default function Post({ post, onDelete }: PostProps) {
             </div>
             <div>
               {post[0][3]?.filter((footer) => footer[0] === 'attachment').map((footer) => {
+                const type = footer[1];
                 const attachmentHash = footer[2];
 
                 return (
-                  <img
-                    key={attachmentHash}
-                    src={`${store.getClient().getAttachmentUrl(attachmentHash)}`}
-                    alt="post attachment"
-                    style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
-                  />
+                  type.startsWith('image/') ? (
+                    <img
+                      key={attachmentHash}
+                      src={`${store.getClient().getAttachmentUrl(attachmentHash)}`}
+                      alt="post attachment"
+                      style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
+                    />
+                  ) : type.startsWith('video/') ? (
+                    <video
+                      key={attachmentHash}
+                      src={`${store.getClient().getAttachmentUrl(attachmentHash)}`}
+                      controls
+                      style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
+                    />
+                  ) : null
                 );
               })}
             </div>

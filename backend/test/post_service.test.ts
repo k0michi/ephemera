@@ -11,6 +11,7 @@ import { migrate } from 'drizzle-orm/mysql2/migrator';
 import type { Pool } from 'mysql2';
 import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
+import TestHelper from './test_helper.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -20,30 +21,14 @@ describe('PostService', () => {
   let postService: PostService;
 
   beforeEach(async () => {
-    container = await new MariaDbContainer('mariadb:11')
-      .withDatabase('test_db')
-      .withUsername('test_user')
-      .withUserPassword('test_pw')
-      .start();
+    container = await TestHelper.startDbContainer();
 
     const db = drizzle(container.getConnectionUri());
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
 
-    const config = new Config({
-      host: 'example.com',
-      port: 3000,
-      dbHost: container.getHost(),
-      dbPort: container.getPort(),
-      dbUser: container.getUsername(),
-      dbPassword: container.getUserPassword(),
-      dbName: container.getDatabase(),
-      dbConnectionLimit: 5,
-      dbQueueLimit: 500,
-      dbConnectTimeout: 10000,
-      allowedTimeSkewMillis: 5 * 60 * 1000,
-    });
+    const config = TestHelper.getConfig(container);
     attachmentService = new AttachmentService(config, database);
     postService = new PostService(config,
       database,
@@ -52,12 +37,7 @@ describe('PostService', () => {
   }, 60_000);
 
   afterEach(async () => {
-    await new Promise<void>((resolve, reject) => {
-      pool.end(err => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    await TestHelper.endPool(pool);
     await container.stop();
   });
 
