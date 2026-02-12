@@ -90,4 +90,18 @@ describe('AttachmentService', () => {
       await TestHelper.assertFileEquals(testVideo, filePath);
     });
   }, 60_000);
+
+  it('should reject an oversized video attachment', async () => {
+    await database.transaction(async (tx) => {
+      const testVideo = await TestHelper.newDummyVideo({
+        duration: 1,
+        width: 5000,
+        height: 5000,
+        format: 'mp4',
+        fps: 1
+      });
+
+      await expect(attachmentService.copyFrom(testVideo, tx)).rejects.toThrow();
+    });
+  }, 60_000);
 });
