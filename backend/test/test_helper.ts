@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { expect } from "vitest";
 import path from "path";
 import os from "os";
+import ffmpeg from 'fluent-ffmpeg';
 
 export default class TestHelper {
   static startDbContainer() {
@@ -92,5 +93,58 @@ export default class TestHelper {
     const buffer1 = await fsPromises.readFile(filePath1);
     const buffer2 = await fsPromises.readFile(filePath2);
     expect(buffer1).toEqual(buffer2);
+  }
+
+  static async newDummyVideo({
+    width,
+    height,
+    duration,
+    format = 'mp4',
+    fps = 30
+  }: {
+    width: number;
+    height: number;
+    duration: number;
+    format: 'mp4' | 'webm';
+    fps?: number;
+  }): Promise<string> {
+    const outputPath = await this.newTempFile();
+
+    const dummyImagePath = await this.newDummyImage({
+      width,
+      height,
+      format: 'png',
+      alpha: false
+    });
+
+    return new Promise((resolve, reject) => {
+      const command = ffmpeg(dummyImagePath)
+        .inputOptions([
+          '-loop 1',
+          `-t ${duration}`
+        ]);
+
+      if (format === 'mp4') {
+        command
+          .videoCodec('libx264')
+          .outputOptions([
+            '-pix_fmt yuv420p',
+            `-r ${fps}`
+          ]);
+      } else {
+        command
+          .videoCodec('libvpx-vp9')
+          .outputOptions([`-r ${fps}`]);
+      }
+
+      command
+        .on('error', (err) => {
+          reject(err);
+        })
+        .on('end', () => {
+          resolve(outputPath);
+        })
+        .save(outputPath);
+    });
   }
 }
