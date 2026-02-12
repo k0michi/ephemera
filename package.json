@@ -4,6 +4,7 @@
   "workspaces": [
     "frontend",
     "backend",
+    "htnode",
     "shared"
   ]
 }
