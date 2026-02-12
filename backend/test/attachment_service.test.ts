@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AttachmentService } from "../app/attachment_service.js";
 import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
 import type { Pool } from "mysql2";
@@ -14,7 +14,7 @@ describe('AttachmentService', () => {
   let pool: Pool;
   let attachmentService: AttachmentService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     container = await TestHelper.startDbContainer();
 
     const db = drizzle(container.getConnectionUri());
@@ -26,7 +26,7 @@ describe('AttachmentService', () => {
     attachmentService = new AttachmentService(config, database);
   }, 60_000);
 
-  afterAll(async () => {
+  afterEach(async () => {
     await TestHelper.endPool(pool);
     await container.stop();
   });

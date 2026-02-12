@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { MariaDbContainer, StartedMariaDbContainer } from "@testcontainers/mariadb";
 import PostService from '../app/post_service.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
@@ -20,7 +20,7 @@ describe('PostService', () => {
   let attachmentService: AttachmentService;
   let postService: PostService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     container = await TestHelper.startDbContainer();
 
     const db = drizzle(container.getConnectionUri());
@@ -36,7 +36,7 @@ describe('PostService', () => {
     );
   }, 60_000);
 
-  afterAll(async () => {
+  afterEach(async () => {
     await TestHelper.endPool(pool);
     await container.stop();
   });
