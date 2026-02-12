@@ -108,7 +108,8 @@ export default class TestHelper {
     format: 'mp4' | 'webm';
     fps?: number;
   }): Promise<string> {
-    const outputPath = await this.newTempFile();
+    let outputPath = await this.newTempFile();
+    outputPath += `.${format}`;
 
     const dummyImagePath = await this.newDummyImage({
       width,
