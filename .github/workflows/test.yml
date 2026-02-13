@@ -63,3 +63,22 @@ jobs:
         run: npm test -- --coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
+  
+  test_peer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./peer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Run tests
+        run: npm test -- --coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
