@@ -53,7 +53,7 @@ export class Config {
   }
 }
 
-export default class EphemeraP2PNode {
+export default class EphemeraPeer {
   private libp2pNode: Libp2p | null = null;
   private options: Config;
 
@@ -119,7 +119,7 @@ export default class EphemeraP2PNode {
   }
 }
 
-const node = new EphemeraP2PNode(
+const node = new EphemeraPeer(
   Config.fromEnv()
 );
 await node.start();
