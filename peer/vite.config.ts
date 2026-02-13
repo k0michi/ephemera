@@ -4,7 +4,7 @@ export default defineConfig({
   build: {
     ssr: 'app/app.ts',
     outDir: 'dist',
-    target: 'node18',
+    target: 'node22',
     rollupOptions: {
       external: [
         /node_modules/,
