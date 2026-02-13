@@ -1,21 +1,21 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY shared/. ./shared/
-COPY node/package.json ./node/
+COPY peer/package.json ./peer/
 RUN npm ci
 COPY shared/. ./shared/
-COPY node/. ./node/
-RUN npm run build -w node
+COPY peer/. ./peer/
+RUN npm run build -w peer
 
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 RUN apk add --no-cache ffmpeg
 COPY package.json package-lock.json ./
-COPY node/package.json ./node/
+COPY peer/package.json ./peer/
 RUN npm ci --omit=dev
 WORKDIR /app
-COPY --from=builder /app/node/dist ./node/dist
+COPY --from=builder /app/peer/dist ./peer/dist
 EXPOSE 3000
 WORKDIR /app
-CMD ["npm", "run", "start", "-w", "node"]
+CMD ["npm", "run", "start", "-w", "peer"]
