@@ -5,6 +5,7 @@
     "frontend",
     "backend",
     "peer",
+    "manager",
     "shared"
   ]
 }
