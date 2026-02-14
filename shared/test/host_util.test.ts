@@ -19,4 +19,36 @@ describe('HostUtil', () => {
       expect(HostUtil.isValid('user:pass@example.com:8080')).toBe(false);
     });
   });
+
+  describe('parse', () => {
+    it('should parse valid hosts', () => {
+      expect(HostUtil.parse('example.com')).toEqual({ hostname: 'example.com', port: 443 });
+      expect(HostUtil.parse('example.com:8080')).toEqual({ hostname: 'example.com', port: 8080 });
+      expect(HostUtil.parse('localhost:3000')).toEqual({ hostname: 'localhost', port: 3000 });
+      expect(HostUtil.parse('sub.example.com:1234')).toEqual({ hostname: 'sub.example.com', port: 1234 });
+      expect(HostUtil.parse('[::1]:3000')).toEqual({ hostname: '[::1]', port: 3000 });
+    });
+
+    it('should throw on invalid hosts', () => {
+      expect(() => HostUtil.parse(':8080')).toThrow();
+      expect(() => HostUtil.parse('http://example.com:8080')).toThrow();
+      expect(() => HostUtil.parse('https://example.com:8080')).toThrow();
+    });
+  });
+
+  describe('stringify', () => {
+    it('should stringify hosts correctly', () => {
+      expect(HostUtil.stringify('example.com', 443)).toBe('example.com');
+      expect(HostUtil.stringify('example.com', 8080)).toBe('example.com:8080');
+      expect(HostUtil.stringify('localhost', 3000)).toBe('localhost:3000');
+      expect(HostUtil.stringify('sub.example.com', 1234)).toBe('sub.example.com:1234');
+      expect(HostUtil.stringify('[::1]', 3000)).toBe('[::1]:3000');
+    });
+
+    it('should throw on invalid hosts', () => {
+      expect(() => HostUtil.stringify('example.com', -1)).toThrow();
+      expect(() => HostUtil.stringify('example.com', 65536)).toThrow();
+      expect(() => HostUtil.stringify('invalid host', 8080)).toThrow();
+    });
+  });
 });
