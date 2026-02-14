@@ -1,5 +1,7 @@
 {
 	"devDependencies": {
+		"protoc": "^33.5.0",
+		"ts-proto": "^2.11.2",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.0",
 		"vite-node": "^5.2.0",
@@ -8,7 +10,6 @@
 	"dependencies": {
 		"@ephemera/shared": "*",
 		"@grpc/grpc-js": "^1.14.3",
-		"@grpc/proto-loader": "^0.8.0",
 		"@libp2p/bootstrap": "^12.0.11",
 		"@libp2p/crypto": "^5.1.13",
 		"@libp2p/identify": "^4.0.10",
@@ -25,6 +26,7 @@
 		"start": "node ./dist/app.js",
 		"dev": "vite-node app/app.ts --watch",
 		"test": "vitest",
-		"typecheck": "tsc -b"
+		"typecheck": "tsc -b",
+		"gen-proto": "protoc --plugin=protoc-gen-ts_proto=../node_modules/ts-proto/protoc-gen-ts_proto --ts_proto_out=./app/gen --ts_proto_opt=esModuleInterop=true,outputServices=grpc-js,useOptionals=messages -I ./proto ./proto/*.proto"
 	}
 }
