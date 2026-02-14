@@ -3,7 +3,9 @@
 	"type": "module",
 	"dependencies": {
 		"@noble/curves": "^2.0.1",
+		"@types/whatwg-url": "^13.0.0",
 		"typescript": "^5.9.3",
+		"whatwg-url": "^15.1.0",
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
