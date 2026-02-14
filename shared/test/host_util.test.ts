@@ -16,6 +16,7 @@ describe('HostUtil', () => {
       expect(HostUtil.isValid(':8080')).toBe(false);
       expect(HostUtil.isValid('http://example.com:8080')).toBe(false);
       expect(HostUtil.isValid('https://example.com:8080')).toBe(false);
+      expect(HostUtil.isValid('user:pass@example.com:8080')).toBe(false);
     });
   });
 });

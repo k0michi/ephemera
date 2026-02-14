@@ -5,7 +5,7 @@ export default class HostUtil {
     try {
       const url = new URL(`https://${host}`);
 
-      return url.pathname === '/' && url.search === '' && url.hash === '';
+      return url.pathname === '/' && url.search === '' && url.hash === '' && url.username === '' && url.password === '';
     } catch (e) {
       return false;
     }
