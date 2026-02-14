@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import EnvParser from '../app/env_parser.js';
+import EnvParser from '../lib/env_parser.js';
 
 describe('EnvParser', () => {
   let originalEnv: NodeJS.ProcessEnv;

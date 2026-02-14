@@ -1,4 +1,4 @@
-import EnvParser from "./env_parser.js";
+import EnvParser from "@ephemera/shared/lib/env_parser.js";
 
 export default class Config {
   /**
