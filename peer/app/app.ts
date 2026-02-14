@@ -8,6 +8,7 @@ import { identify } from '@libp2p/identify';
 import { bootstrap } from '@libp2p/bootstrap'
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr';
 import HostUtil from '@ephemera/shared/lib/host_util.js';
+import EnvParser from '@ephemera/shared/lib/env_parser.js';
 
 export class Config {
   internalHost: string;
@@ -29,9 +30,10 @@ export class Config {
   }
 
   static fromEnv(): Config {
-    const internalHost = process.env.EPHEMERA_INTERNAL_HOST ?? '0.0.0.0:8080';
-    const externalHost = process.env.EPHEMERA_EXTERNAL_HOST ?? 'localhost:443';
-    const bootstrapPeersEnv = process.env.EPHEMERA_BOOTSTRAP_PEERS ?? '';
+    const parser = new EnvParser(process.env);
+    const internalHost = parser.getStringOptional('EPHEMERA_INTERNAL_HOST', '0.0.0.0:8080');
+    const externalHost = parser.getStringOptional('EPHEMERA_EXTERNAL_HOST', 'localhost:443');
+    const bootstrapPeersEnv = parser.getStringOptional('EPHEMERA_BOOTSTRAP_PEERS', '');
     const bootstrapPeers = bootstrapPeersEnv.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
     return new Config({
