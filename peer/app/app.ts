@@ -7,47 +7,36 @@ import { ping } from '@libp2p/ping';
 import { identify } from '@libp2p/identify';
 import { bootstrap } from '@libp2p/bootstrap'
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr';
+import HostUtil from '@ephemera/shared/lib/host_util.js';
 
 export class Config {
-  internalHostname: string;
-  internalPort: number;
-  externalHostname: string;
-  externalPort: number;
+  internalHost: string;
+  externalHost: string;
   bootstrapPeers: string[];
 
   constructor({
-    internalHostname,
-    internalPort,
-    externalHostname,
-    externalPort,
+    internalHost,
+    externalHost,
     bootstrapPeers
   }: {
-    internalHostname: string;
-    internalPort: number;
-    externalHostname: string;
-    externalPort: number;
+    internalHost: string;
+    externalHost: string;
     bootstrapPeers: string[];
   }) {
-    this.internalHostname = internalHostname;
-    this.internalPort = internalPort;
-    this.externalHostname = externalHostname;
-    this.externalPort = externalPort;
+    this.internalHost = internalHost;
+    this.externalHost = externalHost;
     this.bootstrapPeers = bootstrapPeers;
   }
 
   static fromEnv(): Config {
-    const internalHostname = process.env.EPHEMERA_INTERNAL_HOSTNAME ?? '0.0.0.0';
-    const internalPort = Number(process.env.EPHEMERA_INTERNAL_PORT ?? '8080');
-    const externalHostname = process.env.EPHEMERA_EXTERNAL_HOSTNAME ?? 'localhost';
-    const externalPort = Number(process.env.EPHEMERA_EXTERNAL_PORT ?? '443');
+    const internalHost = process.env.EPHEMERA_INTERNAL_HOST ?? '0.0.0.0:8080';
+    const externalHost = process.env.EPHEMERA_EXTERNAL_HOST ?? 'localhost:443';
     const bootstrapPeersEnv = process.env.EPHEMERA_BOOTSTRAP_PEERS ?? '';
     const bootstrapPeers = bootstrapPeersEnv.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
     return new Config({
-      internalHostname,
-      internalPort,
-      externalHostname,
-      externalPort,
+      internalHost,
+      externalHost,
       bootstrapPeers
     });
   }
@@ -62,19 +51,19 @@ export default class EphemeraPeer {
   }
 
   get internalHostname(): string {
-    return this.options.internalHostname;
+    return HostUtil.parse(this.options.internalHost).hostname;
   }
 
   get internalPort(): number {
-    return this.options.internalPort;
+    return HostUtil.parse(this.options.internalHost).port;
   }
 
   get externalHostname(): string {
-    return this.options.externalHostname;
+    return HostUtil.parse(this.options.externalHost).hostname;
   }
 
   get externalPort(): number {
-    return this.options.externalPort;
+    return HostUtil.parse(this.options.externalHost).port;
   }
 
   public async start(): Promise<void> {
