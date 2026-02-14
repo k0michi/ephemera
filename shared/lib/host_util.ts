@@ -23,7 +23,7 @@ export default class HostUtil {
     };
   }
 
-  static stringify(hostname: string, port: number): string {
+  static stringify({ hostname, port }: { hostname: string; port: number }): string {
     let joined = port === 443 ? hostname : `${hostname}:${port}`;
 
     if (!this.isValid(joined)) {
