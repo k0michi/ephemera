@@ -12,13 +12,13 @@ import type { Pool } from 'mysql2';
 import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
 import TestHelper from './test_helper.js';
-import { PeerService } from '../app/peer_service.js';
+import { type IPeerService } from '../app/peer_service.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
   let database: MySql2Database;
   let pool: Pool;
-  let peerService: PeerService;
+  let peerService: IPeerService;
   let attachmentService: AttachmentService;
   let postService: PostService;
 
@@ -31,7 +31,11 @@ describe('PostService', () => {
     await migrate(db, { migrationsFolder: './drizzle' });
 
     const config = TestHelper.getConfig(container);
-    peerService = new PeerService(config, database);
+    peerService = {
+      async publish() {
+        return;
+      }
+    };
     attachmentService = new AttachmentService(config, database);
     postService = new PostService(config,
       database,
