@@ -11,11 +11,13 @@ import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { AttachmentService } from './attachment_service.js';
+import { PeerService } from './peer_service.js';
 
 class Ephemera extends Application {
   config?: Config;
   postService?: PostService;
   attachmentService?: AttachmentService;
+  peerService?: PeerService;
   db?: MySql2Database;
 
   constructor() {
@@ -91,9 +93,9 @@ class Ephemera extends Application {
     await this.connectDatabase();
     console.log('Database connection established');
 
+    this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db));
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
-    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService);
-
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService);
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService));
 

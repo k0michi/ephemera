@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile
     # working_dir: /app
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
@@ -15,6 +17,7 @@ services:
       - EPHEMERA_DB_USER=ephemera
       - EPHEMERA_DB_PASSWORD=${EPHEMERA_DB_PASSWORD:-ephemera_pw}
       - EPHEMERA_DB_NAME=ephemera_db
+      - EPHEMERA_PEER_HOST=peer:50051
     volumes:
       - backend_data:/app/backend/data
     depends_on:
@@ -53,6 +56,8 @@ services:
       context: .
       dockerfile: ./peer/Dockerfile
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - EPHEMERA_INTERNAL_HOST=${EPHEMERA_INTERNAL_HOST:-0.0.0.0:8080}
       - EPHEMERA_EXTERNAL_HOST=${EPHEMERA_EXTERNAL_HOST:-localhost:3000}

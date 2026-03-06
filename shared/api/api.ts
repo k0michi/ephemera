@@ -31,6 +31,11 @@ export type Signal = [
   string // signature
 ];
 
+export type ServerSignedSignal = [
+  Signal, // signal
+  string // server_signature
+];
+
 //
 // Attachments
 //

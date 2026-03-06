@@ -13,6 +13,7 @@ import Crypto from "@ephemera/shared/lib/crypto.js";
 import type { IAttachmentService } from "./attachment_service.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import FSHelper from "./fs_helper.js";
+import type { IPeerService } from "./peer_service.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -36,7 +37,7 @@ export interface PostFindResult {
 }
 
 export abstract class PostServiceBase implements IPostService {
-  private config: Config;
+  protected config: Config;
 
   constructor(config: Config) {
     this.config = config;
@@ -83,12 +84,14 @@ export abstract class PostServiceBase implements IPostService {
 export default class PostService extends PostServiceBase {
   private database: MySql2Database;
   private attachmentService: IAttachmentService;
+  private peerService: IPeerService;
   private static _kMaxAttachmentsPerPost: number = 4;
 
-  constructor(config: Config, database: MySql2Database, attachmentService: IAttachmentService) {
+  constructor(config: Config, database: MySql2Database, attachmentService: IAttachmentService, peerService: IPeerService) {
     super(config);
     this.database = database;
     this.attachmentService = attachmentService;
+    this.peerService = peerService;
   }
 
   async validateAttachmentCount(attachmentPaths: string[]): Promise<void> {
@@ -160,6 +163,9 @@ export default class PostService extends PostServiceBase {
       console.error('Error saving post:', e);
       throw new ApiError('Failed to save post', 500);
     }
+
+    const serverSigned = await SignalCrypto.signServer(signal, Base37.toUint8Array(this.config.privateKey));
+    await this.peerService.publish(serverSigned);
   }
 
   static unwrapVersion(version: number): Version {
