@@ -15,6 +15,8 @@ import { GossipSub, gossipsub, GossipsubMessage } from '@libp2p/gossipsub';
 import { EventTargetReadable } from './event_target_readable.js';
 import { pipeline } from "node:stream/promises";
 import { Transform, Writable } from 'node:stream';
+import Base37 from '@ephemera/shared/lib/base37.js';
+import { keys } from '@libp2p/crypto';
 
 export default class EphemeraPeer {
   private libp2pNode: Libp2p<{
@@ -46,7 +48,10 @@ export default class EphemeraPeer {
   }
 
   public async start(): Promise<void> {
+    const privateKey = Base37.toUint8Array(this.options.privateKey);
+
     this.libp2pNode = await createLibp2p({
+      privateKey: keys.privateKeyFromRaw(privateKey),
       addresses: {
         listen: [`/ip4/${this.internalHostname}/tcp/${this.internalPort}/ws`],
         announce: [
