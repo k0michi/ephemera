@@ -13,6 +13,8 @@ import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import type { MySql2Database } from 'drizzle-orm/mysql2';
 
 function testConfig() {
+  const keyPair = Crypto.generateKeyPair();
+
   return new Config({
     host: 'example.com',
     port: 3000,
@@ -24,6 +26,9 @@ function testConfig() {
     dbConnectionLimit: 5,
     dbQueueLimit: 500,
     dbConnectTimeout: 10000,
+    peerHost: 'peer:50051',
+    privateKey: Base37.fromUint8Array(keyPair.privateKey),
+    publicKey: Base37.fromUint8Array(keyPair.publicKey),
     allowedTimeSkewMillis: 5 * 60 * 1000,
   });
 }
