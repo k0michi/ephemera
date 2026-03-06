@@ -164,7 +164,18 @@ export default class PostService extends PostServiceBase {
       throw new ApiError('Failed to save post', 500);
     }
 
-    const serverSigned = await SignalCrypto.signServer(signal, Base37.toUint8Array(this.config.privateKey));
+    // TODO: Use timestamp from db
+    const now = new Date();
+    const serverSigned = await SignalCrypto.signServer([
+      0,
+      [
+        this.config.host,
+        now.getTime(),
+        'relay',
+      ],
+      signal,
+      [],
+    ], Base37.toUint8Array(this.config.privateKey));
     await this.peerService.publish(serverSigned);
   }
 
