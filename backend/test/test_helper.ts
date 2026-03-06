@@ -7,6 +7,8 @@ import { expect } from "vitest";
 import path from "path";
 import os from "os";
 import ffmpeg from 'fluent-ffmpeg';
+import Crypto from "@ephemera/shared/lib/crypto.js";
+import Base37 from "@ephemera/shared/lib/base37.js";
 
 export default class TestHelper {
   static startDbContainer() {
@@ -18,6 +20,7 @@ export default class TestHelper {
   }
 
   static getConfig(container: StartedMariaDbContainer) {
+    const keyPair = Crypto.generateKeyPair();
     const config = new Config({
       host: 'example.com',
       port: 3000,
@@ -29,7 +32,10 @@ export default class TestHelper {
       dbConnectionLimit: 5,
       dbQueueLimit: 500,
       dbConnectTimeout: 10000,
+      peerHost: 'peer:50051',
       allowedTimeSkewMillis: 5 * 60 * 1000,
+      privateKey: Base37.fromUint8Array(keyPair.privateKey),
+      publicKey: Base37.fromUint8Array(keyPair.publicKey),
     });
     return config;
   }
