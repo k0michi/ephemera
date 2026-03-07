@@ -4,6 +4,7 @@
 	"dependencies": {
 		"@bufbuild/protobuf": "^2.11.0",
 		"@grpc/grpc-js": "^1.14.3",
+		"@js-temporal/polyfill": "^0.5.1",
 		"@noble/curves": "^2.0.1",
 		"@types/whatwg-url": "^13.0.0",
 		"typescript": "^5.9.3",

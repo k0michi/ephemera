@@ -7,13 +7,16 @@ import { ApiError } from "./api_error.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import { posts } from "./db/schema.js";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt, sql } from "drizzle-orm";
 import Base37 from "@ephemera/shared/lib/base37.js";
 import Crypto from "@ephemera/shared/lib/crypto.js";
 import type { IAttachmentService } from "./attachment_service.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import FSHelper from "./fs_helper.js";
 import type { IPeerService } from "./peer_service.js";
+import { PostCursorUtil, type PostCursor } from "@ephemera/shared/lib/post_cursor_util.js";
+import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
+import { Temporal } from "@js-temporal/polyfill";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -188,10 +191,16 @@ export default class PostService extends PostServiceBase {
   }
 
   async find(options: PostFindOptions): Promise<PostFindResult> {
-    const cursorNum = options?.cursor ? parseInt(options.cursor) : Number.MAX_SAFE_INTEGER;
+    let cursor: PostCursor | null = null;
+    let cursorTimeMySQL: string | null = null;
 
-    if (isNaN(cursorNum) || cursorNum < 0) {
-      throw new ApiError('Invalid cursor', 400);
+    if (options.cursor) {
+      try {
+        cursor = PostCursorUtil.parse(options.cursor);
+        cursorTimeMySQL = DateTimeUtil.toMySQLString(Temporal.Instant.from(cursor[0]));
+      } catch (e) {
+        throw new ApiError('Invalid cursor', 400);
+      }
     }
 
     if (options.limit < 1) {
@@ -214,14 +223,21 @@ export default class PostService extends PostServiceBase {
 
     const kMaxLimit = 128;
     options.limit = Math.min(options.limit, kMaxLimit);
+    const filters = [];
 
-    const cond = options.author !== null
-      ? and(lt(posts.seq, cursorNum), eq(posts.author, options.author))
-      : lt(posts.seq, cursorNum);
+    if (options.author !== null) {
+      filters.push(eq(posts.author, options.author));
+    }
+
+    if (cursor !== null && cursorTimeMySQL !== null) {
+      filters.push(sql`(${posts.insertedAt}, ${posts.id}) < (${cursorTimeMySQL}, ${cursor[1]})`);
+    }
+
+    const cond = filters.length > 0 ? and(...filters) : undefined;
 
     const dbSignals = await this.database.select().from(posts)
       .where(cond)
-      .orderBy(desc(posts.seq))
+      .orderBy(desc(posts.insertedAt), desc(posts.id))
       .limit(options.limit + 1);
 
     const signals = dbSignals.map((post) => {
@@ -246,7 +262,13 @@ export default class PostService extends PostServiceBase {
     if (dbSignals.length > options.limit) {
       // There is a next page
       const lastPost = NullableHelper.unwrap(dbSignals.at(-2));
-      nextCursor = String(NullableHelper.unwrap(lastPost.seq));
+
+      const dbInsertedAt = NullableHelper.unwrap(lastPost.insertedAt);
+      const dbID = NullableHelper.unwrap(lastPost.id);
+
+      const isoInsertedAt = DateTimeUtil.fromMySQLString(dbInsertedAt);
+      nextCursor = PostCursorUtil.stringify([isoInsertedAt.toString(), dbID]);
+
       signals.pop();
     }
 
