@@ -1,0 +1,1 @@
+CREATE INDEX `posts_insertedAt_id_idx` ON `posts` (`insertedAt`,`id`);

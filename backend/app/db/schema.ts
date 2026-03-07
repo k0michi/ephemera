@@ -46,6 +46,7 @@ export const posts = mysqlTable('posts', {
   seq: int('seq').autoincrement(),
 }, (table) => [
   uniqueIndex('posts_seq_idx').on(table.seq),
+  index('posts_insertedAt_id_idx').on(table.insertedAt, table.id),
 ]);
 
 export const attachments = mysqlTable('attachments', {
