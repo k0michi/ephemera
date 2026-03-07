@@ -81,6 +81,8 @@ class Ephemera extends Application {
       connectionLimit: config.dbConnectionLimit,
       queueLimit: config.dbQueueLimit,
       connectTimeout: config.dbConnectTimeout,
+
+      timezone: 'Z',
     }));
   }
 
