@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export type PostCursor = [string, string]; // [inserted_at, id]
 const postCursorSchema = z.tuple([
-  z.string(), // inserted_at
+  z.iso.datetime({ precision: 6 }), // inserted_at
   z.string(), // id
 ]);
 
@@ -21,7 +21,7 @@ export class PostCursorUtil {
       const parsed = postCursorSchema.parse(JSON.parse(json));
       return parsed;
     } catch (e) {
-      throw new Error('Invalid cursor');
+      throw new Error(`Invalid post cursor: ${cursor}`);
     }
   }
 }
