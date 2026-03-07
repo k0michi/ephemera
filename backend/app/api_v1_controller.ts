@@ -13,6 +13,7 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import { pipeline } from 'node:stream/promises';
 import { fileTypeFromFile } from 'file-type';
 import fsPromises from 'fs/promises';
+import type { IPeerService } from './peer_service.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -20,19 +21,22 @@ export default class ApiV1Controller implements IController {
   private config: Config;
   private postService: IPostService;
   private attachmentService: IAttachmentService;
+  private peerService: IPeerService;
   private upload = multer({
     dest: './uploads/'
   });
 
-  constructor(config: Config, postService: IPostService, attachmentService: IAttachmentService) {
+  constructor(config: Config, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
     this.config = config;
     this.postService = postService;
     this.attachmentService = attachmentService;
+    this.peerService = peerService;
 
     this.router.post('/post', this.upload.array('attachments', 4), this.handlePost.bind(this));
     this.router.get('/posts', this.handleGetPosts.bind(this));
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
+    this.router.get('/peer', this.handleGetPeer.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -138,5 +142,22 @@ export default class ApiV1Controller implements IController {
       file.createReadStream(),
       res
     );
+  }
+
+  async handleGetPeer(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getPostsRequestSchema.parse(req.query);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const response = {
+      host: this.config.host,
+      publicKey: this.config.publicKey,
+    };
+
+    res.status(200).json(response);
   }
 }

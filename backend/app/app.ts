@@ -99,7 +99,7 @@ class Ephemera extends Application {
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
     this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService);
     this.app.use(express.json());
-    this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService));
+    this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService, this.peerService));
 
     this.app.use((req: express.Request, res: express.Response) => {
       res.status(404).json({ error: 'Not Found' } satisfies ApiResponse);
