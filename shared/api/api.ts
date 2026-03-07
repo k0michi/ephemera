@@ -122,6 +122,32 @@ export type DeletePostSignal = [
 ];
 
 //
+// relay signal
+//
+
+export type RelaySignalHeader = [
+  Host, // host
+  Timestamp, // created_at
+  'relay' // type
+];
+
+export type RelaySignalBody = Signal;
+
+export type RelaySignalFooter = [];
+
+export type RelaySignalPayload = [
+  Version, // version
+  RelaySignalHeader, // header
+  RelaySignalBody, // body
+  RelaySignalFooter // footer
+];
+
+export type RelaySignal = [
+  RelaySignalPayload, // payload
+  string // signature
+];
+
+//
 // Client
 //
 
