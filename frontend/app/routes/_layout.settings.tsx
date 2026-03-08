@@ -62,7 +62,7 @@ export default function Settings({ }: SettingsProps) {
 
       <Modal show={showRevokeModal} onHide={() => setShowRevokeModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm revoke</Modal.Title>
+          <Modal.Title>Confirm Key Pair Revocation</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
