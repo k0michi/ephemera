@@ -28,6 +28,8 @@ services:
       context: .
       dockerfile: ./frontend/Dockerfile
     # working_dir: /app
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
@@ -59,8 +61,8 @@ services:
     env_file:
       - .env
     environment:
-      - EPHEMERA_INTERNAL_HOST=${EPHEMERA_INTERNAL_HOST:-0.0.0.0:8080}
-      - EPHEMERA_EXTERNAL_HOST=${EPHEMERA_EXTERNAL_HOST:-localhost:3000}
+      - EPHEMERA_INTERNAL_HOST=0.0.0.0:8080
+      - EPHEMERA_EXTERNAL_HOST=${EPHEMERA_HOST:-localhost:3000}
 
 volumes:
   mariadb_data:
