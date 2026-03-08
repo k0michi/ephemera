@@ -121,6 +121,7 @@ export default class EphemeraPeer {
 
               const decoder = new TextDecoder();
               const data = decoder.decode(pubsubMessage.detail.data);
+              console.log('Received message:', data);
               const message: Message = {
                 data: data,
               };
