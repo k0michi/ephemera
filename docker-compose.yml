@@ -37,8 +37,6 @@ services:
       context: .
       dockerfile: ./frontend/Dockerfile
     # working_dir: /app
-    env_file:
-      - .env
     environment:
       - NODE_ENV=production
       - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
