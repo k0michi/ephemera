@@ -59,7 +59,6 @@ export default function Settings({ }: SettingsProps) {
         Import Key Pair
       </Button>
 
-
       <Modal show={showRevokeModal} onHide={() => setShowRevokeModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Key Pair Revocation</Modal.Title>
