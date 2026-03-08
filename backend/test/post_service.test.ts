@@ -32,8 +32,19 @@ describe('PostService', () => {
 
     const config = TestHelper.getConfig(container);
     peerService = {
-      async publish() {
+      async publish(signal) {
         return;
+      },
+
+      async handle(signal) {
+        return;
+      },
+
+      getPeerDescriptor() {
+        return {
+          host: 'example.com',
+          publicKey: 'publicKey',
+        };
       }
     };
     attachmentService = new AttachmentService(config, database);
