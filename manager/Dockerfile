@@ -17,4 +17,4 @@ WORKDIR /app
 COPY --from=builder /app/manager/dist ./manager/dist
 EXPOSE 3000
 WORKDIR /app
-CMD ["npm", "run", "start", "-w", "manager"]
+ENTRYPOINT ["npm", "run", "start", "-w", "manager", "--"]
