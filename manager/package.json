@@ -11,9 +11,7 @@
 	},
 	"type": "module",
 	"scripts": {
-		"build": "vite build",
-		"start": "node ./dist/app.js",
-		"dev": "vite-node app/app.ts --watch",
+		"start": "vite-node ./app/app.ts",
 		"test": "vitest",
 		"typecheck": "tsc -b"
 	}
