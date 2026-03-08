@@ -36,4 +36,11 @@ export default class SignalCrypto {
     const signatureUint8 = Hex.toUint8Array(signatureHex);
     return Crypto.verify(payloadHash, signatureUint8, Base37.toUint8Array(payload[1][1]));
   }
+
+  static async verifyServer<S extends ServerSignal>(signal: S, publicKey: Uint8Array): Promise<boolean> {
+    const [payload, signatureHex] = signal;
+    const payloadHash = await SignalCrypto.digestServer(payload);
+    const signatureUint8 = Hex.toUint8Array(signatureHex);
+    return Crypto.verify(payloadHash, signatureUint8, publicKey);
+  }
 }

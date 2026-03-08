@@ -23,6 +23,18 @@ export const signalPayloadSchema = z.tuple([versionSchema, signalHeaderSchema, s
 
 export const signalSchema = z.tuple([signalPayloadSchema, z.string()]);
 
+export const serverVersionSchema = z.literal(0);
+
+export const serverSignalHeaderSchema = z.tuple([hostSchema, timestampSchema, z.string()]);
+
+export const serverSignalBodySchema = z.unknown();
+
+export const serverSignalFooterSchema = z.unknown();
+
+export const serverSignalPayloadSchema = z.tuple([serverVersionSchema, serverSignalHeaderSchema, serverSignalBodySchema, serverSignalFooterSchema]);
+
+export const serverSignalSchema = z.tuple([serverSignalPayloadSchema, z.string()]);
+
 export const attachmentSchema = z.tuple([z.literal("attachment"), contentTypeSchema, hashSchema]);
 
 export const createPostSignalHeaderSchema = z.tuple([hostSchema, authorSchema, timestampSchema, z.literal("create_post")]);
@@ -44,6 +56,16 @@ export const deletePostSignalFooterSchema = z.tuple([]);
 export const deletePostSignalPayloadSchema = z.tuple([versionSchema, deletePostSignalHeaderSchema, deletePostSignalBodySchema, deletePostSignalFooterSchema]);
 
 export const deletePostSignalSchema = z.tuple([deletePostSignalPayloadSchema, z.string()]);
+
+export const relaySignalHeaderSchema = z.tuple([hostSchema, timestampSchema, z.literal("relay")]);
+
+export const relaySignalBodySchema = signalSchema;
+
+export const relaySignalFooterSchema = z.tuple([]);
+
+export const relaySignalPayloadSchema = z.tuple([versionSchema, relaySignalHeaderSchema, relaySignalBodySchema, relaySignalFooterSchema]);
+
+export const relaySignalSchema = z.tuple([relaySignalPayloadSchema, z.string()]);
 
 export const exportedKeyPairSchema = z.object({
     publicKey: z.string(),
@@ -78,3 +100,10 @@ export const deletePostRequestSchema = apiRequestSchema.extend({
 });
 
 export const deletePostResponseSchema = apiResponseSchema;
+
+export const getPeerRequestSchema = apiRequestSchema;
+
+export const getPeerResponseSchema = apiResponseSchema.extend({
+    host: z.string(),
+    publicKey: z.string()
+});

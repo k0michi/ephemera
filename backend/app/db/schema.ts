@@ -49,6 +49,38 @@ export const posts = mysqlTable('posts', {
   index('posts_insertedAt_id_idx').on(table.insertedAt, table.id),
 ]);
 
+export const remotePosts = mysqlTable('remote_posts', {
+  id: char('id', { length: 64 }).primaryKey(),
+
+  version: tinyint('version'),
+
+  host: varchar('host', { length: 255 }),
+
+  author: varchar('author', { length: 50 }),
+
+  content: text('content'),
+
+  footer: json('footer'),
+
+  signature: char('signature', { length: 128 }),
+
+  insertedAt: timestamp('insertedAt', { mode: 'string', fsp: 6 }).default(sql`CURRENT_TIMESTAMP(6)`),
+
+  createdAt: bigint('createdAt', { mode: 'number' }),
+
+  serverID: char('serverID', { length: 64 }),
+  serverVersion: tinyint('serverVersion'),
+  serverCreatedAt: bigint('serverCreatedAt', { mode: 'number' }),
+  serverPublicKey: char('serverPublicKey', { length: 50 }),
+  serverSignature: char('serverSignature', { length: 128 }),
+  serverFooter: json('serverFooter'),
+
+  seq: int('seq').autoincrement(),
+}, (table) => [
+  uniqueIndex('remote_posts_seq_idx').on(table.seq),
+  index('remote_posts_insertedAt_id_idx').on(table.insertedAt, table.id),
+]);
+
 export const attachments = mysqlTable('attachments', {
   /**
    * Attachment ID in hex encoding. This is always 32 bytes (64 hex characters).

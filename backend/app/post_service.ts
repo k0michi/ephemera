@@ -123,6 +123,10 @@ export default class PostService extends PostServiceBase {
     await this.validateAttachmentCount(attachmentPaths);
     await this.validateAttachmentDigests(signal, attachmentPaths);
 
+    let insertedAt: string | null = null;
+    const digest = await SignalCrypto.digest(signal[0]);
+    const digestHex = Hex.fromUint8Array(digest);
+
     try {
       await this.database.transaction(async (tx) => {
         const attachmentIds: string[] = [];
@@ -131,11 +135,9 @@ export default class PostService extends PostServiceBase {
           attachmentIds.push(await this.attachmentService.copyFrom(path, tx));
         }
 
-        const digest = await SignalCrypto.digest(signal[0]);
-
         try {
           await tx.insert(posts).values({
-            id: Hex.fromUint8Array(digest),
+            id: digestHex,
             version: signal[0][0],
             host: signal[0][1][0],
             author: signal[0][1][1],
@@ -152,8 +154,14 @@ export default class PostService extends PostServiceBase {
           throw e;
         }
 
+        const row = await tx.select({ insertedAt: posts.insertedAt })
+          .from(posts)
+          .where(eq(posts.id, digestHex))
+          .limit(1);
+        insertedAt = row[0]?.insertedAt ?? null;
+
         await this.attachmentService.linkPost(
-          Hex.fromUint8Array(digest),
+          digestHex,
           attachmentIds,
           tx
         );
@@ -167,19 +175,25 @@ export default class PostService extends PostServiceBase {
       throw new ApiError('Failed to save post', 500);
     }
 
-    // TODO: Use timestamp from db
-    const now = new Date();
-    const serverSigned = await SignalCrypto.signServer([
-      0,
-      [
-        this.config.host,
-        now.getTime(),
-        'relay',
-      ],
-      signal,
-      [],
-    ], Base37.toUint8Array(this.config.privateKey));
-    await this.peerService.publish(serverSigned);
+    if (insertedAt !== null) {
+      const temporal = DateTimeUtil.fromMySQLString(insertedAt);
+      const timestamp = temporal.epochMilliseconds;
+
+      const serverSigned = await SignalCrypto.signServer([
+        0,
+        [
+          this.config.host,
+          timestamp,
+          'relay',
+        ],
+        signal,
+        [],
+      ], Base37.toUint8Array(this.config.privateKey));
+
+      await this.peerService.publish(serverSigned);
+    } else {
+      console.error(`Failed to retrieve insertedAt for post ${digestHex}`);
+    }
   }
 
   static unwrapVersion(version: number): Version {
