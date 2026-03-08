@@ -63,7 +63,7 @@ export class PeerService implements IPeerService {
   private openStream(): grpc.ClientReadableStream<Message> {
     const stream = this.grpcClient.streamMessages({});
     stream.on('data', async (message: Message) => {
-      const signal = serverSignalSchema.safeParse(message.data);
+      const signal = serverSignalSchema.safeParse(JSON.parse(message.data));
 
       if (!signal.success) {
         return;
