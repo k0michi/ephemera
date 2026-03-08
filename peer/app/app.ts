@@ -11,7 +11,7 @@ import HostUtil from '@ephemera/shared/lib/host_util.js';
 import Config from './config.js';
 import { Message, PubSubServiceServer, PubSubServiceService } from '@ephemera/shared/peer/bridge.js';
 import grpc from '@grpc/grpc-js';
-import { GossipSub, gossipsub, GossipsubMessage } from '@libp2p/gossipsub';
+import { GossipSub, gossipsub, Message as libp2pMessage } from '@libp2p/gossipsub';
 import { EventTargetReadable } from './event_target_readable.js';
 import { pipeline } from "node:stream/promises";
 import { Transform, Writable } from 'node:stream';
@@ -89,8 +89,6 @@ export default class EphemeraPeer {
       console.log(`Disconnected from peer: ${connection.publicKey?.toString()}`);
     });
 
-    this.libp2pNode.services.pubsub.subscribe('broadcast');
-
     const serverImpl: PubSubServiceServer = {
       publish: async (request, callback) => {
         const encoder = new TextEncoder();
@@ -112,15 +110,15 @@ export default class EphemeraPeer {
           new Transform({
             objectMode: true,
             transform(event, encoding, callback) {
-              const pubsubMessage = (event as GossipsubMessage);
+              const pubsubMessage = (event as CustomEvent<libp2pMessage>);
 
-              if (pubsubMessage.msg.topic !== 'broadcast') {
+              if (pubsubMessage.detail.topic !== 'broadcast') {
                 callback();
                 return;
               }
 
               const decoder = new TextDecoder();
-              const data = decoder.decode(pubsubMessage.msg.data);
+              const data = decoder.decode(pubsubMessage.detail.data);
               const message: Message = {
                 data: data,
               };
