@@ -2,19 +2,19 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY shared/. ./shared/
-COPY peer/package.json ./peer/
+COPY manager/package.json ./manager/
 RUN npm ci
 COPY shared/. ./shared/
-COPY peer/. ./peer/
-RUN npm run build -w peer
+COPY manager/. ./manager/
+RUN npm run build -w manager
 
 FROM node:22-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./
-COPY peer/package.json ./peer/
+COPY manager/package.json ./manager/
 RUN npm ci --omit=dev
 WORKDIR /app
-COPY --from=builder /app/peer/dist ./peer/dist
+COPY --from=builder /app/manager/dist ./manager/dist
 EXPOSE 3000
 WORKDIR /app
-CMD ["npm", "run", "start", "-w", "peer"]
+CMD ["npm", "run", "start", "-w", "manager"]
