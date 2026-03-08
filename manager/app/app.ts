@@ -6,6 +6,7 @@ import HostUtil from "@ephemera/shared/lib/host_util.js";
 import readline from 'readline';
 import fsPromises from 'fs/promises';
 import * as envfile from 'envfile';
+import * as util from 'util';
 
 interface EnvEntry {
   names: string[];
@@ -130,17 +131,36 @@ function compactTimestamp(date: Date): string {
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
-async function main(): Promise<void> {
-  const envFilePath = '.env';
-  let env: Record<string, string> = {};
+async function loadEnvFileWithBackup(envFilePath: string): Promise<Record<string, string>> {
   try {
     const envFileContent = await fsPromises.readFile(envFilePath, 'utf-8');
     const moveDest = `${envFilePath}.bak.${compactTimestamp(new Date())}`;
     await fsPromises.copyFile(envFilePath, moveDest);
-    env = envfile.parse(envFileContent);
-    console.log(`Loaded existing .env file. A backup has been created at ${moveDest}`);
-  } catch (err) {
+    console.log(`Loaded existing env file: ${envFilePath}. Backup created at ${moveDest}.`);
+    return envfile.parse(envFileContent);
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') {
+      console.log(`No existing env file found at ${envFilePath}. Creating new one.`);
+      return {};
+    } else {
+      throw err;
+    }
   }
+}
+
+async function main(): Promise<void> {
+  const { values } = util.parseArgs({
+    options: {
+      'env-file': {
+        type: 'string',
+        short: 'e',
+        default: '.env',
+      },
+    },
+  });
+
+  const envFilePath = values['env-file'];
+  let env: Record<string, string> = await loadEnvFileWithBackup(envFilePath);
 
   for (const entry of entries) {
     if (entry.names) {
