@@ -83,7 +83,8 @@ export default class EphemeraPeer {
       console.log(`Connected to peer: ${connection.publicKey?.toString()}`);
     });
 
-    const readable = new EventTargetReadable(this.libp2pNode?.services.pubsub, 'gossipsub:message');
+    const readable = new EventTargetReadable(this.libp2pNode?.services.pubsub, 'message');
+    this.libp2pNode.services.pubsub.subscribe('broadcast');
 
     const serverImpl: PubSubServiceServer = {
       publish: async (request, callback) => {
