@@ -196,7 +196,11 @@ export default class Client {
     } satisfies DeletePostRequest);
   }
 
-  getAttachmentUrl(hash: string): string {
+  getAttachmentUrl(hash: string, host: string): string {
+    if (host !== this._host) {
+      return `https://${host}/api/v1/attachments/${hash}`;
+    }
+
     return `/api/v1/attachments/${hash}`;
   }
 }
