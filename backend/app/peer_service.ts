@@ -109,7 +109,7 @@ export class PeerService implements IPeerService {
   }
 
   async handleRelay(signal: RelaySignal): Promise<void> {
-    if (signal[0][1][0][2] === 'create_post') {
+    if (signal[0][2][0][1][3] === 'create_post') {
       const createPostSignal = createPostSignalSchema.safeParse(signal[0][2]);
 
       if (!createPostSignal.success) {
