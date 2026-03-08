@@ -17,6 +17,7 @@ import { pipeline } from "node:stream/promises";
 import { Transform, Writable } from 'node:stream';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { keys } from '@libp2p/crypto';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 
 export default class EphemeraPeer {
   private libp2pNode: Libp2p<{
@@ -83,7 +84,6 @@ export default class EphemeraPeer {
       console.log(`Connected to peer: ${connection.publicKey?.toString()}`);
     });
 
-    const readable = new EventTargetReadable(this.libp2pNode?.services.pubsub, 'message');
     this.libp2pNode.services.pubsub.subscribe('broadcast');
 
     const serverImpl: PubSubServiceServer = {
@@ -100,12 +100,20 @@ export default class EphemeraPeer {
         callback(null, { ok: true, error: '' });
       },
       streamMessages: async (request) => {
+        const readable = new EventTargetReadable(NullableHelper.unwrap(this.libp2pNode?.services.pubsub), 'message');
+
         await pipeline(
           readable,
           new Transform({
             objectMode: true,
             transform(event, encoding, callback) {
               const pubsubMessage = (event as GossipsubMessage);
+
+              if (pubsubMessage.msg.topic !== 'broadcast') {
+                callback();
+                return;
+              }
+
               const decoder = new TextDecoder();
               const data = decoder.decode(pubsubMessage.msg.data);
               const message: Message = {
