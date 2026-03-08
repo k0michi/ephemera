@@ -13,4 +13,8 @@ export default class PromiseHelper {
       return y;
     });
   }
+
+  static isPromise<T = unknown>(value: unknown): value is Promise<T> {
+    return value instanceof Promise;
+  }
 }
