@@ -6,7 +6,7 @@ import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 import { ApiError } from "./api_error.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import type { MySql2Database } from "drizzle-orm/mysql2";
-import { posts } from "./db/schema.js";
+import { posts, remotePosts } from "./db/schema.js";
 import { and, desc, eq, lt, sql } from "drizzle-orm";
 import Base37 from "@ephemera/shared/lib/base37.js";
 import Crypto from "@ephemera/shared/lib/crypto.js";
@@ -17,6 +17,7 @@ import type { IPeerService } from "./peer_service.js";
 import { PostCursorUtil, type PostCursor } from "@ephemera/shared/lib/post_cursor_util.js";
 import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
 import { Temporal } from "@js-temporal/polyfill";
+import { unionAll } from "drizzle-orm/mysql-core";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -28,10 +29,13 @@ export interface IPostService {
   delete(signal: DeletePostSignal): Promise<void>;
 }
 
+export type PostSource = 'local' | 'remote' | 'all';
+
 export interface PostFindOptions {
   limit: number;
   cursor: string | null;
   author: string | null;
+  source?: PostSource | null;
 }
 
 export interface PostFindResult {
@@ -237,22 +241,82 @@ export default class PostService extends PostServiceBase {
 
     const kMaxLimit = 128;
     options.limit = Math.min(options.limit, kMaxLimit);
-    const filters = [];
+    options.source = options.source ?? 'all';
+
+    const needLocal = options.source === 'local' || options.source === 'all';
+    const needRemote = options.source === 'remote' || options.source === 'all';
+
+    const localFilters = [];
+    const remoteFilters = [];
 
     if (options.author !== null) {
-      filters.push(eq(posts.author, options.author));
+      localFilters.push(eq(posts.author, options.author));
+      remoteFilters.push(eq(remotePosts.author, options.author));
     }
 
     if (cursor !== null && cursorTimeMySQL !== null) {
-      filters.push(sql`(${posts.insertedAt}, ${posts.id}) < (${cursorTimeMySQL}, ${cursor[1]})`);
+      localFilters.push(sql`(${posts.insertedAt}, ${posts.id}) < (${cursorTimeMySQL}, ${cursor[1]})`);
+      remoteFilters.push(sql`(${remotePosts.insertedAt}, ${remotePosts.id}) < (${cursorTimeMySQL}, ${cursor[1]})`);
     }
 
-    const cond = filters.length > 0 ? and(...filters) : undefined;
+    const localCond = localFilters.length > 0 ? and(...localFilters) : undefined;
+    const remoteCond = remoteFilters.length > 0 ? and(...remoteFilters) : undefined;
 
-    const dbSignals = await this.database.select().from(posts)
-      .where(cond)
+    const localQuery = this.database.select({
+      id: posts.id,
+      version: posts.version,
+      host: posts.host,
+      author: posts.author,
+      content: posts.content,
+      footer: posts.footer,
+      signature: posts.signature,
+      createdAt: posts.createdAt,
+      insertedAt: posts.insertedAt,
+    }).from(posts)
+      .where(localCond)
       .orderBy(desc(posts.insertedAt), desc(posts.id))
       .limit(options.limit + 1);
+
+    const remoteQuery = this.database.select({
+      id: remotePosts.id,
+      version: remotePosts.version,
+      host: remotePosts.host,
+      author: remotePosts.author,
+      content: remotePosts.content,
+      footer: remotePosts.footer,
+      signature: remotePosts.signature,
+      createdAt: remotePosts.createdAt,
+      insertedAt: remotePosts.insertedAt,
+    }).from(remotePosts)
+      .where(remoteCond)
+      .orderBy(desc(remotePosts.insertedAt), desc(remotePosts.id))
+      .limit(options.limit + 1);
+
+    let dbSignals: {
+      id: string;
+      version: number | null;
+      host: string | null;
+      author: string | null;
+      content: string | null;
+      footer: unknown;
+      signature: string | null;
+      createdAt: number | null;
+      insertedAt: string | null;
+    }[];
+
+    if (needLocal && needRemote) {
+      dbSignals = await this.database.select()
+        .from(unionAll(localQuery, remoteQuery).as('combined'))
+        .orderBy(desc(sql`insertedAt`), desc(sql`id`))
+        .limit(options.limit + 1);
+
+    } else if (needLocal) {
+      dbSignals = await localQuery;
+    } else if (needRemote) {
+      dbSignals = await remoteQuery;
+    } else {
+      dbSignals = [];
+    }
 
     const signals = dbSignals.map((post) => {
       return [
