@@ -6,4 +6,11 @@ export default class PromiseHelper {
       return f(x);
     }
   }
+
+  static tap<T>(x: T | Promise<T>, f: (y: T) => void): T | Promise<T> {
+    return this.then(x, (y) => {
+      f(y);
+      return y;
+    });
+  }
 }
