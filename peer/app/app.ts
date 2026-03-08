@@ -89,6 +89,8 @@ export default class EphemeraPeer {
       console.log(`Disconnected from peer: ${connection.publicKey?.toString()}`);
     });
 
+    this.libp2pNode.services.pubsub.subscribe('broadcast');
+
     const serverImpl: PubSubServiceServer = {
       publish: async (request, callback) => {
         const encoder = new TextEncoder();
