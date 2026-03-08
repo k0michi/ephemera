@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: ./manager/Dockerfile
+    profiles:
+      - manager
     volumes:
       - ./:/app
       - /app/node_modules
