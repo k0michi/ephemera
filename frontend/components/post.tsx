@@ -88,7 +88,9 @@ export default function Post({ post, onDelete }: PostProps) {
                   <>
                     {'•'}
                     <span style={{ flexShrink: 0 }}>
-                      {post[0][1][0]}
+                      <Link to={`https://${post[0][1][0]}`} style={{ color: 'inherit' }}>
+                        {post[0][1][0]}
+                      </Link>
                     </span>
                   </>
                   : null
