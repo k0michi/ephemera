@@ -109,6 +109,20 @@ export class PeerService implements IPeerService {
   }
 
   async handleRelay(signal: RelaySignal): Promise<void> {
+    const peerDescriptor = await this.fetchPeerDescriptor(signal[0][1][0]);
+
+    // Verify server signature
+    if (!(await SignalCrypto.verifyServer(signal, Base37.toUint8Array(peerDescriptor.publicKey)))) {
+      // Failed to verify server signature
+      return;
+    }
+
+    // Verify client signature
+    if (!(await SignalCrypto.verify(signal[0][2]))) {
+      // Failed to verify client signature
+      return;
+    }
+
     if (signal[0][2][0][1][3] === 'create_post') {
       const createPostSignal = createPostSignalSchema.safeParse(signal[0][2]);
 
@@ -116,20 +130,7 @@ export class PeerService implements IPeerService {
         return;
       }
 
-      const peerDescriptor = await this.fetchPeerDescriptor(signal[0][1][0]);
       const inner = createPostSignal.data;
-
-      // Verify server signature
-      if (!(await SignalCrypto.verifyServer(signal, Base37.toUint8Array(peerDescriptor.publicKey)))) {
-        // Failed to verify server signature
-        return;
-      }
-
-      // Verify client signature
-      if (!(await SignalCrypto.verify(inner))) {
-        // Failed to verify client signature
-        return;
-      }
 
       await this.database.insert(remotePosts).values({
         id: Hex.fromUint8Array(await SignalCrypto.digest(inner[0])),
