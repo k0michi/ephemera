@@ -87,9 +87,9 @@ export default function Layout() {
           </Col>
         </Row>
         <div style={{ textAlign: 'center', color: '#bbb', fontSize: '0.8rem', marginTop: `2rem`, marginBottom: `2rem` }}>
-          Ephemera {import.meta.env.EPHEMERA_COMMIT_HASH}
+          <Link to="https://github.com/k0michi/ephemera" style={{ color: "inherit" }}>Ephemera</Link> {import.meta.env.EPHEMERA_COMMIT_HASH}
         </div>
-      </Container>
+      </Container >
       <Notifier />
     </>
   );
