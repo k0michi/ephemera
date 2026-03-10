@@ -5,7 +5,7 @@ import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
-import type { GetPostsResponse } from '@ephemera/shared/api/api.js';
+import type { GetPeerResponse, GetPostsResponse } from '@ephemera/shared/api/api.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import multer from 'multer';
 import type { IAttachmentService } from './attachment_service.js';
@@ -154,9 +154,13 @@ export default class ApiV1Controller implements IController {
     }
 
     const response = {
+      implementation: {
+        name: 'ephemera',
+        version: import.meta.env.EPHEMERA_COMMIT_HASH
+      },
       host: this.config.host,
       publicKey: this.config.publicKey,
-    };
+    } satisfies GetPeerResponse;
 
     res.status(200).json(response);
   }

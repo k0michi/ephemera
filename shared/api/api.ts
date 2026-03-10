@@ -199,6 +199,10 @@ export interface GetPeerRequest extends ApiRequest {
 }
 
 export interface GetPeerResponse extends ApiResponse {
+  implementation: {
+    name: string;
+    version: string;
+  };
   host: string;
   publicKey: string;
 }

@@ -1,11 +1,14 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
+COPY .git ./.git
 COPY package.json package-lock.json ./
 COPY shared/. ./shared/
 COPY backend/package.json ./backend/
 RUN npm ci
 COPY shared/. ./shared/
 COPY backend/. ./backend/
+
+RUN apk add --no-cache git
 RUN npm run build -w backend
 
 FROM node:20-alpine
