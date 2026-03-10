@@ -345,7 +345,7 @@ export default class PostService extends PostServiceBase {
       const dbID = NullableHelper.unwrap(lastPost.id);
 
       const isoInsertedAt = DateTimeUtil.fromMySQLString(dbInsertedAt);
-      nextCursor = PostCursorUtil.stringify([isoInsertedAt.toString(), dbID]);
+      nextCursor = PostCursorUtil.stringify([isoInsertedAt.toString({ fractionalSecondDigits: 6 }), dbID]);
 
       signals.pop();
     }
