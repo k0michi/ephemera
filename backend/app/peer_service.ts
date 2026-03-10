@@ -3,13 +3,13 @@ import { Message, PubSubServiceClient } from '@ephemera/shared/peer/bridge.js';
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import type Config from './config.js';
 import type { RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
-import { createPostSignalSchema, getPeerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
+import { createPostSignalSchema, deletePostSignalSchema, getPeerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
 import { remotePosts } from './db/schema.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { asc, count, inArray } from 'drizzle-orm';
+import { and, asc, count, eq, inArray } from 'drizzle-orm';
 
 export interface PeerDescriptor {
   host: string;
@@ -168,6 +168,18 @@ export class PeerService implements IPeerService {
             .where(inArray(remotePosts.id, oldIds.map(r => r.id)));
         }
       }
+    } else if (signal[0][2][0][1][3] === 'delete_post') {
+      const deletePostSignal = deletePostSignalSchema.safeParse(signal[0][2]);
+
+      if (!deletePostSignal.success) {
+        return;
+      }
+
+      const inner = deletePostSignal.data;
+
+      await this.database.delete(remotePosts)
+        .where(and(eq(remotePosts.id, inner[0][2][0]), eq(remotePosts.author, inner[0][1][1])))
+        .execute();
     }
   }
 
