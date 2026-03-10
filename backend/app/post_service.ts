@@ -371,6 +371,17 @@ export default class PostService extends PostServiceBase {
       .where(and(eq(posts.id, postId), eq(posts.author, signal[0][1][1])))
       .execute();
 
+    await this.peerService.publish(await SignalCrypto.signServer([
+      0,
+      [
+        this.config.host,
+        Date.now(),
+        'relay',
+      ],
+      signal,
+      [],
+    ], Base37.toUint8Array(this.config.privateKey)));
+
     if (deleteResult[0].affectedRows === 0) {
       throw new ApiError('Post not found', 404);
     }
