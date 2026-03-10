@@ -83,6 +83,16 @@ export default function Post({ post, onDelete }: PostProps) {
               >
                 @{post[0][1][1]}
               </Link>
+              {
+                !isLocal(post[0][1][0]) ?
+                  <>
+                    {'•'}
+                    <span style={{ flexShrink: 0 }}>
+                      {post[0][1][0]}
+                    </span>
+                  </>
+                  : null
+              }
               {'•'}
               <OverlayTrigger
                 placement="top"
@@ -146,6 +156,10 @@ export default function Post({ post, onDelete }: PostProps) {
       </Card.Body>
     </Card>
   );
+}
+
+function isLocal(host: string): boolean {
+  return host === window.location.host;
 }
 
 function formatDate(timestamp: number, now: number): string {
