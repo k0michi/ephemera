@@ -7,6 +7,15 @@
   text-decoration: underline;
 }
 
+.postHostLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.postHostLink:hover {
+  text-decoration: underline;
+}
+
 .post {
   border-radius: 0;
 }
