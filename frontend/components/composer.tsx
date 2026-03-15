@@ -23,8 +23,7 @@ export default function Composer({ }: ComposerProps) {
   const count = PostUtil.weightedLength(value);
   const store = useReader(EphemeraStoreContext);
 
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+  const processFile = (file: File | null) => {
     setAttachment(file);
     if (file) {
       const url = new DisposableURL(file);
@@ -33,6 +32,28 @@ export default function Composer({ }: ComposerProps) {
       setPreviewUrl(null);
     }
   };
+  
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    processFile(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item && (item.type.startsWith("image/") || item.type.startsWith("video/"))) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          processFile(file);
+        }
+      }
+    }
+  };
+
+//const handleDrop = (e:React.DragEvent) => {}
 
   const handleRemoveAttachment = () => {
     setAttachment(null);
@@ -78,6 +99,7 @@ export default function Composer({ }: ComposerProps) {
               onChange={e => {
                 setValue(PostUtil.sanitize(e.target.value))
               }}
+              onPaste={handlePaste}
               placeholder="What are you doing?"
               aria-label="Post content"
               style={{ resize: 'none' }}
