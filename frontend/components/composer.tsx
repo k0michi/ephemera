@@ -7,7 +7,6 @@ import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
-import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 
 export interface ComposerProps {
 }
