@@ -48,16 +48,11 @@ export default function Composer({ }: ComposerProps) {
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item && (item.type.startsWith("image/") || item.type.startsWith("video/"))) {
-        const file = item.getAsFile();
-        if (file) {
-          e.preventDefault();
-          processFile(file);
-        }
+    for (const file of e.clipboardData.files) {
+      if (allowedFileTypes.has(file.type)) {
+        e.preventDefault();
+        processFile(file);
+        break;
       }
     }
   };
