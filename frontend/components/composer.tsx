@@ -11,6 +11,14 @@ import { DisposableURL } from "lib/disposable_url";
 export interface ComposerProps {
 }
 
+const allowedFileTypes = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+]);
+
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -23,9 +31,14 @@ export default function Composer({ }: ComposerProps) {
   const count = PostUtil.weightedLength(value);
   const store = useReader(EphemeraStoreContext);
 
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+  const processFile = (file: File | null) => {
+    if (file && !allowedFileTypes.has(file.type)) {
+      store.addLog("warning", `Unsupported file type. Allowed types: ${Array.from(allowedFileTypes).join(", ")}.`);
+      return;
+    }
+
     setAttachment(file);
+
     if (file) {
       const url = new DisposableURL(file);
       setPreviewUrl(url);
@@ -33,6 +46,28 @@ export default function Composer({ }: ComposerProps) {
       setPreviewUrl(null);
     }
   };
+
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    processFile(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    if (attachment) {
+      // There's already an attachment
+      return;
+    }
+
+    for (const file of e.clipboardData.files) {
+      if (allowedFileTypes.has(file.type)) {
+        e.preventDefault();
+        processFile(file);
+        break;
+      }
+    }
+  };
+
+  //const handleDrop = (e:React.DragEvent) => {}
 
   const handleRemoveAttachment = () => {
     setAttachment(null);
@@ -78,6 +113,7 @@ export default function Composer({ }: ComposerProps) {
               onChange={e => {
                 setValue(PostUtil.sanitize(e.target.value))
               }}
+              onPaste={handlePaste}
               placeholder="What are you doing?"
               aria-label="Post content"
               style={{ resize: 'none' }}
@@ -106,7 +142,7 @@ export default function Composer({ }: ComposerProps) {
               style={{ flexGrow: 1 }}>
               <input
                 type="file"
-                accept="image/png, image/jpeg, image/gif, image/webp, video/mp4"
+                accept={Array.from(allowedFileTypes).join(",")}
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAttachmentChange}
