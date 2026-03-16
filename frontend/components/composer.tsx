@@ -7,9 +7,18 @@ import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 
 export interface ComposerProps {
 }
+
+const allowedFileTypes = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+]);
 
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
@@ -32,7 +41,7 @@ export default function Composer({ }: ComposerProps) {
       setPreviewUrl(null);
     }
   };
-  
+
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     processFile(file);
@@ -53,7 +62,7 @@ export default function Composer({ }: ComposerProps) {
     }
   };
 
-//const handleDrop = (e:React.DragEvent) => {}
+  //const handleDrop = (e:React.DragEvent) => {}
 
   const handleRemoveAttachment = () => {
     setAttachment(null);
@@ -128,7 +137,7 @@ export default function Composer({ }: ComposerProps) {
               style={{ flexGrow: 1 }}>
               <input
                 type="file"
-                accept="image/png, image/jpeg, image/gif, image/webp, video/mp4"
+                accept={Array.from(allowedFileTypes).join(",")}
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAttachmentChange}
