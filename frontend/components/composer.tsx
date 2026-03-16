@@ -32,7 +32,13 @@ export default function Composer({ }: ComposerProps) {
   const store = useReader(EphemeraStoreContext);
 
   const processFile = (file: File | null) => {
+    if (file && !allowedFileTypes.has(file.type)) {
+      store.addLog("warning", `Unsupported file type. Allowed types: ${Array.from(allowedFileTypes).join(", ")}.`);
+      return;
+    }
+
     setAttachment(file);
+
     if (file) {
       const url = new DisposableURL(file);
       setPreviewUrl(url);
