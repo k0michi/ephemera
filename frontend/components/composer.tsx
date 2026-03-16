@@ -53,6 +53,11 @@ export default function Composer({ }: ComposerProps) {
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (attachment) {
+      // There's already an attachment
+      return;
+    }
+
     for (const file of e.clipboardData.files) {
       if (allowedFileTypes.has(file.type)) {
         e.preventDefault();
