@@ -22,6 +22,7 @@ import { KEEP_ALIVE } from '@libp2p/interface';
 
 interface Peer {
   id: string;
+  multiaddrs: string[];
 }
 
 export default class EphemeraPeer {
@@ -32,7 +33,7 @@ export default class EphemeraPeer {
     pubsub: GossipSub;
   }> | null = null;
   private options: Config;
-  private peers: Set<string> = new Set();
+  private verifiedPeers: Map<string, Peer> = new Map();
 
   public constructor(options: Config) {
     this.options = options;
@@ -97,9 +98,26 @@ export default class EphemeraPeer {
       console.log(`Connected to peer: ${connection.publicKey?.toString()}`);
     });
 
-    this.libp2pNode.addEventListener('peer:disconnect', (evt) => {
+    this.libp2pNode.addEventListener('peer:identify', (evt) => {
+      const detail = evt.detail;
+      console.log(`Identified peer: ${detail.peerId.toString()} with protocols: ${detail.protocols.join(', ')}`);
+      const record = detail.signedPeerRecord;
+      console.log(`Peer record for ${detail.peerId.toString()}:`);
+      for (const multiaddr of record?.addresses ?? []) {
+        console.log(`  - ${multiaddr.toString()}`);
+      }
+
+      this.verifiedPeers.set(detail.peerId.toString(), {
+        id: detail.peerId.toString(),
+        multiaddrs: (record?.addresses ?? []).map((a) => a.toString())
+      });
+    });
+
+    this.libp2pNode.addEventListener('peer:disconnect', async (evt) => {
       const connection = evt.detail;
       console.log(`Disconnected from peer: ${connection.publicKey?.toString()}`);
+
+      this.verifiedPeers.delete(connection.toString());
     });
 
     this.libp2pNode.services.pubsub.subscribe('broadcast');
