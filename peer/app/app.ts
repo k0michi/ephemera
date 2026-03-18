@@ -86,7 +86,10 @@ export default class EphemeraPeer {
           },
         }),
         pubsub: gossipsub(),
-      }
+      },
+      connectionManager: {
+        reconnectRetries: 20,
+      },
     });
 
     await this.libp2pNode.start();
