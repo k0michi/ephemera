@@ -171,6 +171,7 @@ export default function Composer({ }: ComposerProps) {
               placeholder="What are you doing?"
               aria-label="Post content"
               style={{ resize: 'none' }}
+              disabled={isLocked}
             />
           </Form.Group>
           <div
@@ -228,6 +229,7 @@ export default function Composer({ }: ComposerProps) {
                     lineHeight: 1,
                   }}
                   aria-label="Remove attachment"
+                  disabled={isLocked}
                 >
                   <XLg size={12} aria-hidden="true" />
                 </Button>
@@ -256,7 +258,7 @@ export default function Composer({ }: ComposerProps) {
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={attachments.length >= maxAttachmentCount}
+                disabled={attachments.length >= maxAttachmentCount || isLocked}
                 aria-label="Attach image"
               >
                 <BsImage />
