@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Form, Button, Card } from "react-bootstrap";
+import { Form, Button, Card, Spinner } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { useReader } from "lib/store";
 import { EphemeraStoreContext } from "~/store";
@@ -232,8 +232,26 @@ export default function Composer({ }: ComposerProps) {
               {count} / {maxLength}
             </div>
             <div className="text-end">
-              <Button type="submit" variant="primary" disabled={isUnder || isOver || isLocked}>
-                Post
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isUnder || isOver || isLocked}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                {isLocked && (
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                )}
+                {isLocked ? "Posting..." : "Post"}
               </Button>
             </div>
           </div>
