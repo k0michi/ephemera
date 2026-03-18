@@ -56,55 +56,65 @@ interface AttachmentEntry {
   digest: Uint8Array;
 }
 
+function containsAttachable(files: FileList): boolean {
+  for (const file of files) {
+    if (allowedFileTypes.has(file.type)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachments, setAttachments] = useState<AttachmentEntry[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const { isLocked, tryLock } = useMutex();
+  const { isLocked: isReading, tryLock: tryLockReading } = useMutex();
+  const { isLocked: isSubmitting, tryLock: tryLockSubmitting } = useMutex();
 
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
   const store = useReader(EphemeraStoreContext);
 
-  const addAttachedFiles = (files: File[]) => {
-    const acceptedFiles = files.filter(file => allowedFileTypes.has(file.type));
+  const addAttachedFiles = async (files: File[]) => {
+    const attachableFiles = files.filter(file => allowedFileTypes.has(file.type));
+    let candidates: AttachmentEntry[];
 
-    if (acceptedFiles.length === 0) {
-      return false;
+    {
+      using lock = tryLockReading();
+
+      if (lock === null) {
+        return false;
+      }
+
+      candidates = await Promise.all(attachableFiles.map(async (file) => {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const digest = await Crypto.digest(bytes);
+        return { file, digest };
+      }));
     }
 
-    (async () => {
-      const candidates = await Promise.all(
-        acceptedFiles.map(async (file) => {
-          const bytes = new Uint8Array(await file.arrayBuffer());
-          const digest = await Crypto.digest(bytes);
-          return { file, digest };
-        })
-      );
+    setAttachments((prev) => {
+      const next = [...prev];
 
-      setAttachments((prev) => {
-        const next = [...prev];
+      for (const candidate of candidates) {
+        const alreadyExists = next.some((a) =>
+          ArrayHelper.equals(a.digest, candidate.digest)
+        );
 
-        for (const candidate of candidates) {
-          const alreadyExists = next.some((a) =>
-            ArrayHelper.equals(a.digest, candidate.digest)
-          );
-
-          if (!alreadyExists) {
-            next.push(candidate);
-          }
-
-          if (next.length >= maxAttachmentCount) {
-            break;
-          }
+        if (!alreadyExists) {
+          next.push(candidate);
         }
 
-        return next;
-      });
-    })();
+        if (next.length >= maxAttachmentCount) {
+          break;
+        }
+      }
 
-    return true;
+      return next;
+    });
   };
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +126,8 @@ export default function Composer({ }: ComposerProps) {
     const files = Array.from(e.clipboardData.files);
 
     if (files.length > 0) {
-      if (addAttachedFiles(Array.from(e.clipboardData.files))) {
+      if (containsAttachable(e.clipboardData.files)) {
+        addAttachedFiles(files);
         e.preventDefault();
       }
     }
@@ -131,9 +142,15 @@ export default function Composer({ }: ComposerProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    using lock = tryLock();
+    using submitLock = tryLockSubmitting();
 
-    if (lock === null) {
+    if (submitLock === null) {
+      return;
+    }
+
+    using readLock = tryLockReading();
+
+    if (readLock === null) {
       return;
     }
 
@@ -166,7 +183,7 @@ export default function Composer({ }: ComposerProps) {
               placeholder="What are you doing?"
               aria-label="Post content"
               style={{ resize: 'none' }}
-              disabled={isLocked}
+              disabled={isSubmitting}
               onKeyDown={e => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
@@ -232,7 +249,7 @@ export default function Composer({ }: ComposerProps) {
                     lineHeight: 1,
                   }}
                   aria-label="Remove attachment"
-                  disabled={isLocked}
+                  disabled={isSubmitting}
                 >
                   <XLg size={12} aria-hidden="true" />
                 </Button>
@@ -261,7 +278,7 @@ export default function Composer({ }: ComposerProps) {
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={attachments.length >= maxAttachmentCount || isLocked}
+                disabled={attachments.length >= maxAttachmentCount || isSubmitting || isReading}
                 aria-label="Attach image"
               >
                 <BsImage />
@@ -276,14 +293,14 @@ export default function Composer({ }: ComposerProps) {
               <Button
                 type="submit"
                 variant="primary"
-                disabled={isUnder || isOver || isLocked}
+                disabled={isUnder || isOver || isSubmitting || isReading}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "0.5rem",
                 }}
               >
-                {isLocked && (
+                {isSubmitting && (
                   <Spinner
                     as="span"
                     animation="border"
@@ -292,7 +309,7 @@ export default function Composer({ }: ComposerProps) {
                     aria-hidden="true"
                   />
                 )}
-                {isLocked ? "Posting..." : "Post"}
+                {isSubmitting ? "Posting..." : "Post"}
               </Button>
             </div>
           </div>
