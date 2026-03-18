@@ -6,14 +6,22 @@ const safeDispatcher = new Agent({
   connect: {
     lookup: async (hostname, _options, callback) => {
       try {
-        const result = await lookup(hostname);
-        const addr = ipaddr.parse(result.address);
+        const result = await lookup(hostname, _options);
+        const addrs = Array.isArray(result) ? result : [result];
 
-        if (addr.range() !== 'unicast') {
-          throw new Error(`Unsafe IP address: ${result.address}`);
+        for (const addr of addrs) {
+          const parsed = ipaddr.parse(addr.address);
+
+          if (parsed.range() !== 'unicast') {
+            throw new Error(`Unsafe IP address: ${addr.address}`);
+          }
         }
 
-        callback(null, result.address, result.family === 6 ? 6 : 4);
+        if (Array.isArray(result)) {
+          callback(null, result);
+        } else {
+          callback(null, result.address, result.family);
+        }
       } catch (err) {
         callback(err as Error, '', 4);
       }
