@@ -62,6 +62,27 @@ export class PeerService implements IPeerService {
 
   private openStream(): grpc.ClientReadableStream<Message> {
     const stream = this.grpcClient.streamMessages({});
+    let reconnectScheduled = false;
+
+    const reconnect = (reason: string, err?: unknown) => {
+      if (reconnectScheduled) {
+        return;
+      }
+      reconnectScheduled = true;
+
+      if (err) {
+        console.error(`gRPC stream ${reason}:`, err);
+      } else {
+        console.warn(`gRPC stream ${reason}, reconnecting...`);
+      }
+
+      setTimeout(() => {
+        if (this.stream === stream) {
+          this.stream = this.openStream();
+        }
+      }, 1000);
+    };
+
     stream.on('data', async (message: Message) => {
       const signal = serverSignalSchema.safeParse(JSON.parse(message.data));
 
@@ -73,18 +94,11 @@ export class PeerService implements IPeerService {
     });
 
     stream.on('error', (err) => {
-      console.error('gRPC stream error:', err);
-      setTimeout(() => {
-        stream.cancel();
-        this.stream = this.openStream();
-      }, 1000);
+      reconnect('error', err);
     });
 
     stream.on('end', () => {
-      console.warn('gRPC stream ended, reconnecting...');
-      setTimeout(() => {
-        this.stream = this.openStream();
-      }, 1000);
+      reconnect('ended');
     });
 
     return stream;
