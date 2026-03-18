@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Form, Button, Card } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { useReader } from "lib/store";
@@ -19,10 +19,32 @@ const allowedFileTypes = new Set([
   "video/mp4",
 ]);
 
+function FilePreview({ file }: { file: File }) {
+  const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
+
+  useEffect(() => {
+    const url = new DisposableURL(file);
+    setPreviewUrl(url);
+
+    return () => {
+      setPreviewUrl(null);
+    };
+  }, [file]);
+
+  if (!previewUrl) {
+    return null;
+  }
+
+  if (file.type.startsWith("video/")) {
+    return <video src={previewUrl.url} controls style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />;
+  } else {
+    return <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />;
+  }
+}
+
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked, tryLock } = useMutex();
 
@@ -38,13 +60,6 @@ export default function Composer({ }: ComposerProps) {
     }
 
     setAttachment(file);
-
-    if (file) {
-      const url = new DisposableURL(file);
-      setPreviewUrl(url);
-    } else {
-      setPreviewUrl(null);
-    }
   };
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +86,6 @@ export default function Composer({ }: ComposerProps) {
 
   const handleRemoveAttachment = () => {
     setAttachment(null);
-    setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -120,13 +134,9 @@ export default function Composer({ }: ComposerProps) {
             />
           </Form.Group>
           {/* TODO: Redesign */}
-          {previewUrl && attachment && (
+          {attachment && (
             <div style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-              {attachment.type.startsWith('video/') ? (
-                <video src={previewUrl.url} controls style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
-              ) : (
-                <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
-              )}
+              <FilePreview file={attachment} />
               <Button size="sm" variant="light" onClick={handleRemoveAttachment} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
             </div>
           )}
