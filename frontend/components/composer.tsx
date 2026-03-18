@@ -172,6 +172,12 @@ export default function Composer({ }: ComposerProps) {
               aria-label="Post content"
               style={{ resize: 'none' }}
               disabled={isLocked}
+              onKeyDown={e => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
             />
           </Form.Group>
           <div
