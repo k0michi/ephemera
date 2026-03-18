@@ -234,6 +234,12 @@ export class PeerService implements IPeerService {
       });
     });
 
-    return await Promise.all(hosts.map(host => this.fetchPeerDescriptor(host)));
+    const results = await Promise.allSettled(
+      hosts.map(host => this.fetchPeerDescriptor(host))
+    );
+
+    return results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
   }
 }
