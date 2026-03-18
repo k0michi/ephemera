@@ -129,6 +129,11 @@ export class PeerService implements IPeerService {
       return;
     }
 
+    if (signal[0][2][0][1][0] !== signal[0][1][0]) {
+      // Host mismatch between server signal and client signal
+      return;
+    }
+
     if (signal[0][2][0][1][3] === 'create_post') {
       const createPostSignal = createPostSignalSchema.safeParse(signal[0][2]);
 
