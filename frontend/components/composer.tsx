@@ -7,6 +7,7 @@ import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
+import { XLg } from "react-bootstrap-icons";
 
 export interface ComposerProps {
 }
@@ -136,17 +137,67 @@ export default function Composer({ }: ComposerProps) {
               style={{ resize: 'none' }}
             />
           </Form.Group>
-          {/* TODO: Redesign */}
-          {attachments.map((file, index) => (
-            <div key={index} style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-              <FilePreview file={file} style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} alt={`attachment ${index + 1}`} />
-              <Button size="sm" variant="light" onClick={() => {
-                const newAttachments = [...attachments];
-                newAttachments.splice(index, 1);
-                setAttachments(newAttachments);
-              }} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
-            </div>
-          ))}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.75rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            {attachments.map((file, index) => (
+              <div
+                key={`${file.name}-${index}`}
+                style={{
+                  position: "relative",
+                  inlineSize: "10rem",
+                  blockSize: "7.5rem",
+                  borderRadius: "0.5rem",
+                  overflow: "hidden",
+                  border: "1px solid #eee",
+                  background: "#fafafa",
+                  flex: "0 0 auto",
+                }}
+              >
+                <FilePreview
+                  file={file}
+                  alt={`attachment ${index + 1}`}
+                  style={{
+                    inlineSize: "100%",
+                    blockSize: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+
+                <Button
+                  size="sm"
+                  variant="light"
+                  onClick={() => {
+                    const newAttachments = [...attachments];
+                    newAttachments.splice(index, 1);
+                    setAttachments(newAttachments);
+                  }}
+                  style={{
+                    position: "absolute",
+                    insetBlockStart: "0.375rem",
+                    insetInlineEnd: "0.375rem",
+                    inlineSize: "1.75rem",
+                    blockSize: "1.75rem",
+                    minInlineSize: "1.75rem",
+                    padding: 0,
+                    borderRadius: "9999px",
+                    display: "grid",
+                    placeItems: "center",
+                    lineHeight: 1,
+                  }}
+                  aria-label="Remove attachment"
+                >
+                  <XLg size={12} aria-hidden="true" />
+                </Button>
+              </div>
+            ))}
+          </div>
           <div style={{
             marginTop: 8,
             display: 'flex',
