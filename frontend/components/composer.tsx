@@ -212,9 +212,11 @@ export default function Composer({ }: ComposerProps) {
                   size="sm"
                   variant="light"
                   onClick={() => {
-                    const newAttachments = [...attachments];
-                    newAttachments.splice(index, 1);
-                    setAttachments(newAttachments);
+                    setAttachments(prev => {
+                      const next = [...prev];
+                      next.splice(index, 1);
+                      return next;
+                    });
                   }}
                   style={{
                     position: "absolute",
