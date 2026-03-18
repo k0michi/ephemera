@@ -10,6 +10,7 @@ import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
+import SafeFetch from '@ephemera/shared/lib/safe_fetch.js';
 
 export interface IPeerService {
   publish(signal: ServerSignal): Promise<void>;
@@ -103,7 +104,7 @@ export class PeerService implements IPeerService {
 
   async fetchPeerDescriptor(host: string): Promise<PeerManifest> {
     return this.peerDescriptorCache.getOrSet(host, async () => {
-      const response = await fetch(`https://${host}/api/v1/peer`, {
+      const response = await SafeFetch.safeFetch(`https://${host}/api/v1/peer`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
