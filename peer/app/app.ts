@@ -18,6 +18,11 @@ import { Transform, Writable } from 'node:stream';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { keys } from '@libp2p/crypto';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import { KEEP_ALIVE } from '@libp2p/interface';
+
+interface Peer {
+  id: string;
+}
 
 export default class EphemeraPeer {
   private libp2pNode: Libp2p<{
@@ -27,6 +32,7 @@ export default class EphemeraPeer {
     pubsub: GossipSub;
   }> | null = null;
   private options: Config;
+  private peers: Set<string> = new Set();
 
   public constructor(options: Config) {
     this.options = options;
@@ -62,7 +68,11 @@ export default class EphemeraPeer {
       transports: [webSockets()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
-      peerDiscovery: this.options.bootstrapPeers.map((addr) => bootstrap({ list: [addr] })),
+      peerDiscovery: [bootstrap({
+        list: this.options.bootstrapPeers,
+        tagName: `${KEEP_ALIVE}-bootstrap`,
+        tagValue: 100,
+      })],
       services: {
         ping: ping(),
         identify: identify(),
