@@ -38,7 +38,7 @@ export default class SignalCrypto {
   }
 
   static async verifyServer<S extends ServerSignal>(signal: S, fetchedPublicKey: Uint8Array): Promise<boolean> {
-    if (signal[0][1][1] !== Hex.fromUint8Array(fetchedPublicKey)) {
+    if (signal[0][1][1] !== Base37.fromUint8Array(fetchedPublicKey)) {
       return false;
     }
 
