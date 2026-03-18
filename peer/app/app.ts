@@ -68,11 +68,14 @@ export default class EphemeraPeer {
       transports: [webSockets()],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
-      peerDiscovery: [bootstrap({
-        list: this.options.bootstrapPeers,
-        tagName: `${KEEP_ALIVE}-bootstrap`,
-        tagValue: 100,
-      })],
+      peerDiscovery:
+        this.options.bootstrapPeers.length > 0 ? [
+          bootstrap({
+            list: this.options.bootstrapPeers,
+            tagName: `${KEEP_ALIVE}-bootstrap`,
+            tagValue: 100,
+          })
+        ] : [],
       services: {
         ping: ping(),
         identify: identify(),
