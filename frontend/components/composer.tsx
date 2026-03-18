@@ -8,6 +8,10 @@ import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
 import { XLg } from "react-bootstrap-icons";
+import Crypto from "@ephemera/shared/lib/crypto";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import Hex from "@ephemera/shared/lib/hex";
+import ArrayHelper from "@ephemera/shared/lib/array_helper";
 
 export interface ComposerProps {
 }
@@ -52,9 +56,14 @@ function FilePreview(props: FilePreviewProps) {
   }
 }
 
+interface AttachmentEntry {
+  file: File;
+  digest: Uint8Array;
+}
+
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentEntry[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked, tryLock } = useMutex();
 
@@ -64,15 +73,42 @@ export default function Composer({ }: ComposerProps) {
   const store = useReader(EphemeraStoreContext);
 
   const addAttachedFiles = (files: File[]) => {
-    const filteredFiles = files.filter(file => allowedFileTypes.has(file.type));
+    const acceptedFiles = files.filter(file => allowedFileTypes.has(file.type));
 
-    if (filteredFiles.length === 0) {
+    if (acceptedFiles.length === 0) {
       return false;
     }
 
-    const newAttachments = [...attachments, ...filteredFiles];
-    newAttachments.splice(maxAttachmentCount);
-    setAttachments(newAttachments);
+    (async () => {
+      const candidates = await Promise.all(
+        acceptedFiles.map(async (file) => {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const digest = await Crypto.digest(bytes);
+          return { file, digest };
+        })
+      );
+
+      setAttachments((prev) => {
+        const next = [...prev];
+
+        for (const candidate of candidates) {
+          const alreadyExists = next.some((a) =>
+            ArrayHelper.equals(a.digest, candidate.digest)
+          );
+
+          if (!alreadyExists) {
+            next.push(candidate);
+          }
+
+          if (next.length >= maxAttachmentCount) {
+            break;
+          }
+        }
+
+        return next;
+      });
+    })();
+
     return true;
   };
 
@@ -107,7 +143,7 @@ export default function Composer({ }: ComposerProps) {
     }
 
     try {
-      await store.getClient().sendPost(value, attachments);
+      await store.getClient().sendPost(value, attachments.map(a => a.file));
       store.addLog("success", "Post submitted successfully!");
       setValue("");
       handleRemoveAttachment();
@@ -147,7 +183,7 @@ export default function Composer({ }: ComposerProps) {
           >
             {attachments.map((file, index) => (
               <div
-                key={`${file.name}-${index}`}
+                key={Hex.fromUint8Array(file.digest)}
                 style={{
                   position: "relative",
                   inlineSize: "10rem",
@@ -160,7 +196,7 @@ export default function Composer({ }: ComposerProps) {
                 }}
               >
                 <FilePreview
-                  file={file}
+                  file={file.file}
                   alt={`attachment ${index + 1}`}
                   style={{
                     inlineSize: "100%",
