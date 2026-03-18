@@ -37,12 +37,7 @@ function FilePreview(props: FilePreviewProps) {
   const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
 
   useEffect(() => {
-    const url = new DisposableURL(props.file);
-    setPreviewUrl(url);
-
-    return () => {
-      setPreviewUrl(null);
-    };
+    setPreviewUrl(new DisposableURL(props.file));
   }, [props.file]);
 
   if (!previewUrl) {
