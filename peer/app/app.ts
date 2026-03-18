@@ -63,7 +63,7 @@ export default class EphemeraPeer {
       addresses: {
         listen: [`/ip4/${this.internalHostname}/tcp/${this.internalPort}/ws`],
         announce: [
-          `/dns4/${this.externalHostname}/tcp/${this.externalPort}/wss`
+          `/dns/${this.externalHostname}/tcp/${this.externalPort}/wss`
         ],
       },
       transports: [webSockets()],
