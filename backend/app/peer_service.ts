@@ -2,7 +2,7 @@ import grpc from '@grpc/grpc-js';
 import { Message, PubSubServiceClient } from '@ephemera/shared/peer/bridge.js';
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import type Config from './config.js';
-import type { RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
+import type { PeerManifest, RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
 import { createPostSignalSchema, deletePostSignalSchema, getPeerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
 import { remotePosts } from './db/schema.js';
 import Hex from '@ephemera/shared/lib/hex.js';
@@ -11,17 +11,14 @@ import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
 
-export interface PeerDescriptor {
-  host: string;
-  publicKey: string;
-}
-
 export interface IPeerService {
   publish(signal: ServerSignal): Promise<void>;
 
   handle(signal: ServerSignal): Promise<void>;
 
-  getPeerDescriptor(): PeerDescriptor;
+  getPeerDescriptor(): PeerManifest;
+
+  getRemoteServers(): Promise<PeerManifest[]>;
 }
 
 export class PeerService implements IPeerService {
@@ -30,7 +27,7 @@ export class PeerService implements IPeerService {
   private grpcClient: PubSubServiceClient;
   private stream: grpc.ClientReadableStream<Message>;
   // host -> peerDescriptor
-  private peerDescriptorCache = new KeyedCache<string, PeerDescriptor>({
+  private peerDescriptorCache = new KeyedCache<string, PeerManifest>({
     maxSize: 128,
   });
   private static readonly kMaxRemotePosts = 65535;
@@ -104,7 +101,7 @@ export class PeerService implements IPeerService {
     return stream;
   }
 
-  async fetchPeerDescriptor(host: string): Promise<PeerDescriptor> {
+  async fetchPeerDescriptor(host: string): Promise<PeerManifest> {
     return this.peerDescriptorCache.getOrSet(host, async () => {
       const response = await fetch(`https://${host}/api/v1/peer`, {
         method: 'GET',
@@ -214,10 +211,29 @@ export class PeerService implements IPeerService {
     }
   }
 
-  getPeerDescriptor(): PeerDescriptor {
+  getPeerDescriptor(): PeerManifest {
     return {
+      implementation: {
+        name: 'ephemera',
+        version: import.meta.env.EPHEMERA_COMMIT_HASH
+      },
       host: this.config.host,
       publicKey: this.config.publicKey,
     };
+  }
+
+  async getRemoteServers(): Promise<PeerManifest[]> {
+    const hosts = await new Promise<string[]>((resolve, reject) => {
+      this.grpcClient.getRemoteServers({}, (err, response) => {
+        if (err) {
+          console.error('Failed to get remote servers:', err);
+          reject(err);
+        } else {
+          resolve(response.hosts);
+        }
+      });
+    });
+
+    return await Promise.all(hosts.map(host => this.fetchPeerDescriptor(host)));
   }
 }

@@ -7,6 +7,7 @@ option go_package = "example.com/ephemera/pubsub;pubsub";
 service PubSubService {
   rpc Publish(PublishRequest) returns (PublishResponse);
   rpc StreamMessages(StreamMessagesRequest) returns (stream Message);
+  rpc GetRemoteServers(GetRemoteServersRequest) returns (GetRemoteServersResponse);
 }
 
 message PublishRequest {
@@ -23,4 +24,10 @@ message StreamMessagesRequest {
 
 message Message {
   string data = 1;
+}
+
+message GetRemoteServersRequest {}
+
+message GetRemoteServersResponse {
+  repeated string hosts = 1;
 }

@@ -60,17 +60,32 @@ export default function Layout() {
         <Container>
           <Row className="align-items-center" style={{ height: "56px" }}>
             <Col>
-              <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-                <Link to="/" style={{ textDecoration: "none" }}>
-                  <ServerIdenticon
-                    style={{
-                      width: 24
-                    }}
-                    data={new TextEncoder().encode(store.getHost() || '')}
-                  />
-                </Link>
-                <Link to="/" style={{ textDecoration: "none" }}>
-                  <div style={{ fontSize: "1.5rem", color: "black" }}>Ephemera</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                  <Link to="/" style={{ textDecoration: "none" }}>
+                    <ServerIdenticon
+                      style={{
+                        width: 24
+                      }}
+                      data={new TextEncoder().encode(store.getHost() || '')}
+                    />
+                  </Link>
+                  <Link to="/" style={{ textDecoration: "none" }}>
+                    <div style={{ fontSize: "1.5rem", color: "black" }}>Ephemera</div>
+                  </Link>
+                </div>
+
+                <Link
+                  to="/servers"
+                  style={{
+                    textDecoration: "none",
+                    color: "#495057",
+                    fontSize: "0.95rem",
+                    padding: "6px 10px",
+                    borderRadius: "6px"
+                  }}
+                >
+                  Servers
                 </Link>
               </div>
             </Col>

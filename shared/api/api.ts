@@ -213,3 +213,11 @@ export interface PeerManifest {
 
 export interface GetPeerResponse extends ApiResponse, PeerManifest {
 }
+
+// GET /api/v1/remote-servers
+export interface GetRemoteServersRequest extends ApiRequest {
+}
+
+export interface GetRemoteServersResponse extends ApiResponse {
+  servers: PeerManifest[];
+}

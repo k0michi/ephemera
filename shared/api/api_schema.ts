@@ -115,3 +115,9 @@ export const peerManifestSchema = z.object({
 });
 
 export const getPeerResponseSchema = apiResponseSchema.extend(peerManifestSchema.shape);
+
+export const getRemoteServersRequestSchema = apiRequestSchema;
+
+export const getRemoteServersResponseSchema = apiResponseSchema.extend({
+    servers: z.array(peerManifestSchema)
+});

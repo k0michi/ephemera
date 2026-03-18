@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createRequest, createResponse } from 'node-mocks-http';
 import ApiV1Controller from '../app/api_v1_controller.js';
-import type { CreatePostSignalPayload, PostRequest, CreatePostSignal, DeletePostSignal, Signal, RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignalPayload, PostRequest, CreatePostSignal, DeletePostSignal, Signal, RelaySignal, ServerSignal, PeerManifest } from '@ephemera/shared/api/api.js';
 import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
@@ -100,9 +100,17 @@ class MockPeerService implements IPeerService {
 
   getPeerDescriptor() {
     return {
+      implementation: {
+        name: "ephemera",
+        version: "0.1.0",
+      },
       host: 'example.com',
-      publicKey: 'hash',
+      publicKey: 'publicKey',
     }
+  }
+
+  async getRemoteServers(): Promise<PeerManifest[]> {
+    return [];
   }
 }
 

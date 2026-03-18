@@ -18,11 +18,34 @@ import { Transform, Writable } from 'node:stream';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { keys } from '@libp2p/crypto';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
-import { KEEP_ALIVE } from '@libp2p/interface';
+import { KEEP_ALIVE } from '@libp2p/interface'
+
+export function getHostFromMultiaddr(addr: Multiaddr): [string, number] | null {
+  let hostname: string | null = null;
+  let port: number | null = null;
+
+  for (const c of addr.getComponents()) {
+    // TODO: other components?
+    if (c.name === 'dns') {
+      hostname = c.value ?? null;
+    }
+
+    if (c.name === 'tcp') {
+      port = NullableHelper.map(c.value, (v) => parseInt(v)) ?? null;
+    }
+  }
+
+  if (hostname && port) {
+    return [hostname, port];
+  } else {
+    return null;
+  }
+}
 
 interface Peer {
   id: string;
-  multiaddrs: string[];
+  multiaddrs: Multiaddr[];
+  host: [string, number];
 }
 
 export default class EphemeraPeer {
@@ -110,9 +133,27 @@ export default class EphemeraPeer {
         console.log(`  - ${multiaddr.toString()}`);
       }
 
+      if (record === undefined) {
+        console.warn(`No signed peer record found for peer ${detail.peerId.toString()}`);
+        return;
+      }
+
+      if (record?.addresses.length === 0) {
+        console.warn(`No addresses found for peer ${detail.peerId.toString()}`);
+        return;
+      }
+
+      const host = getHostFromMultiaddr(record.addresses[0]);
+
+      if (host === null) {
+        console.warn(`Failed to extract host from multiaddr for peer ${detail.peerId.toString()}`);
+        return;
+      }
+
       this.verifiedPeers.set(detail.peerId.toString(), {
         id: detail.peerId.toString(),
-        multiaddrs: (record?.addresses ?? []).map((a) => a.toString())
+        multiaddrs: (record?.addresses ?? []).map((a) => a),
+        host: host,
       });
     });
 
@@ -164,6 +205,15 @@ export default class EphemeraPeer {
           }),
           request as Writable
         );
+      },
+      getRemoteServers: async (request, callback) => {
+        const hosts = Array.from(this.verifiedPeers.values()).map(peer => HostUtil.stringify({
+          hostname: peer.host[0],
+          port: peer.host[1],
+        }));
+        callback(null, {
+          hosts: hosts,
+        });
       }
     };
 

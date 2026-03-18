@@ -42,9 +42,17 @@ describe('PostService', () => {
 
       getPeerDescriptor() {
         return {
+          implementation: {
+            name: "ephemera",
+            version: "0.1.0",
+          },
           host: 'example.com',
           publicKey: 'publicKey',
         };
+      },
+
+      async getRemoteServers() {
+        return [];
       }
     };
     attachmentService = new AttachmentService(config, database);

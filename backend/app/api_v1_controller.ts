@@ -5,7 +5,7 @@ import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
-import type { GetPeerResponse, GetPostsResponse } from '@ephemera/shared/api/api.js';
+import type { GetPeerResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import multer from 'multer';
 import type { IAttachmentService } from './attachment_service.js';
@@ -37,6 +37,7 @@ export default class ApiV1Controller implements IController {
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
     this.router.get('/peer', this.handleGetPeer.bind(this));
+    this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -153,15 +154,21 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Invalid request', 400);
     }
 
-    const response = {
-      implementation: {
-        name: 'ephemera',
-        version: import.meta.env.EPHEMERA_COMMIT_HASH
-      },
-      host: this.config.host,
-      publicKey: this.config.publicKey,
-    } satisfies GetPeerResponse;
+    const response = this.peerService.getPeerDescriptor() satisfies GetPeerResponse;
+    res.status(200).json(response);
+  }
 
+  async handleGetRemoteServers(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getPeerRequestSchema.parse(req.query);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const servers = await this.peerService.getRemoteServers();
+    const response = { servers } satisfies GetRemoteServersResponse;
     res.status(200).json(response);
   }
 }

@@ -39,6 +39,13 @@ export interface Message {
   data: string;
 }
 
+export interface GetRemoteServersRequest {
+}
+
+export interface GetRemoteServersResponse {
+  hosts: string[];
+}
+
 function createBasePublishRequest(): PublishRequest {
   return { data: "" };
 }
@@ -274,6 +281,107 @@ export const Message: MessageFns<Message> = {
   },
 };
 
+function createBaseGetRemoteServersRequest(): GetRemoteServersRequest {
+  return {};
+}
+
+export const GetRemoteServersRequest: MessageFns<GetRemoteServersRequest> = {
+  encode(_: GetRemoteServersRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetRemoteServersRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetRemoteServersRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): GetRemoteServersRequest {
+    return {};
+  },
+
+  toJSON(_: GetRemoteServersRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetRemoteServersRequest>, I>>(base?: I): GetRemoteServersRequest {
+    return GetRemoteServersRequest.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetRemoteServersRequest>, I>>(_: I): GetRemoteServersRequest {
+    const message = createBaseGetRemoteServersRequest();
+    return message;
+  },
+};
+
+function createBaseGetRemoteServersResponse(): GetRemoteServersResponse {
+  return { hosts: [] };
+}
+
+export const GetRemoteServersResponse: MessageFns<GetRemoteServersResponse> = {
+  encode(message: GetRemoteServersResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.hosts) {
+      writer.uint32(10).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetRemoteServersResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetRemoteServersResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.hosts.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetRemoteServersResponse {
+    return { hosts: globalThis.Array.isArray(object?.hosts) ? object.hosts.map((e: any) => globalThis.String(e)) : [] };
+  },
+
+  toJSON(message: GetRemoteServersResponse): unknown {
+    const obj: any = {};
+    if (message.hosts?.length) {
+      obj.hosts = message.hosts;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetRemoteServersResponse>, I>>(base?: I): GetRemoteServersResponse {
+    return GetRemoteServersResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetRemoteServersResponse>, I>>(object: I): GetRemoteServersResponse {
+    const message = createBaseGetRemoteServersResponse();
+    message.hosts = object.hosts?.map((e) => e) || [];
+    return message;
+  },
+};
+
 export type PubSubServiceService = typeof PubSubServiceService;
 export const PubSubServiceService = {
   publish: {
@@ -295,11 +403,23 @@ export const PubSubServiceService = {
     responseSerialize: (value: Message): Buffer => Buffer.from(Message.encode(value).finish()),
     responseDeserialize: (value: Buffer): Message => Message.decode(value),
   },
+  getRemoteServers: {
+    path: "/ephemera.pubsub.PubSubService/GetRemoteServers",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetRemoteServersRequest): Buffer =>
+      Buffer.from(GetRemoteServersRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer): GetRemoteServersRequest => GetRemoteServersRequest.decode(value),
+    responseSerialize: (value: GetRemoteServersResponse): Buffer =>
+      Buffer.from(GetRemoteServersResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer): GetRemoteServersResponse => GetRemoteServersResponse.decode(value),
+  },
 } as const;
 
 export interface PubSubServiceServer extends UntypedServiceImplementation {
   publish: handleUnaryCall<PublishRequest, PublishResponse>;
   streamMessages: handleServerStreamingCall<StreamMessagesRequest, Message>;
+  getRemoteServers: handleUnaryCall<GetRemoteServersRequest, GetRemoteServersResponse>;
 }
 
 export interface PubSubServiceClient extends Client {
@@ -324,6 +444,21 @@ export interface PubSubServiceClient extends Client {
     metadata?: Metadata,
     options?: Partial<CallOptions>,
   ): ClientReadableStream<Message>;
+  getRemoteServers(
+    request: GetRemoteServersRequest,
+    callback: (error: ServiceError | null, response: GetRemoteServersResponse) => void,
+  ): ClientUnaryCall;
+  getRemoteServers(
+    request: GetRemoteServersRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetRemoteServersResponse) => void,
+  ): ClientUnaryCall;
+  getRemoteServers(
+    request: GetRemoteServersRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetRemoteServersResponse) => void,
+  ): ClientUnaryCall;
 }
 
 export const PubSubServiceClient = makeGenericClientConstructor(
