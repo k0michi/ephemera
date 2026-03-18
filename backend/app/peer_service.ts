@@ -137,7 +137,6 @@ export class PeerService implements IPeerService {
       }
 
       const inner = createPostSignal.data;
-      const peerDescriptor = await this.fetchPeerDescriptor(signal[0][1][0]);
 
       await this.database.insert(remotePosts).values({
         id: Hex.fromUint8Array(await SignalCrypto.digest(inner[0])),
@@ -150,8 +149,8 @@ export class PeerService implements IPeerService {
         createdAt: inner[0][1][2],
         serverID: Hex.fromUint8Array(await SignalCrypto.digestServer(signal[0])),
         serverVersion: signal[0][0],
-        serverCreatedAt: signal[0][1][1],
-        serverPublicKey: peerDescriptor.publicKey,
+        serverCreatedAt: signal[0][1][2],
+        serverPublicKey: signal[0][1][1],
         serverSignature: signal[1],
         serverFooter: signal[0][3],
       });
@@ -199,7 +198,7 @@ export class PeerService implements IPeerService {
       return;
     }
 
-    if (signal[0][1][2] === 'relay') {
+    if (signal[0][1][3] === 'relay') {
       const relaySignal = relaySignalSchema.safeParse(signal);
 
       if (!relaySignal.success) {

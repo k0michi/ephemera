@@ -33,8 +33,11 @@ export type Signal = [
 
 export type ServerVersion = 0;
 
+export type ServerPublicKey = string;
+
 export type ServerSignalHeader = [
   Host, // host
+  ServerPublicKey, // public_key
   Timestamp, // created_at
   string // type
 ];
@@ -127,6 +130,7 @@ export type DeletePostSignal = [
 
 export type RelaySignalHeader = [
   Host, // host
+  ServerPublicKey, // public_key
   Timestamp, // created_at
   'relay' // type
 ];

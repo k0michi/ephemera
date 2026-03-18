@@ -25,7 +25,9 @@ export const signalSchema = z.tuple([signalPayloadSchema, z.string()]);
 
 export const serverVersionSchema = z.literal(0);
 
-export const serverSignalHeaderSchema = z.tuple([hostSchema, timestampSchema, z.string()]);
+export const serverPublicKeySchema = z.string();
+
+export const serverSignalHeaderSchema = z.tuple([hostSchema, serverPublicKeySchema, timestampSchema, z.string()]);
 
 export const serverSignalBodySchema = z.unknown();
 
@@ -57,7 +59,7 @@ export const deletePostSignalPayloadSchema = z.tuple([versionSchema, deletePostS
 
 export const deletePostSignalSchema = z.tuple([deletePostSignalPayloadSchema, z.string()]);
 
-export const relaySignalHeaderSchema = z.tuple([hostSchema, timestampSchema, z.literal("relay")]);
+export const relaySignalHeaderSchema = z.tuple([hostSchema, serverPublicKeySchema, timestampSchema, z.literal("relay")]);
 
 export const relaySignalBodySchema = signalSchema;
 
@@ -103,7 +105,13 @@ export const deletePostResponseSchema = apiResponseSchema;
 
 export const getPeerRequestSchema = apiRequestSchema;
 
-export const getPeerResponseSchema = apiResponseSchema.extend({
+export const peerManifestSchema = z.object({
+    implementation: z.object({
+        name: z.string(),
+        version: z.string()
+    }),
     host: z.string(),
     publicKey: z.string()
 });
+
+export const getPeerResponseSchema = apiResponseSchema.extend(peerManifestSchema.shape);
