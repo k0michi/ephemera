@@ -187,6 +187,7 @@ export default class PostService extends PostServiceBase {
         0,
         [
           this.config.host,
+          this.config.publicKey,
           timestamp,
           'relay',
         ],
@@ -375,6 +376,7 @@ export default class PostService extends PostServiceBase {
       0,
       [
         this.config.host,
+        this.config.publicKey,
         Date.now(),
         'relay',
       ],
