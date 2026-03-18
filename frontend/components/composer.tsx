@@ -19,6 +19,8 @@ const allowedFileTypes = new Set([
   "video/mp4",
 ]);
 
+const maxAttachmentCount = 4;
+
 function FilePreview({ file }: { file: File }) {
   const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
 
@@ -44,7 +46,7 @@ function FilePreview({ file }: { file: File }) {
 
 export default function Composer({ }: ComposerProps) {
   const [value, setValue] = useState("");
-  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked, tryLock } = useMutex();
 
@@ -53,31 +55,29 @@ export default function Composer({ }: ComposerProps) {
   const count = PostUtil.weightedLength(value);
   const store = useReader(EphemeraStoreContext);
 
-  const processFile = (file: File | null) => {
-    if (file && !allowedFileTypes.has(file.type)) {
-      store.addLog("warning", `Unsupported file type. Allowed types: ${Array.from(allowedFileTypes).join(", ")}.`);
-      return;
+  const addAttachedFiles = (files: File[]) => {
+    const filteredFiles = files.filter(file => allowedFileTypes.has(file.type));
+
+    if (filteredFiles.length === 0) {
+      return false;
     }
 
-    setAttachment(file);
+    const newAttachments = [...attachments, ...filteredFiles];
+    newAttachments.splice(maxAttachmentCount);
+    setAttachments(newAttachments);
+    return true;
   };
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    processFile(file);
+    addAttachedFiles(Array.from(e.target.files ?? []));
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
-    if (attachment) {
-      // There's already an attachment
-      return;
-    }
+    const files = Array.from(e.clipboardData.files);
 
-    for (const file of e.clipboardData.files) {
-      if (allowedFileTypes.has(file.type)) {
+    if (files.length > 0) {
+      if (addAttachedFiles(Array.from(e.clipboardData.files))) {
         e.preventDefault();
-        processFile(file);
-        break;
       }
     }
   };
@@ -85,7 +85,7 @@ export default function Composer({ }: ComposerProps) {
   //const handleDrop = (e:React.DragEvent) => {}
 
   const handleRemoveAttachment = () => {
-    setAttachment(null);
+    setAttachments([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -99,11 +99,7 @@ export default function Composer({ }: ComposerProps) {
     }
 
     try {
-      if (attachment) {
-        await store.getClient().sendPost(value, [attachment]);
-      } else {
-        await store.getClient().sendPost(value);
-      }
+      await store.getClient().sendPost(value, attachments);
       store.addLog("success", "Post submitted successfully!");
       setValue("");
       handleRemoveAttachment();
@@ -134,12 +130,16 @@ export default function Composer({ }: ComposerProps) {
             />
           </Form.Group>
           {/* TODO: Redesign */}
-          {attachment && (
-            <div style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-              <FilePreview file={attachment} />
-              <Button size="sm" variant="light" onClick={handleRemoveAttachment} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
+          {attachments.map((file, index) => (
+            <div key={index} style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
+              <FilePreview file={file} />
+              <Button size="sm" variant="light" onClick={() => {
+                const newAttachments = [...attachments];
+                newAttachments.splice(index, 1);
+                setAttachments(newAttachments);
+              }} style={{ position: 'absolute', top: 0, right: 0, padding: '2px 6px', borderRadius: '0 8px 0 8px', fontWeight: 700 }} aria-label="Remove attachment">×</Button>
             </div>
-          )}
+          ))}
           <div style={{
             marginTop: 8,
             display: 'flex',
@@ -153,6 +153,7 @@ export default function Composer({ }: ComposerProps) {
               <input
                 type="file"
                 accept={Array.from(allowedFileTypes).join(",")}
+                multiple
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAttachmentChange}
@@ -161,7 +162,7 @@ export default function Composer({ }: ComposerProps) {
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={!!attachment}
+                disabled={attachments.length >= maxAttachmentCount}
                 aria-label="Attach image"
               >
                 <BsImage />
