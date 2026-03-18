@@ -15,6 +15,5 @@ COPY peer/package.json ./peer/
 RUN npm ci --omit=dev
 WORKDIR /app
 COPY --from=builder /app/peer/dist ./peer/dist
-EXPOSE 3000
 WORKDIR /app
 CMD ["npm", "run", "start", "-w", "peer"]
