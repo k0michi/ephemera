@@ -109,6 +109,7 @@ export default function Composer({ }: ComposerProps) {
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     addAttachedFiles(Array.from(e.target.files ?? []));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -125,7 +126,6 @@ export default function Composer({ }: ComposerProps) {
 
   const handleRemoveAttachment = () => {
     setAttachments([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
