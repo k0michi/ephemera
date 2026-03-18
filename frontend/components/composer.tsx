@@ -21,26 +21,33 @@ const allowedFileTypes = new Set([
 
 const maxAttachmentCount = 4;
 
-function FilePreview({ file }: { file: File }) {
+interface FilePreviewProps {
+  file: File;
+  style?: React.CSSProperties;
+  className?: string;
+  alt?: string;
+}
+
+function FilePreview(props: FilePreviewProps) {
   const [previewUrl, setPreviewUrl] = useDisposableState<DisposableURL>();
 
   useEffect(() => {
-    const url = new DisposableURL(file);
+    const url = new DisposableURL(props.file);
     setPreviewUrl(url);
 
     return () => {
       setPreviewUrl(null);
     };
-  }, [file]);
+  }, [props.file]);
 
   if (!previewUrl) {
     return null;
   }
 
-  if (file.type.startsWith("video/")) {
-    return <video src={previewUrl.url} controls style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />;
+  if (props.file.type.startsWith("video/")) {
+    return <video src={previewUrl.url} controls style={props.style} className={props.className} />;
   } else {
-    return <img src={previewUrl.url} alt="attachment preview" style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />;
+    return <img src={previewUrl.url} alt={props.alt} style={props.style} className={props.className} />;
   }
 }
 
@@ -132,7 +139,7 @@ export default function Composer({ }: ComposerProps) {
           {/* TODO: Redesign */}
           {attachments.map((file, index) => (
             <div key={index} style={{ marginTop: 8, marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-              <FilePreview file={file} />
+              <FilePreview file={file} style={{ maxWidth: 160, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} alt={`attachment ${index + 1}`} />
               <Button size="sm" variant="light" onClick={() => {
                 const newAttachments = [...attachments];
                 newAttachments.splice(index, 1);
