@@ -5,6 +5,7 @@ describe('HostUtil', () => {
   describe('isValid', () => {
     it('should validate valid hosts', () => {
       expect(HostUtil.isValid('example.com')).toBe(true);
+      expect(HostUtil.isValid('example.com:443')).toBe(true);
       expect(HostUtil.isValid('example.com:8080')).toBe(true);
       expect(HostUtil.isValid('localhost:3000')).toBe(true);
       expect(HostUtil.isValid('sub.example.com:1234')).toBe(true);
