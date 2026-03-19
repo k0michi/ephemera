@@ -88,7 +88,11 @@ export class PeerService implements IPeerService {
         return;
       }
 
-      await this.handle(signal.data);
+      try {
+        await this.handle(signal.data);
+      } catch (err) {
+        console.error('Failed to handle incoming signal:', err instanceof Error ? err.message : err);
+      }
     });
 
     stream.on('error', (err) => {
