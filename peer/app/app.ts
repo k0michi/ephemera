@@ -7,7 +7,7 @@ import { Ping, ping } from '@libp2p/ping';
 import { Identify, identify } from '@libp2p/identify';
 import { bootstrap } from '@libp2p/bootstrap'
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr';
-import HostUtil from '@ephemera/shared/lib/host_util.js';
+import HostUtil, { Host } from '@ephemera/shared/lib/host_util.js';
 import Config from './config.js';
 import { Message, PubSubServiceServer, PubSubServiceService } from '@ephemera/shared/peer/bridge.js';
 import grpc from '@grpc/grpc-js';
@@ -20,23 +20,31 @@ import { keys } from '@libp2p/crypto';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { KEEP_ALIVE } from '@libp2p/interface'
 
-export function getHostFromMultiaddr(addr: Multiaddr): [string, number] | null {
+/**
+ * Extracts the hostname and port from a multiaddr, if possible. Returns null if extraction fails.
+ */
+export function getHostFromMultiaddr(addr: Multiaddr): Host | null {
   let hostname: string | null = null;
   let port: number | null = null;
 
   for (const c of addr.getComponents()) {
-    // TODO: other components?
-    if (c.name === 'dns') {
+    if (hostname === null && (
+      c.name === 'dns'
+      || c.name === 'dns4'
+      || c.name === 'dns6'
+      || c.name === 'ip4'
+      || c.name === 'ip6'
+    )) {
       hostname = c.value ?? null;
     }
 
-    if (c.name === 'tcp') {
-      port = NullableHelper.map(c.value, (v) => parseInt(v)) ?? null;
+    if (port === null && (c.name === 'tcp' || c.name === 'udp')) {
+      port = NullableHelper.map(c.value, (v) => parseInt(v, 10)) ?? null;
     }
   }
 
   if (hostname && port) {
-    return [hostname, port];
+    return { hostname, port };
   } else {
     return null;
   }
@@ -45,7 +53,7 @@ export function getHostFromMultiaddr(addr: Multiaddr): [string, number] | null {
 interface Peer {
   id: string;
   multiaddrs: Multiaddr[];
-  host: [string, number];
+  host: Host;
 }
 
 export default class EphemeraPeer {
@@ -207,10 +215,7 @@ export default class EphemeraPeer {
         );
       },
       getRemoteServers: async (request, callback) => {
-        const hosts = Array.from(this.verifiedPeers.values()).map(peer => HostUtil.stringify({
-          hostname: peer.host[0],
-          port: peer.host[1],
-        }));
+        const hosts = Array.from(this.verifiedPeers.values()).map(peer => HostUtil.stringify(peer.host));
         callback(null, {
           hosts: hosts,
         });
