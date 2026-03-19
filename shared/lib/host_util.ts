@@ -1,5 +1,16 @@
 import { URL } from 'whatwg-url';
 
+export type Host = {
+  /**
+   * The hostname, which can be a domain name, IPv4 address, or IPv6 address (enclosed in square brackets).
+   */
+  hostname: string;
+  /**
+   * The port number.
+   */
+  port: number;
+};
+
 export default class HostUtil {
   static isValid(host: string): boolean {
     try {
@@ -11,7 +22,7 @@ export default class HostUtil {
     }
   }
 
-  static parse(host: string): { hostname: string; port: number } {
+  static parse(host: string): Host {
     if (!this.isValid(host)) {
       throw new Error(`Invalid host: ${host}`);
     }
@@ -23,7 +34,7 @@ export default class HostUtil {
     };
   }
 
-  static stringify({ hostname, port }: { hostname: string; port: number }): string {
+  static stringify({ hostname, port }: Host): string {
     let joined = port === 443 ? hostname : `${hostname}:${port}`;
 
     if (!this.isValid(joined)) {
@@ -33,7 +44,7 @@ export default class HostUtil {
     return joined;
   }
 
-  static getResolvableHostname({ hostname, port }: { hostname: string; port: number }): string {
+  static getResolvableHostname({ hostname }: Host): string {
     if (hostname.startsWith('[') && hostname.endsWith(']')) {
       return hostname.slice(1, -1);
     }
