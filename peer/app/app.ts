@@ -19,36 +19,7 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import { keys } from '@libp2p/crypto';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { KEEP_ALIVE } from '@libp2p/interface'
-
-/**
- * Extracts the hostname and port from a multiaddr, if possible. Returns null if extraction fails.
- */
-export function getHostFromMultiaddr(addr: Multiaddr): Host | null {
-  let hostname: string | null = null;
-  let port: number | null = null;
-
-  for (const c of addr.getComponents()) {
-    if (hostname === null && (
-      c.name === 'dns'
-      || c.name === 'dns4'
-      || c.name === 'dns6'
-      || c.name === 'ip4'
-      || c.name === 'ip6'
-    )) {
-      hostname = c.value ?? null;
-    }
-
-    if (port === null && (c.name === 'tcp' || c.name === 'udp')) {
-      port = NullableHelper.map(c.value, (v) => parseInt(v, 10)) ?? null;
-    }
-  }
-
-  if (hostname && port) {
-    return { hostname, port };
-  } else {
-    return null;
-  }
-}
+import MultiaddrHelper from './multiaddr_helper.js';
 
 interface Peer {
   id: string;
@@ -151,7 +122,7 @@ export default class EphemeraPeer {
         return;
       }
 
-      const host = getHostFromMultiaddr(record.addresses[0]);
+      const host = MultiaddrHelper.getHostFromMultiaddr(record.addresses[0]);
 
       if (host === null) {
         console.warn(`Failed to extract host from multiaddr for peer ${detail.peerId.toString()}`);

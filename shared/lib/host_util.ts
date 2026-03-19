@@ -22,6 +22,16 @@ export default class HostUtil {
     }
   }
 
+  static isValidHost(host: Host): boolean {
+    try {
+      const url = new URL(`https://${host.hostname}:${host.port}`);
+
+      return url.pathname === '/' && url.search === '' && url.hash === '' && url.username === '' && url.password === '';
+    } catch (e) {
+      return false;
+    }
+  }
+
   static parse(host: string): Host {
     if (!this.isValid(host)) {
       throw new Error(`Invalid host: ${host}`);
@@ -50,5 +60,20 @@ export default class HostUtil {
     }
 
     return hostname;
+  }
+
+  static createHost(hostname: string, port: number): Host {
+    const host = { hostname, port };
+
+    if (!this.isValidHost(host)) {
+      throw new Error(`Invalid host: ${this.stringify(host)}`);
+    }
+
+    return host;
+  }
+
+  static createHostFromResolvable(hostname: string, port: number): Host {
+    const resolvedHostname = hostname.includes(':') ? `[${hostname}]` : hostname;
+    return this.createHost(resolvedHostname, port);
   }
 }
