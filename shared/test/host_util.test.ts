@@ -63,4 +63,12 @@ describe('HostUtil', () => {
       expect(() => HostUtil.stringify({ hostname: 'invalid host', port: 8080 })).toThrow();
     });
   });
+
+  describe('getResolvableHost', () => {
+    it('should extract raw hostname correctly', () => {
+      expect(HostUtil.getResolvableHostname({ hostname: 'example.com', port: 443 })).toBe('example.com');
+      expect(HostUtil.getResolvableHostname({ hostname: 'localhost', port: 3000 })).toBe('localhost');
+      expect(HostUtil.getResolvableHostname({ hostname: '[::1]', port: 443 })).toBe('::1');
+    });
+  });
 });

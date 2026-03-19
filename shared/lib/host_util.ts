@@ -32,4 +32,12 @@ export default class HostUtil {
 
     return joined;
   }
+
+  static getResolvableHostname({ hostname, port }: { hostname: string; port: number }): string {
+    if (hostname.startsWith('[') && hostname.endsWith(']')) {
+      return hostname.slice(1, -1);
+    }
+
+    return hostname;
+  }
 }
