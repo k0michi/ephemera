@@ -36,7 +36,7 @@ export default class ApiV1Controller implements IController {
     this.router.get('/posts', this.handleGetPosts.bind(this));
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
-    this.router.get('/peer', this.handleGetPeer.bind(this));
+    this.router.get('/server', this.handleGetPeer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
   }
 

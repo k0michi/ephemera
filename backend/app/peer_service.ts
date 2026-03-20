@@ -108,7 +108,7 @@ export class PeerService implements IPeerService {
 
   async fetchPeerDescriptor(host: string): Promise<PeerManifest> {
     return this.peerDescriptorCache.getOrSet(host, async () => {
-      const response = await SafeFetch.safeFetch(`https://${host}/api/v1/peer`, {
+      const response = await SafeFetch.safeFetch(`https://${host}/api/v1/server`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

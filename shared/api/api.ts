@@ -198,7 +198,7 @@ export interface DeletePostRequest extends ApiRequest {
 export interface DeletePostResponse extends ApiResponse {
 }
 
-// GET /api/v1/peer
+// GET /api/v1/server
 export interface GetPeerRequest extends ApiRequest {
 }
 

@@ -205,7 +205,7 @@ export default class Client {
   }
 
   async getLocalServer(): Promise<PeerManifest> {
-    const response = await Fetcher.get(`/api/v1/peer`);
+    const response = await Fetcher.get(`/api/v1/server`);
 
     let parsed;
 
