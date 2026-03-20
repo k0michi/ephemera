@@ -20,6 +20,5 @@ COPY backend/drizzle ./backend/drizzle
 RUN npm ci --omit=dev
 WORKDIR /app
 COPY --from=builder /app/backend/dist ./backend/dist
-EXPOSE 3000
 WORKDIR /app
 CMD ["npm", "run", "start", "-w", "backend"]
