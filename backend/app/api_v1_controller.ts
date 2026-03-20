@@ -1,5 +1,5 @@
 import express from 'express';
-import { deletePostRequestSchema, deletePostSignalSchema, getPeerRequestSchema, getPostsRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, deletePostSignalSchema, getPeerRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
@@ -162,7 +162,7 @@ export default class ApiV1Controller implements IController {
     let parsed;
 
     try {
-      parsed = getPeerRequestSchema.parse(req.query);
+      parsed = getRemoteServersRequestSchema.parse(req.query);
     } catch (e) {
       throw new ApiError('Invalid request', 400);
     }
