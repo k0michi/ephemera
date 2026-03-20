@@ -24,7 +24,7 @@ export class KeyedCache<K, V> {
 
   set(key: K, value: V, ttl?: number) {
     const expiryTTL = ttl ?? this.defaultTTL;
-    const expiry = expiryTTL ? Date.now() + expiryTTL : null;
+    const expiry = expiryTTL !== null ? Date.now() + expiryTTL : null;
 
     if (this.entries.has(key)) {
       this.entries.delete(key);
