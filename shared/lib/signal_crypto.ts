@@ -1,10 +1,16 @@
-import type { CreatePostSignalPayload, Signal, SignalPayload } from "../api/api.js";
+import type { ServerSignal, ServerSignalPayload, Signal, SignalPayload } from "../api/api.js";
 import Base37 from "./base37.js";
 import Crypto from "./crypto.js";
 import Hex from "./hex.js";
 
 export default class SignalCrypto {
   static async digest<S extends SignalPayload>(signal: S): Promise<Uint8Array> {
+    const payloadString = JSON.stringify(signal);
+    const payloadUint8 = new TextEncoder().encode(payloadString);
+    return await Crypto.digest(payloadUint8);
+  }
+
+  static async digestServer<S extends ServerSignalPayload>(signal: S): Promise<Uint8Array> {
     const payloadString = JSON.stringify(signal);
     const payloadUint8 = new TextEncoder().encode(payloadString);
     return await Crypto.digest(payloadUint8);
@@ -17,9 +23,27 @@ export default class SignalCrypto {
     return [signal, signatureHex];
   }
 
+  static async signServer<S extends ServerSignalPayload>(signal: S, privateKey: Uint8Array): Promise<ServerSignal> {
+    const payloadHash = await SignalCrypto.digestServer(signal);
+    const signatureUint8 = Crypto.sign(payloadHash, privateKey);
+    const signatureHex = Hex.fromUint8Array(signatureUint8);
+    return [signal, signatureHex];
+  }
+
   static async verify<S extends Signal>(signal: S): Promise<boolean> {
     const [payload, signatureHex] = signal;
     const payloadHash = await SignalCrypto.digest(payload);
+    const signatureUint8 = Hex.toUint8Array(signatureHex);
+    return Crypto.verify(payloadHash, signatureUint8, Base37.toUint8Array(payload[1][1]));
+  }
+
+  static async verifyServer<S extends ServerSignal>(signal: S, fetchedPublicKey: Uint8Array): Promise<boolean> {
+    if (signal[0][1][1] !== Base37.fromUint8Array(fetchedPublicKey)) {
+      return false;
+    }
+
+    const [payload, signatureHex] = signal;
+    const payloadHash = await SignalCrypto.digestServer(payload);
     const signatureUint8 = Hex.toUint8Array(signatureHex);
     return Crypto.verify(payloadHash, signatureUint8, Base37.toUint8Array(payload[1][1]));
   }

@@ -22,6 +22,20 @@
       "when": 1770703993419,
       "tag": "0002_kind_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1772881230971,
+      "tag": "0003_salty_nico_minoru",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1772937780200,
+      "tag": "0004_friendly_doctor_doom",
+      "breakpoints": true
     }
   ]
 }

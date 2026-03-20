@@ -1,11 +1,11 @@
 import express from 'express';
-import { deletePostRequestSchema, deletePostSignalSchema, getPostsRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, deletePostSignalSchema, getPeerRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
-import type { GetPostsResponse } from '@ephemera/shared/api/api.js';
+import type { GetPeerResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import multer from 'multer';
 import type { IAttachmentService } from './attachment_service.js';
@@ -13,6 +13,7 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import { pipeline } from 'node:stream/promises';
 import { fileTypeFromFile } from 'file-type';
 import fsPromises from 'fs/promises';
+import type { IPeerService } from './peer_service.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -20,19 +21,23 @@ export default class ApiV1Controller implements IController {
   private config: Config;
   private postService: IPostService;
   private attachmentService: IAttachmentService;
+  private peerService: IPeerService;
   private upload = multer({
     dest: './uploads/'
   });
 
-  constructor(config: Config, postService: IPostService, attachmentService: IAttachmentService) {
+  constructor(config: Config, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
     this.config = config;
     this.postService = postService;
     this.attachmentService = attachmentService;
+    this.peerService = peerService;
 
     this.router.post('/post', this.upload.array('attachments', 4), this.handlePost.bind(this));
     this.router.get('/posts', this.handleGetPosts.bind(this));
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
+    this.router.get('/peer', this.handleGetPeer.bind(this));
+    this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -138,5 +143,32 @@ export default class ApiV1Controller implements IController {
       file.createReadStream(),
       res
     );
+  }
+
+  async handleGetPeer(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getPeerRequestSchema.parse(req.query);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const response = this.peerService.getPeerDescriptor() satisfies GetPeerResponse;
+    res.status(200).json(response);
+  }
+
+  async handleGetRemoteServers(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getRemoteServersRequestSchema.parse(req.query);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const servers = await this.peerService.getRemoteServers();
+    const response = { servers } satisfies GetRemoteServersResponse;
+    res.status(200).json(response);
   }
 }

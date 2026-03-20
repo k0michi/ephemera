@@ -35,7 +35,6 @@ export default function Post({ post, onDelete }: PostProps) {
   const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
 
   const postPublicKey = post[0][1][1];
-  const isMine = myPublicKeyBase37 === postPublicKey;
 
   const handleDeletePost = async (post: CreatePostSignal) => {
     try {
@@ -83,6 +82,18 @@ export default function Post({ post, onDelete }: PostProps) {
               >
                 @{post[0][1][1]}
               </Link>
+              {
+                !isLocal(post[0][1][0]) ?
+                  <>
+                    {'•'}
+                    <span style={{ flexShrink: 0 }}>
+                      <Link to={`https://${post[0][1][0]}`} style={{ color: 'inherit' }} className={styles.postHostLink}>
+                        {post[0][1][0]}
+                      </Link>
+                    </span>
+                  </>
+                  : null
+              }
               {'•'}
               <OverlayTrigger
                 placement="top"
@@ -111,14 +122,14 @@ export default function Post({ post, onDelete }: PostProps) {
                   type.startsWith('image/') ? (
                     <img
                       key={attachmentHash}
-                      src={`${store.getClient().getAttachmentUrl(attachmentHash)}`}
+                      src={`${store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0])}`}
                       alt="post attachment"
                       style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
                     />
                   ) : type.startsWith('video/') ? (
                     <video
                       key={attachmentHash}
-                      src={`${store.getClient().getAttachmentUrl(attachmentHash)}`}
+                      src={`${store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0])}`}
                       controls
                       style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
                     />
@@ -133,11 +144,11 @@ export default function Post({ post, onDelete }: PostProps) {
                   <BsThreeDots className="text-secondary" />
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  {isMine && (
+                  {canDelete(post, myPublicKeyBase37) ? (
                     <Dropdown.Item onClick={() => handleDeletePost(post)}>
                       Delete post
                     </Dropdown.Item>
-                  )}
+                  ) : null}
                 </Dropdown.Menu>
               </Dropdown>
             </div>
@@ -146,6 +157,18 @@ export default function Post({ post, onDelete }: PostProps) {
       </Card.Body>
     </Card>
   );
+}
+
+function isLocal(host: string): boolean {
+  return host === window.location.host;
+}
+
+function canDelete(post: CreatePostSignal, myPublicKey: string | null): boolean {
+  if (myPublicKey === null) {
+    return false;
+  }
+
+  return post[0][1][1] === myPublicKey && isLocal(post[0][1][0]);
 }
 
 function formatDate(timestamp: number, now: number): string {

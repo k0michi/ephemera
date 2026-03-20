@@ -31,6 +31,33 @@ export type Signal = [
   string // signature
 ];
 
+export type ServerVersion = 0;
+
+export type ServerPublicKey = string;
+
+export type ServerSignalHeader = [
+  Host, // host
+  ServerPublicKey, // public_key
+  Timestamp, // created_at
+  string // type
+];
+
+export type ServerSignalBody = unknown;
+
+export type ServerSignalFooter = unknown;
+
+export type ServerSignalPayload = [
+  ServerVersion, // version
+  ServerSignalHeader, // header
+  ServerSignalBody, // body
+  ServerSignalFooter // footer
+];
+
+export type ServerSignal = [
+  ServerSignalPayload, // payload
+  string // signature
+];
+
 //
 // Attachments
 //
@@ -98,6 +125,33 @@ export type DeletePostSignal = [
 ];
 
 //
+// relay signal
+//
+
+export type RelaySignalHeader = [
+  Host, // host
+  ServerPublicKey, // public_key
+  Timestamp, // created_at
+  'relay' // type
+];
+
+export type RelaySignalBody = Signal;
+
+export type RelaySignalFooter = [];
+
+export type RelaySignalPayload = [
+  Version, // version
+  RelaySignalHeader, // header
+  RelaySignalBody, // body
+  RelaySignalFooter // footer
+];
+
+export type RelaySignal = [
+  RelaySignalPayload, // payload
+  string // signature
+];
+
+//
 // Client
 //
 
@@ -142,4 +196,28 @@ export interface DeletePostRequest extends ApiRequest {
 }
 
 export interface DeletePostResponse extends ApiResponse {
+}
+
+// GET /api/v1/peer
+export interface GetPeerRequest extends ApiRequest {
+}
+
+export interface PeerManifest {
+  implementation: {
+    name: string;
+    version: string;
+  };
+  host: string;
+  publicKey: string;
+}
+
+export interface GetPeerResponse extends ApiResponse, PeerManifest {
+}
+
+// GET /api/v1/remote-servers
+export interface GetRemoteServersRequest extends ApiRequest {
+}
+
+export interface GetRemoteServersResponse extends ApiResponse {
+  servers: PeerManifest[];
 }

@@ -1,5 +1,13 @@
-version: '3.9'
 services:
+  manager:
+    build:
+      context: .
+      dockerfile: ./manager/Dockerfile
+    profiles:
+      - manager
+    volumes:
+      - ./:/app
+      - /app/node_modules
   backend:
     restart: unless-stopped
     build:
@@ -8,13 +16,16 @@ services:
     # working_dir: /app
     environment:
       - NODE_ENV=production
-      - EPHEMERA_HOST=localhost:3000
+      - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
       - EPHEMERA_PORT=3000
       - EPHEMERA_DB_HOST=mariadb
       - EPHEMERA_DB_PORT=3306
       - EPHEMERA_DB_USER=ephemera
-      - EPHEMERA_DB_PASSWORD=ephemera_pw
+      - EPHEMERA_DB_PASSWORD=${EPHEMERA_DB_PASSWORD:-ephemera_pw}
       - EPHEMERA_DB_NAME=ephemera_db
+      - EPHEMERA_PUBLIC_KEY=${EPHEMERA_PUBLIC_KEY:-}
+      - EPHEMERA_PRIVATE_KEY=${EPHEMERA_PRIVATE_KEY:-}
+      - EPHEMERA_PEER_HOST=peer:50051
     volumes:
       - backend_data:/app/backend/data
     depends_on:
@@ -27,15 +38,15 @@ services:
     # working_dir: /app
     environment:
       - NODE_ENV=production
-      - EPHEMERA_HOST=localhost:3000
+      - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
   mariadb:
     image: mariadb:11
     restart: unless-stopped
     environment:
-      - MARIADB_ROOT_PASSWORD=root_pw
+      - MARIADB_ROOT_PASSWORD=${EPHEMERA_DB_ROOT_PASSWORD:-root_pw}
       - MARIADB_DATABASE=ephemera_db
       - MARIADB_USER=ephemera
-      - MARIADB_PASSWORD=ephemera_pw
+      - MARIADB_PASSWORD=${EPHEMERA_DB_PASSWORD:-ephemera_pw}
     volumes:
       - mariadb_data:/var/lib/mysql
   nginx:
@@ -48,6 +59,19 @@ services:
     depends_on:
       - frontend
       - backend
+  peer:
+    build:
+      context: .
+      dockerfile: ./peer/Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
+      - EPHEMERA_INTERNAL_HOST=0.0.0.0:8080
+      - EPHEMERA_EXTERNAL_HOST=${EPHEMERA_HOST:-localhost:3000}
+      - EPHEMERA_PUBLIC_KEY=${EPHEMERA_PUBLIC_KEY:-}
+      - EPHEMERA_PRIVATE_KEY=${EPHEMERA_PRIVATE_KEY:-}
+      - EPHEMERA_BOOTSTRAP_PEERS=${EPHEMERA_BOOTSTRAP_PEERS:-}
 
 volumes:
   mariadb_data:

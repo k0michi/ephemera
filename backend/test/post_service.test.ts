@@ -12,11 +12,13 @@ import type { Pool } from 'mysql2';
 import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
 import TestHelper from './test_helper.js';
+import { type IPeerService } from '../app/peer_service.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
   let database: MySql2Database;
   let pool: Pool;
+  let peerService: IPeerService;
   let attachmentService: AttachmentService;
   let postService: PostService;
 
@@ -29,10 +31,35 @@ describe('PostService', () => {
     await migrate(db, { migrationsFolder: './drizzle' });
 
     const config = TestHelper.getConfig(container);
+    peerService = {
+      async publish(signal) {
+        return;
+      },
+
+      async handle(signal) {
+        return;
+      },
+
+      getPeerDescriptor() {
+        return {
+          implementation: {
+            name: "ephemera",
+            version: "0.1.0",
+          },
+          host: 'example.com',
+          publicKey: 'publicKey',
+        };
+      },
+
+      async getRemoteServers() {
+        return [];
+      }
+    };
     attachmentService = new AttachmentService(config, database);
     postService = new PostService(config,
       database,
-      attachmentService
+      attachmentService,
+      peerService
     );
   }, 60_000);
 

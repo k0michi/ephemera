@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createRequest, createResponse } from 'node-mocks-http';
 import ApiV1Controller from '../app/api_v1_controller.js';
-import type { CreatePostSignalPayload, PostRequest, CreatePostSignal, DeletePostSignal, Signal } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignalPayload, PostRequest, CreatePostSignal, DeletePostSignal, Signal, RelaySignal, ServerSignal, PeerManifest } from '@ephemera/shared/api/api.js';
 import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
@@ -11,8 +11,11 @@ import type { AttachmentType, IAttachmentService } from '../app/attachment_servi
 import fs from 'fs/promises';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import type { MySql2Database } from 'drizzle-orm/mysql2';
+import type { IPeerService } from '../app/peer_service.js';
 
 function testConfig() {
+  const keyPair = Crypto.generateKeyPair();
+
   return new Config({
     host: 'example.com',
     port: 3000,
@@ -24,6 +27,9 @@ function testConfig() {
     dbConnectionLimit: 5,
     dbQueueLimit: 500,
     dbConnectTimeout: 10000,
+    peerHost: 'peer:50051',
+    privateKey: Base37.fromUint8Array(keyPair.privateKey),
+    publicKey: Base37.fromUint8Array(keyPair.publicKey),
     allowedTimeSkewMillis: 5 * 60 * 1000,
   });
 }
@@ -83,6 +89,31 @@ class MockAttachmentService implements IAttachmentService {
   }
 }
 
+class MockPeerService implements IPeerService {
+  async publish(signal: ServerSignal): Promise<void> {
+    return;
+  }
+
+  async handle(signal: ServerSignal): Promise<void> {
+    return;
+  }
+
+  getPeerDescriptor() {
+    return {
+      implementation: {
+        name: "ephemera",
+        version: "0.1.0",
+      },
+      host: 'example.com',
+      publicKey: 'publicKey',
+    }
+  }
+
+  async getRemoteServers(): Promise<PeerManifest[]> {
+    return [];
+  }
+}
+
 function createFormData(data: Record<string, string | Blob>): FormData {
   const formData = new FormData();
   for (const key in data) {
@@ -104,7 +135,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -121,7 +152,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
     });
 
@@ -145,7 +176,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).resolves.not.toThrow();
     });
 
@@ -169,7 +200,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
     });
 
@@ -193,7 +224,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
     });
   });
@@ -209,7 +240,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -224,7 +255,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService());
+      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await controller.handleGetPosts(req, res);
       expect(res.statusCode).toBe(200);
       const data = res._getJSONData();

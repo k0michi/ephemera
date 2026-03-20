@@ -1,6 +1,12 @@
 # Ephemera
 
-**Ephemera** is a bulletin board system powered by PKI (Public Key Infrastructure).
+**Ephemera** is a PKI-oriented distributed bulletin board system.
+
+## Features
+
+- PKI-based user identity and post signing
+- Cross-server timeline with image and video attachments
+- Easy self-hosting with Docker
 
 ## Quick Start
 
@@ -10,17 +16,24 @@
 
 ### Setup
 
-1. Open `docker-compose.yml` and set `EPHEMERA_HOST` to your hostname or IP address:
+Run interactive setup script:
 
-```yaml
-environment:
-  - EPHEMERA_HOST=your-host.example.com
+```sh
+docker compose run --build --rm manager -e /app/.env
 ```
 
-### Start the Application
+This command creates and saves your configuration in `.env`.
+
+### Start the server
 
 ```sh
 docker compose up -d --build
+```
+
+### Stop the Server
+
+```sh
+docker compose down
 ```
 
 ## License

@@ -4,6 +4,8 @@
   "workspaces": [
     "frontend",
     "backend",
+    "peer",
+    "manager",
     "shared"
   ]
 }

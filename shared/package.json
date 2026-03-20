@@ -2,12 +2,21 @@
 	"name": "@ephemera/shared",
 	"type": "module",
 	"dependencies": {
+		"@bufbuild/protobuf": "^2.11.0",
+		"@grpc/grpc-js": "^1.14.3",
+		"@js-temporal/polyfill": "^0.5.1",
 		"@noble/curves": "^2.0.1",
+		"@types/whatwg-url": "^13.0.0",
+		"ipaddr.js": "^2.3.0",
 		"typescript": "^5.9.3",
+		"undici": "^7.24.4",
+		"whatwg-url": "^15.1.0",
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "^4.0.16",
+		"protoc": "^34.0.0",
+		"ts-proto": "^2.11.4",
 		"ts-to-zod": "^5.1.0",
 		"vitest": "^4.0.16"
 	},
@@ -15,6 +24,7 @@
 		"build": "tsc",
 		"test": "vitest",
 		"gen-zod": "ts-to-zod ./api/api.ts ./api/api_schema.ts",
-		"typecheck": "tsc -b"
+		"typecheck": "tsc -b",
+		"gen-proto": "protoc --plugin=protoc-gen-ts_proto=../node_modules/ts-proto/protoc-gen-ts_proto --ts_proto_out=./peer --ts_proto_opt=esModuleInterop=true,outputServices=grpc-js,useOptionals=messages -I ./proto ./proto/*.proto"
 	}
 }

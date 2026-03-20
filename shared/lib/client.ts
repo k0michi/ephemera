@@ -1,5 +1,5 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment } from "../api/api.js";
-import { apiResponseSchema, getPostsResponseSchema } from "../api/api_schema.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment, PeerManifest } from "../api/api.js";
+import { apiResponseSchema, getPeerResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -196,7 +196,38 @@ export default class Client {
     } satisfies DeletePostRequest);
   }
 
-  getAttachmentUrl(hash: string): string {
+  getAttachmentUrl(hash: string, host: string): string {
+    if (host !== this._host) {
+      return `https://${host}/api/v1/attachments/${hash}`;
+    }
+
     return `/api/v1/attachments/${hash}`;
+  }
+
+  async getLocalServer(): Promise<PeerManifest> {
+    const response = await Fetcher.get(`/api/v1/peer`);
+
+    let parsed;
+
+    try {
+      parsed = getPeerResponseSchema.parse(response);
+    } catch (e) {
+      throw new Error("Invalid response");
+    }
+
+    return parsed;
+  }
+
+  async getRemoteServers(): Promise<PeerManifest[]> {
+    const response = await Fetcher.get(`/api/v1/remote-servers`);
+    let parsed;
+
+    try {
+      parsed = getRemoteServersResponseSchema.parse(response);
+    } catch (e) {
+      throw new Error("Invalid response");
+    }
+
+    return parsed.servers;
   }
 }

@@ -1,0 +1,18 @@
+{
+	"devDependencies": {
+		"typescript": "^5.9.3",
+		"vite": "^7.3.0",
+		"vite-node": "^5.2.0",
+		"vitest": "^4.0.16"
+	},
+	"dependencies": {
+		"@ephemera/shared": "*",
+		"envfile": "^7.1.0"
+	},
+	"type": "module",
+	"scripts": {
+		"start": "vite-node ./app/app.ts",
+		"test": "vitest",
+		"typecheck": "tsc -b"
+	}
+}

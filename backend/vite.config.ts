@@ -1,4 +1,12 @@
 import { defineConfig } from 'vite';
+import { execSync } from 'child_process';
+
+let commitHash = 'unknown';
+
+try {
+  commitHash = execSync('git describe --tags --always --dirty').toString().trim();
+} catch (e) {
+}
 
 export default defineConfig({
   build: {
@@ -10,5 +18,8 @@ export default defineConfig({
         /node_modules/,
       ]
     }
+  },
+  define: {
+    'import.meta.env.EPHEMERA_COMMIT_HASH': JSON.stringify(commitHash),
   },
 });
