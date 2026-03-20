@@ -4,7 +4,7 @@ import { Link } from "react-router";
 import { Card, ListGroup } from "react-bootstrap";
 import { useReader } from "lib/store";
 import { useEffect, useState } from "react";
-import { EphemeraStoreContext } from "~/store";
+import { EphemeraStore } from "~/store";
 
 interface ServerListItemProps {
   server: PeerManifest;
@@ -76,7 +76,7 @@ function ServerCard({ title, servers, emptyMessage }: ServerCardProps) {
 }
 
 export default function Servers() {
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
   const [servers, setServers] = useState<PeerManifest[] | null>(null);
   const [localServer, setLocalServer] = useState<PeerManifest | null>(null);
 

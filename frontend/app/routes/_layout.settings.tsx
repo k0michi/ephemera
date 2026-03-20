@@ -4,13 +4,13 @@ import { useReader, useSelector } from "lib/store";
 import { useMemo, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import FileHelper from "~/file_helper";
-import { EphemeraStoreContext } from "~/store";
+import { EphemeraStore } from "~/store";
 
 export interface SettingsProps { }
 
 export default function Settings({ }: SettingsProps) {
-  const publicKey = useSelector(EphemeraStoreContext, (store) => store.keyPair?.publicKey);
-  const store = useReader(EphemeraStoreContext);
+  const publicKey = useSelector(EphemeraStore, (store) => store.keyPair?.publicKey);
+  const store = useReader(EphemeraStore);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
 
   const publicKeyMem = useMemo(() => Base37.fromUint8Array(publicKey || new Uint8Array()), [publicKey]);

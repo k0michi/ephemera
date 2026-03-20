@@ -4,16 +4,16 @@ import { Link, Outlet, useNavigate } from "react-router";
 
 import { Dropdown } from "react-bootstrap";
 import Identicon from "components/identicon";
-import { EphemeraStoreContext } from "~/store";
 import { useReader, useSelector } from "lib/store";
 import Base37 from "@ephemera/shared/lib/base37";
 import { useEffect } from "react";
 import ServerIdenticon from "components/server_identicon";
+import { EphemeraStore } from "~/store";
 
 function UserMenu() {
   const navigate = useNavigate();
 
-  const key = useSelector(EphemeraStoreContext, (store) => {
+  const key = useSelector(EphemeraStore, (store) => {
     return store.keyPair?.publicKey || null;
   });
 
@@ -48,7 +48,7 @@ function UserMenu() {
 }
 
 export default function Layout() {
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   useEffect(() => {
     store.prepareKeyPair();

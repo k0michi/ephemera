@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Form, Button, Card, Spinner } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { useReader } from "lib/store";
-import { EphemeraStoreContext } from "~/store";
 import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
@@ -12,6 +11,7 @@ import Crypto from "@ephemera/shared/lib/crypto";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import Hex from "@ephemera/shared/lib/hex";
 import ArrayHelper from "@ephemera/shared/lib/array_helper";
+import { EphemeraStore } from "~/store";
 
 export interface ComposerProps {
 }
@@ -76,7 +76,7 @@ export default function Composer({ }: ComposerProps) {
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   const addAttachedFiles = async (files: File[]) => {
     const attachableFiles = files.filter(file => allowedFileTypes.has(file.type));

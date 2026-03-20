@@ -2,10 +2,10 @@
 import type { GetPostsRequest, CreatePostSignal } from "@ephemera/shared/api/api";
 import { useReader } from "lib/store";
 import React from "react";
-import { EphemeraStoreContext } from "~/store";
 import Post from "./post";
 import postStyles from "./post.module.css";
 import { Card } from "react-bootstrap";
+import { EphemeraStore } from "~/store";
 
 export interface TimelineProps {
   author?: string | undefined;
@@ -15,7 +15,7 @@ export default function Timeline({ author }: TimelineProps) {
   const [posts, setPosts] = React.useState<CreatePostSignal[]>([]);
   const [hasMore, setHasMore] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
   const [cursor, setCursor] = React.useState<string | null>(null);
   const bottomRef = React.useRef<HTMLDivElement | null>(null);
 
