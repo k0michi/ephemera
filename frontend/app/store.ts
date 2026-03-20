@@ -2,7 +2,7 @@ import { Store } from "../lib/store.js";
 
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
-import type { ExportedKeyPair, CreatePostSignal } from "@ephemera/shared/api/api";
+import type { ExportedKeyPair, CreatePostSignal, ServerManifest } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
 
 export interface LogEntry {
@@ -12,6 +12,7 @@ export interface LogEntry {
 }
 
 export class EphemeraStore extends Store {
+  private _localManifest: ServerManifest;
   private _keyPair: KeyPair | null = null;
   private _kPublicKeyStorageKey = 'ephemera_publicKey';
   private _kPrivateKeyStorageKey = 'ephemera_privateKey';
@@ -19,8 +20,9 @@ export class EphemeraStore extends Store {
   private _nextLogId: number = 0;
   private _kMaxLogEntries: number = 8;
 
-  constructor() {
+  constructor({ manifest }: { manifest: ServerManifest }) {
     super();
+    this._localManifest = manifest;
   }
 
   get keyPair(): KeyPair | null {
@@ -155,5 +157,9 @@ export class EphemeraStore extends Store {
     }
 
     return window.location.host;
+  }
+
+  get manifest(): ServerManifest {
+    return this._localManifest;
   }
 }

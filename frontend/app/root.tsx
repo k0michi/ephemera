@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -12,8 +13,22 @@ import 'bootstrap/dist/css/bootstrap.css';
 import "./app.css";
 import { StoreProvider } from "lib/store";
 import { EphemeraStore } from "./store";
+import { getServerResponseSchema } from "@ephemera/shared/api/api_schema";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const backendHost = NullableHelper.unwrap(process.env.EPHEMERA_BACKEND_HOST);
+
+  const manifest = getServerResponseSchema.parse(
+    await (await fetch(`http://${backendHost}/api/v1/server`)).json()
+  );
+
+  return { manifest };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -24,7 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <StoreProvider
-          create={() => new EphemeraStore()}
+          create={() => new EphemeraStore(data)}
         >
           {children}
         </StoreProvider>
