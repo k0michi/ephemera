@@ -1,11 +1,11 @@
 import express from 'express';
-import { deletePostRequestSchema, deletePostSignalSchema, getServerRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, deletePostSignalSchema, getServerRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema, getPostRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
-import type { GetServerResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
+import type { GetServerResponse, GetPostsResponse, GetRemoteServersResponse, GetPostResponse } from '@ephemera/shared/api/api.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import multer from 'multer';
 import type { IAttachmentService } from './attachment_service.js';
@@ -38,6 +38,7 @@ export default class ApiV1Controller implements IController {
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
     this.router.get('/server', this.handleGetServer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
+    this.router.get('/posts/:index', this.handleGetPost.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -169,6 +170,24 @@ export default class ApiV1Controller implements IController {
 
     const servers = await this.peerService.getRemoteManifests();
     const response = { servers } satisfies GetRemoteServersResponse;
+    res.status(200).json(response);
+  }
+
+  async handleGetPost(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getPostRequestSchema.parse(req.params);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const post = await this.postService.get(parsed.index);
+
+    const response = {
+      post
+    } satisfies GetPostResponse;
+
     res.status(200).json(response);
   }
 }

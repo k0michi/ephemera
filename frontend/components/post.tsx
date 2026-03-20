@@ -34,6 +34,18 @@ export default function Post({ post, onDelete }: PostProps) {
   const store = useReader(EphemeraStore);
   const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
 
+  const isLocal = (host: string): boolean => {
+    return host === store.manifest.host;
+  };
+
+  const canDelete = (post: CreatePostSignal, myPublicKey: string | null): boolean => {
+    if (myPublicKey === null) {
+      return false;
+    }
+
+    return post[0][1][1] === myPublicKey && isLocal(post[0][1][0]);
+  }
+
   const postPublicKey = post[0][1][1];
 
   const handleDeletePost = async (post: CreatePostSignal) => {
@@ -157,18 +169,6 @@ export default function Post({ post, onDelete }: PostProps) {
       </Card.Body>
     </Card>
   );
-}
-
-function isLocal(host: string): boolean {
-  return host === window.location.host;
-}
-
-function canDelete(post: CreatePostSignal, myPublicKey: string | null): boolean {
-  if (myPublicKey === null) {
-    return false;
-  }
-
-  return post[0][1][1] === myPublicKey && isLocal(post[0][1][0]);
 }
 
 function formatDate(timestamp: number, now: number): string {

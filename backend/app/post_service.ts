@@ -24,6 +24,8 @@ export interface IPostService {
 
   validate<T extends Signal>(signal: T): Promise<[boolean, string?]>;
 
+  get(index: string): Promise<CreatePostSignal>;
+
   find(options: PostFindOptions): Promise<PostFindResult>;
 
   delete(signal: DeletePostSignal): Promise<void>;
@@ -207,6 +209,41 @@ export default class PostService extends PostServiceBase {
     } else {
       throw new Error(`Unsupported version: ${version}`);
     }
+  }
+
+  async get(index: string): Promise<CreatePostSignal> {
+    const row = await this.database.select({
+      version: posts.version,
+      host: posts.host,
+      author: posts.author,
+      content: posts.content,
+      footer: posts.footer,
+      signature: posts.signature,
+      createdAt: posts.createdAt,
+    }).from(posts)
+      .where(eq(posts.seq, parseInt(index, 10)))
+      .limit(1);
+
+    if (row.length === 0) {
+      throw new ApiError('Post not found', 404);
+    }
+
+    const postRow = ArrayHelper.strictGet(row, 0);
+
+    return [
+      [
+        PostService.unwrapVersion(NullableHelper.unwrap(postRow.version)),
+        [
+          NullableHelper.unwrap(postRow.host),
+          NullableHelper.unwrap(postRow.author),
+          NullableHelper.unwrap(Number(postRow.createdAt)),
+          "create_post",
+        ],
+        NullableHelper.unwrap(postRow.content),
+        NullableHelper.unwrap(createPostSignalFooterSchema.parse(JSON.parse(postRow.footer as string))),
+      ],
+      NullableHelper.unwrap(postRow.signature),
+    ] satisfies CreatePostSignal;
   }
 
   async find(options: PostFindOptions): Promise<PostFindResult> {
