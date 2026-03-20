@@ -65,6 +65,7 @@ services:
       dockerfile: ./peer/Dockerfile
     restart: unless-stopped
     environment:
+      - NODE_ENV=production
       - EPHEMERA_HOST=${EPHEMERA_HOST:-localhost:3000}
       - EPHEMERA_INTERNAL_HOST=0.0.0.0:8080
       - EPHEMERA_EXTERNAL_HOST=${EPHEMERA_HOST:-localhost:3000}
