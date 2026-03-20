@@ -1,4 +1,4 @@
-import type { PeerManifest } from "@ephemera/shared/api/api";
+import type { ServerManifest } from "@ephemera/shared/api/api";
 import ServerIdenticon from "components/server_identicon";
 import { Link } from "react-router";
 import { Card, ListGroup } from "react-bootstrap";
@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { EphemeraStore } from "~/store";
 
 interface ServerListItemProps {
-  server: PeerManifest;
+  server: ServerManifest;
 }
 
 function ServerListItem({ server }: ServerListItemProps) {
@@ -54,7 +54,7 @@ function ServerListItem({ server }: ServerListItemProps) {
 
 interface ServerCardProps {
   title: string;
-  servers: PeerManifest[] | null;
+  servers: ServerManifest[] | null;
   emptyMessage?: string | null;
 }
 
@@ -77,8 +77,8 @@ function ServerCard({ title, servers, emptyMessage }: ServerCardProps) {
 
 export default function Servers() {
   const store = useReader(EphemeraStore);
-  const [servers, setServers] = useState<PeerManifest[] | null>(null);
-  const [localServer, setLocalServer] = useState<PeerManifest | null>(null);
+  const [servers, setServers] = useState<ServerManifest[] | null>(null);
+  const [localServer, setLocalServer] = useState<ServerManifest | null>(null);
 
   useEffect(() => {
     (async () => {

@@ -199,10 +199,10 @@ export interface DeletePostResponse extends ApiResponse {
 }
 
 // GET /api/v1/server
-export interface GetPeerRequest extends ApiRequest {
+export interface GetServerRequest extends ApiRequest {
 }
 
-export interface PeerManifest {
+export interface ServerManifest {
   implementation: {
     name: string;
     version: string;
@@ -211,7 +211,7 @@ export interface PeerManifest {
   publicKey: string;
 }
 
-export interface GetPeerResponse extends ApiResponse, PeerManifest {
+export interface GetServerResponse extends ApiResponse, ServerManifest {
 }
 
 // GET /api/v1/remote-servers
@@ -219,5 +219,5 @@ export interface GetRemoteServersRequest extends ApiRequest {
 }
 
 export interface GetRemoteServersResponse extends ApiResponse {
-  servers: PeerManifest[];
+  servers: ServerManifest[];
 }

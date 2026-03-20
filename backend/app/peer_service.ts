@@ -2,8 +2,8 @@ import grpc from '@grpc/grpc-js';
 import { Message, PubSubServiceClient } from '@ephemera/shared/peer/bridge.js';
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import type Config from './config.js';
-import type { PeerManifest, RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
-import { createPostSignalSchema, deletePostSignalSchema, getPeerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
+import type { ServerManifest, RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
+import { createPostSignalSchema, deletePostSignalSchema, getServerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
 import { remotePosts } from './db/schema.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
@@ -17,9 +17,9 @@ export interface IPeerService {
 
   handle(signal: ServerSignal): Promise<void>;
 
-  getPeerDescriptor(): PeerManifest;
+  getLocalManifest(): ServerManifest;
 
-  getRemoteServers(): Promise<PeerManifest[]>;
+  getRemoteManifests(): Promise<ServerManifest[]>;
 }
 
 export class PeerService implements IPeerService {
@@ -27,8 +27,8 @@ export class PeerService implements IPeerService {
   private database: MySql2Database;
   private grpcClient: PubSubServiceClient;
   private stream: grpc.ClientReadableStream<Message>;
-  // host -> peerDescriptor
-  private peerDescriptorCache = new KeyedCache<string, PeerManifest>({
+  // host -> serverManifest
+  private serverManifestCache = new KeyedCache<string, ServerManifest>({
     maxSize: 128,
   });
   private static readonly kMaxRemotePosts = 65535;
@@ -106,8 +106,8 @@ export class PeerService implements IPeerService {
     return stream;
   }
 
-  async fetchPeerDescriptor(host: string): Promise<PeerManifest> {
-    return this.peerDescriptorCache.getOrSet(host, async () => {
+  async fetchServerManifest(host: string): Promise<ServerManifest> {
+    return this.serverManifestCache.getOrSet(host, async () => {
       const response = await SafeFetch.safeFetch(`https://${host}/api/v1/server`, {
         method: 'GET',
         headers: {
@@ -116,11 +116,11 @@ export class PeerService implements IPeerService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch peer descriptor from ${host}: ${response.statusText}`);
+        throw new Error(`Failed to fetch server manifest from ${host}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      return getPeerResponseSchema.parse(data);
+      return getServerResponseSchema.parse(data);
     });
   }
 
@@ -197,10 +197,10 @@ export class PeerService implements IPeerService {
   }
 
   async handle(signal: ServerSignal): Promise<void> {
-    const peerDescriptor = await this.fetchPeerDescriptor(signal[0][1][0]);
+    const manifest = await this.fetchServerManifest(signal[0][1][0]);
 
     // Verify server signature
-    if (!(await SignalCrypto.verifyServer(signal, Base37.toUint8Array(peerDescriptor.publicKey)))) {
+    if (!(await SignalCrypto.verifyServer(signal, Base37.toUint8Array(manifest.publicKey)))) {
       // Failed to verify server signature
       return;
     }
@@ -216,7 +216,7 @@ export class PeerService implements IPeerService {
     }
   }
 
-  getPeerDescriptor(): PeerManifest {
+  getLocalManifest(): ServerManifest {
     return {
       implementation: {
         name: 'ephemera',
@@ -227,7 +227,7 @@ export class PeerService implements IPeerService {
     };
   }
 
-  async getRemoteServers(): Promise<PeerManifest[]> {
+  async getRemoteManifests(): Promise<ServerManifest[]> {
     const hosts = await new Promise<string[]>((resolve, reject) => {
       this.grpcClient.getRemoteServers({}, (err, response) => {
         if (err) {
@@ -240,7 +240,7 @@ export class PeerService implements IPeerService {
     });
 
     const results = await Promise.allSettled(
-      hosts.map(host => this.fetchPeerDescriptor(host))
+      hosts.map(host => this.fetchServerManifest(host))
     );
 
     return results

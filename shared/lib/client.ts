@@ -1,5 +1,5 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment, PeerManifest } from "../api/api.js";
-import { apiResponseSchema, getPeerResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
+import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment, ServerManifest } from "../api/api.js";
+import { apiResponseSchema, getServerResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -204,13 +204,13 @@ export default class Client {
     return `/api/v1/attachments/${hash}`;
   }
 
-  async getLocalServer(): Promise<PeerManifest> {
+  async getLocalServer(): Promise<ServerManifest> {
     const response = await Fetcher.get(`/api/v1/server`);
 
     let parsed;
 
     try {
-      parsed = getPeerResponseSchema.parse(response);
+      parsed = getServerResponseSchema.parse(response);
     } catch (e) {
       throw new Error("Invalid response");
     }
@@ -218,7 +218,7 @@ export default class Client {
     return parsed;
   }
 
-  async getRemoteServers(): Promise<PeerManifest[]> {
+  async getRemoteServers(): Promise<ServerManifest[]> {
     const response = await Fetcher.get(`/api/v1/remote-servers`);
     let parsed;
 

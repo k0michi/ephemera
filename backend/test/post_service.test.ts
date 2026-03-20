@@ -40,7 +40,7 @@ describe('PostService', () => {
         return;
       },
 
-      getPeerDescriptor() {
+      getLocalManifest() {
         return {
           implementation: {
             name: "ephemera",
@@ -51,7 +51,7 @@ describe('PostService', () => {
         };
       },
 
-      async getRemoteServers() {
+      async getRemoteManifests() {
         return [];
       }
     };

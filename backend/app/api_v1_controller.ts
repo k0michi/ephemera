@@ -1,11 +1,11 @@
 import express from 'express';
-import { deletePostRequestSchema, deletePostSignalSchema, getPeerRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, deletePostSignalSchema, getServerRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { type IController } from '../lib/controller.js';
 import type Config from './config.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 import { ApiError } from './api_error.js';
-import type { GetPeerResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
+import type { GetServerResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import multer from 'multer';
 import type { IAttachmentService } from './attachment_service.js';
@@ -36,7 +36,7 @@ export default class ApiV1Controller implements IController {
     this.router.get('/posts', this.handleGetPosts.bind(this));
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
-    this.router.get('/server', this.handleGetPeer.bind(this));
+    this.router.get('/server', this.handleGetServer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
   }
 
@@ -145,16 +145,16 @@ export default class ApiV1Controller implements IController {
     );
   }
 
-  async handleGetPeer(req: express.Request, res: express.Response) {
+  async handleGetServer(req: express.Request, res: express.Response) {
     let parsed;
 
     try {
-      parsed = getPeerRequestSchema.parse(req.query);
+      parsed = getServerRequestSchema.parse(req.query);
     } catch (e) {
       throw new ApiError('Invalid request', 400);
     }
 
-    const response = this.peerService.getPeerDescriptor() satisfies GetPeerResponse;
+    const response = this.peerService.getLocalManifest() satisfies GetServerResponse;
     res.status(200).json(response);
   }
 
@@ -167,7 +167,7 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Invalid request', 400);
     }
 
-    const servers = await this.peerService.getRemoteServers();
+    const servers = await this.peerService.getRemoteManifests();
     const response = { servers } satisfies GetRemoteServersResponse;
     res.status(200).json(response);
   }

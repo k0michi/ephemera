@@ -103,9 +103,9 @@ export const deletePostRequestSchema = apiRequestSchema.extend({
 
 export const deletePostResponseSchema = apiResponseSchema;
 
-export const getPeerRequestSchema = apiRequestSchema;
+export const getServerRequestSchema = apiRequestSchema;
 
-export const peerManifestSchema = z.object({
+export const serverManifestSchema = z.object({
     implementation: z.object({
         name: z.string(),
         version: z.string()
@@ -114,10 +114,10 @@ export const peerManifestSchema = z.object({
     publicKey: z.string()
 });
 
-export const getPeerResponseSchema = apiResponseSchema.extend(peerManifestSchema.shape);
+export const getServerResponseSchema = apiResponseSchema.extend(serverManifestSchema.shape);
 
 export const getRemoteServersRequestSchema = apiRequestSchema;
 
 export const getRemoteServersResponseSchema = apiResponseSchema.extend({
-    servers: z.array(peerManifestSchema)
+    servers: z.array(serverManifestSchema)
 });

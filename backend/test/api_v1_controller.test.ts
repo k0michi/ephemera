@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createRequest, createResponse } from 'node-mocks-http';
 import ApiV1Controller from '../app/api_v1_controller.js';
-import type { CreatePostSignalPayload, PostRequest, CreatePostSignal, DeletePostSignal, Signal, RelaySignal, ServerSignal, PeerManifest } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignalPayload, PostRequest, CreatePostSignal, DeletePostSignal, Signal, RelaySignal, ServerSignal, ServerManifest } from '@ephemera/shared/api/api.js';
 import Config from '../app/config.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
@@ -98,7 +98,7 @@ class MockPeerService implements IPeerService {
     return;
   }
 
-  getPeerDescriptor() {
+  getLocalManifest() {
     return {
       implementation: {
         name: "ephemera",
@@ -109,7 +109,7 @@ class MockPeerService implements IPeerService {
     }
   }
 
-  async getRemoteServers(): Promise<PeerManifest[]> {
+  async getRemoteManifests(): Promise<ServerManifest[]> {
     return [];
   }
 }
