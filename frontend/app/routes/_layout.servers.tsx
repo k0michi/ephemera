@@ -1,10 +1,10 @@
 import type { ServerManifest } from "@ephemera/shared/api/api";
 import ServerIdenticon from "components/server_identicon";
-import { Link } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { Card, ListGroup } from "react-bootstrap";
-import { useReader } from "lib/store";
-import { useEffect, useState } from "react";
-import { EphemeraStore } from "~/store";
+import type { Route } from "./+types/_layout.servers";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import { getRemoteServersResponseSchema, getServerResponseSchema } from "@ephemera/shared/api/api_schema";
 
 interface ServerListItemProps {
   server: ServerManifest;
@@ -75,48 +75,34 @@ function ServerCard({ title, servers, emptyMessage }: ServerCardProps) {
   );
 }
 
+export async function loader({ request }: Route.LoaderArgs) {
+  const backendHost = NullableHelper.unwrap(process.env.EPHEMERA_BACKEND_HOST);
+
+  const localManifest = getServerResponseSchema.parse(
+    await (await fetch(`http://${backendHost}/api/v1/server`)).json()
+  );
+  const remoteManifests = getRemoteServersResponseSchema.parse(
+    await (await fetch(`http://${backendHost}/api/v1/remote-servers`)).json()
+  ).servers;
+
+  return {
+    localManifest,
+    remoteManifests,
+  };
+}
+
 export default function Servers() {
-  const store = useReader(EphemeraStore);
-  const [servers, setServers] = useState<ServerManifest[] | null>(null);
-  const [localServer, setLocalServer] = useState<ServerManifest | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const fetched = await store.getClient().getRemoteServers();
-        setServers(fetched);
-      } catch (e) {
-        store.addLog(
-          "danger",
-          e instanceof Error ? e.message : "Failed to fetch remote servers"
-        );
-      }
-    })();
-  }, [store]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const local = await store.getClient().getLocalServer();
-        setLocalServer(local);
-      } catch (e) {
-        store.addLog(
-          "danger",
-          e instanceof Error ? e.message : "Failed to fetch local server"
-        );
-      }
-    })();
-  }, [store]);
+  const data = useLoaderData<typeof loader>();
 
   return (
     <>
       <ServerCard
         title="Local Server"
-        servers={[localServer].filter(s => s !== null)}
+        servers={[data.localManifest].filter(s => s !== null)}
       />
       <ServerCard
         title="Remote Servers"
-        servers={servers}
+        servers={data.remoteManifests}
         emptyMessage="No remote servers"
       />
     </>
