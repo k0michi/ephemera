@@ -4,22 +4,26 @@ import React, { useSyncExternalStore } from "react";
  * A data store mimicking Flutter's ChangeNotifier.
  */
 export class Store {
-  private listeners: Set<() => void> = new Set();
-  private version: number = 0;
+  private _listeners: Set<() => void> = new Set();
+  private _version: number = 0;
 
   subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
+    this._listeners.add(listener);
     return () => {
-      this.listeners.delete(listener);
+      this._listeners.delete(listener);
     };
   }
 
   notifyListeners(): void {
-    this.version = (this.version + 1) % Number.MAX_SAFE_INTEGER;
+    this._version = (this._version + 1) % Number.MAX_SAFE_INTEGER;
 
-    for (const listener of this.listeners) {
+    for (const listener of this._listeners) {
       listener();
     }
+  }
+
+  get version(): number {
+    return this._version;
   }
 }
 
@@ -49,8 +53,8 @@ export function useWatcher<T extends Store>(
   const store = useReader(Context);
   useSyncExternalStore(
     (onStoreChange) => store.subscribe(onStoreChange),
-    () => store["version"],
-    () => store["version"]
+    () => store.version,
+    () => store.version
   );
   return store;
 }
