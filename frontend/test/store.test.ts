@@ -14,7 +14,16 @@ describe('EphemeraStore', () => {
   let localStorageMock: Record<string, string>;
 
   beforeEach(() => {
-    store = new EphemeraStore();
+    store = new EphemeraStore({
+      manifest: {
+        host: 'example.com',
+        publicKey: 'abcdef',
+        implementation: {
+          name: 'TestServer',
+          version: '1.0.0',
+        },
+      },
+    });
     localStorageMock = {};
 
     globalThis.localStorage = {
