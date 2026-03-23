@@ -80,6 +80,9 @@ export default function Layout() {
                 <ServersLink />
               </div>
             </Col>
+            <Col xs="auto">
+              <UserMenu />
+            </Col>
           </Row>
         </Container>
       </nav>
