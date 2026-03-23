@@ -10,6 +10,8 @@ import Base37 from "@ephemera/shared/lib/base37";
 import { useEffect } from "react";
 import ServerIdenticon from "components/server_identicon";
 
+import { ServersLink } from "components/link";
+
 function UserMenu() {
   const navigate = useNavigate();
 
@@ -59,8 +61,8 @@ export default function Layout() {
       <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
         <Container>
           <Row className="align-items-center" style={{ height: "56px" }}>
-            <Col>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Col style={{ display: "flex", blockSize: "100%" }}>
+              <div style={{ display: "flex", alignItems: "stretch", gap: "12px", blockSize: "100%" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
                   <Link to="/" style={{ textDecoration: "none" }}>
                     <ServerIdenticon
@@ -75,22 +77,8 @@ export default function Layout() {
                   </Link>
                 </div>
 
-                <Link
-                  to="/servers"
-                  style={{
-                    textDecoration: "none",
-                    color: "#495057",
-                    fontSize: "0.95rem",
-                    padding: "6px 10px",
-                    borderRadius: "6px"
-                  }}
-                >
-                  Servers
-                </Link>
+                <ServersLink />
               </div>
-            </Col>
-            <Col xs="auto">
-              <UserMenu />
             </Col>
           </Row>
         </Container>
