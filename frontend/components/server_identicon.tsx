@@ -130,6 +130,32 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
 </svg>`;
 }
 
+export function deriveColor(bytes: Uint8Array): string {
+  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 2 * Math.PI;
+  const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
+  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 2 * Math.PI;
+  const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
+
+  let result = {
+    r: 0,
+    g: 0,
+    b: 0
+  };
+
+  const maxOffset = Math.floor(bytes.length * 8 / 7);
+
+  for (let i = 0; i < maxOffset; i++) {
+    const t = i / maxOffset;
+    const hue = MathHelper.lerp(startHue, endHue, t);
+    const lightness = 0.1;
+    const chroma = MathHelper.lerp(startChroma, endChroma, t);
+    const rgb = oklchToRgb(lightness, chroma, hue);
+    result = addRgb(result, rgb);
+  }
+
+  return `rgb(${Math.round(result.r * 255)}, ${Math.round(result.g * 255)}, ${Math.round(result.b * 255)})`;
+}
+
 export default function ServerIdenticon(props: ServerIdenticonProps) {
   const { data, className, style } = props;
   const [svgString, setSvgString] = useState<string>('');
