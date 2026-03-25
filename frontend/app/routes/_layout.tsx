@@ -17,7 +17,7 @@ export default function Layout() {
   return (
     <>
       <Nav />
-      <main style={{ marginTop: "1rem" }}>
+      <main style={{ marginTop: "1rem", marginBottom: "1rem" }}>
         <Container>
           <div
             style={{
