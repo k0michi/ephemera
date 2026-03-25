@@ -17,16 +17,36 @@ export default function Layout() {
   return (
     <>
       <Nav />
-      <Container style={{ paddingTop: "72px" }}>
-        <Row className="justify-content-md-center">
-          <Col md={8} lg={6}>
-            <Outlet />
-          </Col>
-        </Row>
-        <div style={{ textAlign: 'center', color: '#bbb', fontSize: '0.8rem', marginTop: `2rem`, marginBottom: `2rem` }}>
-          <Link to="https://github.com/k0michi/ephemera" style={{ color: "inherit" }}>Ephemera</Link> {import.meta.env.EPHEMERA_COMMIT_HASH}
-        </div>
-      </Container >
+      <main style={{ marginTop: "1rem" }}>
+        <Container>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+          >
+            <Row className="justify-content-md-center">
+              <Col md={8} lg={6}>
+                <Outlet />
+              </Col>
+            </Row>
+
+            <div
+              style={{
+                textAlign: "center",
+                color: "#bbb",
+                fontSize: "0.8rem",
+              }}
+            >
+              <Link to="https://github.com/k0michi/ephemera" style={{ color: "inherit" }}>
+                Ephemera
+              </Link>{" "}
+              {import.meta.env.EPHEMERA_COMMIT_HASH}
+            </div>
+          </div>
+        </Container>
+      </main>
       <Notifier />
     </>
   );

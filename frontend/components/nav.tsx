@@ -48,7 +48,7 @@ export default function Nav() {
   const store = useReader(EphemeraStoreContext);
 
   return (
-    <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
+    <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
       <Container>
         <Row className="align-items-center" style={{ height: "56px" }}>
           <Col style={{ display: "flex", blockSize: "100%" }}>
