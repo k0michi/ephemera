@@ -1,4 +1,3 @@
-import { HddNetwork } from "react-bootstrap-icons";
 import styles from "./nav_link.module.css";
 import { useLocation, Link } from "react-router";
 import { useEffect, useState } from "react";
