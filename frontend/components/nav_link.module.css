@@ -1,0 +1,33 @@
+.nav-link {
+  --nav-link-color: #495057;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  block-size: 100%;
+  gap: 0.375rem;
+  padding-inline: 0.625rem;
+  text-decoration: none;
+  color: var(--nav-link-color);
+  font-size: 0.95rem;
+  transition: color 150ms ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--nav-link-active-color);
+}
+
+.nav-link-indicator {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 0;
+  background: var(--nav-link-active-color);
+  transition: block-size 150ms ease;
+}
+
+.nav-link:hover .nav-link-indicator,
+.nav-link.active .nav-link-indicator {
+  block-size: 0.25rem;
+}

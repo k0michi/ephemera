@@ -32,7 +32,10 @@ function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: n
 const toRgb = converter("rgb");
 const clampToSRGB = clampGamut("rgb");
 
-function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b: number } {
+type RGB = { r: number, g: number, b: number };
+type OKLCH = { l: number, c: number, h: number };
+
+function oklchToRgb({ l, c, h }: OKLCH): RGB {
   h = MathHelper.toDegrees(h);
   const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
   const r = NullableHelper.unwrap(rgb?.r);
@@ -41,12 +44,16 @@ function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b:
   return { r, g, b };
 }
 
-function addRgb(c1: { r: number, g: number, b: number }, c2: { r: number, g: number, b: number }): { r: number, g: number, b: number } {
+function addRgb(c1: RGB, c2: RGB): RGB {
   return {
     r: MathHelper.clamp(c1.r + c2.r, 0, 1),
     g: MathHelper.clamp(c1.g + c2.g, 0, 1),
     b: MathHelper.clamp(c1.b + c2.b, 0, 1),
   };
+}
+
+function rgbToString(rgb: RGB): string {
+  return `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
 }
 
 const kSize = 400;
@@ -102,11 +109,11 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
       const hue = MathHelper.slerp(startHue, endHue, normalizedT);
       const lightness = 0.1;
       const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
-      const visitColor = oklchToRgb(lightness, chroma, hue);
+      const visitColor = oklchToRgb({ l: lightness, c: chroma, h: hue });
       rgb = addRgb(rgb, visitColor);
     }
 
-    color = `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
+    color = rgbToString(rgb);
 
     let d = '';
 
@@ -128,6 +135,32 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
     ${svgPaths.join('')}
   </g>
 </svg>`;
+}
+
+export function deriveColor(bytes: Uint8Array): string {
+  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 2 * Math.PI;
+  const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
+  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 2 * Math.PI;
+  const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
+
+  let result = {
+    r: 0,
+    g: 0,
+    b: 0
+  };
+
+  const maxOffset = Math.floor(bytes.length * 8 / 7);
+
+  for (let i = 0; i < maxOffset; i++) {
+    const t = i / maxOffset;
+    const hue = MathHelper.slerp(startHue, endHue, t);
+    const lightness = 0.1;
+    const chroma = MathHelper.lerp(startChroma, endChroma, t);
+    const rgb = oklchToRgb({ l: lightness, c: chroma, h: hue });
+    result = addRgb(result, rgb);
+  }
+
+  return rgbToString(result);
 }
 
 export default function ServerIdenticon(props: ServerIdenticonProps) {
