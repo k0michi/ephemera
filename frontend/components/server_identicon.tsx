@@ -35,7 +35,7 @@ const clampToSRGB = clampGamut("rgb");
 type RGB = { r: number, g: number, b: number };
 type OKLCH = { l: number, c: number, h: number };
 
-function oklchToRgb(l: number, c: number, h: number): RGB {
+function oklchToRgb({ l, c, h }: OKLCH): RGB {
   h = MathHelper.toDegrees(h);
   const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
   const r = NullableHelper.unwrap(rgb?.r);
@@ -109,7 +109,7 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
       const hue = MathHelper.slerp(startHue, endHue, normalizedT);
       const lightness = 0.1;
       const chroma = MathHelper.lerp(startChroma, endChroma, normalizedT);
-      const visitColor = oklchToRgb(lightness, chroma, hue);
+      const visitColor = oklchToRgb({ l: lightness, c: chroma, h: hue });
       rgb = addRgb(rgb, visitColor);
     }
 
@@ -156,7 +156,7 @@ export function deriveColor(bytes: Uint8Array): string {
     const hue = MathHelper.lerp(startHue, endHue, t);
     const lightness = 0.1;
     const chroma = MathHelper.lerp(startChroma, endChroma, t);
-    const rgb = oklchToRgb(lightness, chroma, hue);
+    const rgb = oklchToRgb({ l: lightness, c: chroma, h: hue });
     result = addRgb(result, rgb);
   }
 
