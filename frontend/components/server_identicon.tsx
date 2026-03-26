@@ -153,7 +153,7 @@ export function deriveColor(bytes: Uint8Array): string {
 
   for (let i = 0; i < maxOffset; i++) {
     const t = i / maxOffset;
-    const hue = MathHelper.lerp(startHue, endHue, t);
+    const hue = MathHelper.slerp(startHue, endHue, t);
     const lightness = 0.1;
     const chroma = MathHelper.lerp(startChroma, endChroma, t);
     const rgb = oklchToRgb({ l: lightness, c: chroma, h: hue });
