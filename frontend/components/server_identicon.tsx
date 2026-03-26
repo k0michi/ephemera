@@ -32,7 +32,10 @@ function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: n
 const toRgb = converter("rgb");
 const clampToSRGB = clampGamut("rgb");
 
-function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b: number } {
+type RGB = { r: number, g: number, b: number };
+type OKLCH = { l: number, c: number, h: number };
+
+function oklchToRgb(l: number, c: number, h: number): RGB {
   h = MathHelper.toDegrees(h);
   const rgb = toRgb(clampToSRGB(oklch({ l, c, h, mode: "oklch" })));
   const r = NullableHelper.unwrap(rgb?.r);
@@ -41,12 +44,16 @@ function oklchToRgb(l: number, c: number, h: number): { r: number, g: number, b:
   return { r, g, b };
 }
 
-function addRgb(c1: { r: number, g: number, b: number }, c2: { r: number, g: number, b: number }): { r: number, g: number, b: number } {
+function addRgb(c1: RGB, c2: RGB): RGB {
   return {
     r: MathHelper.clamp(c1.r + c2.r, 0, 1),
     g: MathHelper.clamp(c1.g + c2.g, 0, 1),
     b: MathHelper.clamp(c1.b + c2.b, 0, 1),
   };
+}
+
+function rgbToString(rgb: RGB): string {
+  return `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
 }
 
 const kSize = 400;
@@ -106,7 +113,7 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
       rgb = addRgb(rgb, visitColor);
     }
 
-    color = `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
+    color = rgbToString(rgb);
 
     let d = '';
 
@@ -153,7 +160,7 @@ export function deriveColor(bytes: Uint8Array): string {
     result = addRgb(result, rgb);
   }
 
-  return `rgb(${Math.round(result.r * 255)}, ${Math.round(result.g * 255)}, ${Math.round(result.b * 255)})`;
+  return rgbToString(result);
 }
 
 export default function ServerIdenticon(props: ServerIdenticonProps) {
