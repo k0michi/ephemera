@@ -5,7 +5,6 @@ import Crypto from '@ephemera/shared/lib/crypto.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import type { CreatePostSignalPayload } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import type { Pool } from 'mysql2';
@@ -13,10 +12,11 @@ import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
 import TestHelper from './test_helper.js';
 import { type IPeerService } from '../app/peer_service.js';
+import type { PooledDatabase } from '../app/app.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
-  let database: MySql2Database;
+  let database: PooledDatabase;
   let pool: Pool;
   let peerService: IPeerService;
   let attachmentService: AttachmentService;

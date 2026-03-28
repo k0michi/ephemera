@@ -5,7 +5,6 @@ import type Config from "./config.js";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 import { ApiError } from "./api_error.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
-import type { MySql2Database } from "drizzle-orm/mysql2";
 import { posts, remotePosts } from "./db/schema.js";
 import { and, desc, eq, lt, sql } from "drizzle-orm";
 import Base37 from "@ephemera/shared/lib/base37.js";
@@ -18,6 +17,7 @@ import { PostCursorUtil, type PostCursor } from "@ephemera/shared/lib/post_curso
 import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { unionAll } from "drizzle-orm/mysql-core";
+import type { PooledDatabase } from "./app.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -89,12 +89,12 @@ export abstract class PostServiceBase implements IPostService {
 }
 
 export default class PostService extends PostServiceBase {
-  private database: MySql2Database;
+  private database: PooledDatabase;
   private attachmentService: IAttachmentService;
   private peerService: IPeerService;
   private static _kMaxAttachmentsPerPost: number = 4;
 
-  constructor(config: Config, database: MySql2Database, attachmentService: IAttachmentService, peerService: IPeerService) {
+  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService) {
     super(config);
     this.database = database;
     this.attachmentService = attachmentService;

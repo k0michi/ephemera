@@ -13,12 +13,16 @@ import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { AttachmentService } from './attachment_service.js';
 import { PeerService } from './peer_service.js';
 
+export type PooledDatabase = MySql2Database<Record<string, never>> & {
+  $client: mysql.Pool;
+};
+
 class Ephemera extends Application {
   config?: Config;
   postService?: PostService;
   attachmentService?: AttachmentService;
   peerService?: PeerService;
-  db?: MySql2Database;
+  db?: PooledDatabase;
 
   constructor() {
     super();

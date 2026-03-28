@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import type Config from './config.js';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
 import crypto from 'crypto';
 import path from 'path';
 import { attachments, postAttachments } from './db/schema.js';
@@ -14,6 +13,7 @@ import mime from 'mime-types';
 import sharp from 'sharp';
 import FSHelper from './fs_helper.js';
 import ffmpeg from 'fluent-ffmpeg';
+import type { PooledDatabase } from './app.js';
 
 export interface AttachmentType {
   type: string;
@@ -21,13 +21,13 @@ export interface AttachmentType {
 }
 
 export interface IAttachmentService {
-  copyFrom(srcFile: string, tx: MySql2Database): Promise<string>;
+  copyFrom(srcFile: string, tx: PooledDatabase): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
 
   getType(hash: string): Promise<AttachmentType>;
 
-  linkPost(postId: string, attachmentIds: string[], tx: MySql2Database): Promise<void>;
+  linkPost(postId: string, attachmentIds: string[], tx: PooledDatabase): Promise<void>;
 
   getFilePath(hash: string): string;
 
@@ -36,7 +36,7 @@ export interface IAttachmentService {
 
 export class AttachmentService implements IAttachmentService {
   private config: Config;
-  private database: MySql2Database;
+  private database: PooledDatabase;
   private static _kMaxAttachmentSize: number = 16 * 1024 * 1024; // 16 MB
   private static _kMaxAttachmentWidth: number = 4096; // 4096 pixels
   private static _kAllowedAttachmentTypes: Set<string> = new Set([
@@ -47,7 +47,7 @@ export class AttachmentService implements IAttachmentService {
     'video/mp4',
   ]);
 
-  constructor(config: Config, database: MySql2Database) {
+  constructor(config: Config, database: PooledDatabase) {
     this.config = config;
     this.database = database;
   }
@@ -120,7 +120,7 @@ export class AttachmentService implements IAttachmentService {
     }
   }
 
-  async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
+  async copyFrom(srcFile: string, tx: PooledDatabase): Promise<string> {
     // Validation
 
     const size = await FSHelper.size(srcFile);
@@ -195,7 +195,7 @@ export class AttachmentService implements IAttachmentService {
     return { type, ext };
   }
 
-  async linkPost(postId: string, attachmentIds: string[], tx: MySql2Database): Promise<void> {
+  async linkPost(postId: string, attachmentIds: string[], tx: PooledDatabase): Promise<void> {
     const rows = attachmentIds.map((attachmentId) => ({
       postId: postId,
       attachmentId: attachmentId,

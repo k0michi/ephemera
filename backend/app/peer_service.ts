@@ -1,6 +1,5 @@
 import grpc from '@grpc/grpc-js';
 import { Message, PubSubServiceClient } from '@ephemera/shared/peer/bridge.js';
-import type { MySql2Database } from "drizzle-orm/mysql2";
 import type Config from './config.js';
 import type { PeerManifest, RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
 import { createPostSignalSchema, deletePostSignalSchema, getPeerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
@@ -11,6 +10,7 @@ import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import SafeFetch from '@ephemera/shared/lib/safe_fetch.js';
+import type { PooledDatabase } from './app.js';
 
 export interface IPeerService {
   publish(signal: ServerSignal): Promise<void>;
@@ -24,7 +24,7 @@ export interface IPeerService {
 
 export class PeerService implements IPeerService {
   private config: Config;
-  private database: MySql2Database;
+  private database: PooledDatabase;
   private grpcClient: PubSubServiceClient;
   private stream: grpc.ClientReadableStream<Message>;
   // host -> peerDescriptor
@@ -33,7 +33,7 @@ export class PeerService implements IPeerService {
   });
   private static readonly kMaxRemotePosts = 65535;
 
-  constructor(config: Config, database: MySql2Database) {
+  constructor(config: Config, database: PooledDatabase) {
     this.config = config;
     this.database = database;
     this.grpcClient = new PubSubServiceClient(
