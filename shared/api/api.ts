@@ -152,6 +152,50 @@ export type RelaySignal = [
 ];
 
 //
+// Rich text
+//
+
+export type RichTextGlobalAttribute =
+  | ['alt', string];
+
+export type RichTextAnchorAttribute =
+  | ['url', string];
+
+export type RichTextAnchorElement = [
+  elementName: 'anchor',
+  attributes: Array<RichTextAnchorAttribute | RichTextGlobalAttribute>,
+  childNodes: RichTextNode[]
+];
+
+export type RichTextBoldElement = [
+  elementName: 'bold',
+  attributes: RichTextGlobalAttribute[],
+  childNodes: RichTextNode[]
+];
+
+export type RichTextItalicElement = [
+  elementName: 'italic',
+  attributes: RichTextGlobalAttribute[],
+  childNodes: RichTextNode[]
+];
+
+export type RichTextStrikethroughElement = [
+  elementName: 'strikethrough',
+  attributes: RichTextGlobalAttribute[],
+  childNodes: RichTextNode[]
+];
+
+export type RichTextElement =
+  | RichTextAnchorElement
+  | RichTextBoldElement
+  | RichTextItalicElement
+  | RichTextStrikethroughElement;
+
+export type RichTextNode = RichTextElement | string;
+
+export type RichText = RichTextNode[];
+
+//
 // Client
 //
 
