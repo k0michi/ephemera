@@ -9,6 +9,7 @@ import fsPromises from "fs/promises";
 import type { PooledDatabase } from "../app/database.js";
 import type { Pool } from "mysql2/promise";
 import { createPool } from "mysql2/promise";
+import path from "path";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;
@@ -106,4 +107,13 @@ describe('AttachmentService', () => {
       await expect(attachmentService.copyFrom(testVideo, tx)).rejects.toThrow();
     });
   }, 60_000);
+
+  it('should remove unlinked files', async () => {
+    const p = path.join(attachmentService.attachmentsDir, 'nonexistent');
+    await FSHelper.ensureDir(p);
+    await fsPromises.writeFile(p, 'dummy data');
+
+    const removedFiles = await attachmentService.removeUnlinkedFiles();
+    expect(removedFiles).toContain('nonexistent');
+  });
 });

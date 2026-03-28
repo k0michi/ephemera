@@ -22,6 +22,8 @@ export interface AttachmentType {
 }
 
 export interface IAttachmentService {
+  get attachmentsDir(): string;
+
   copyFrom(srcFile: string, tx: Transaction): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;

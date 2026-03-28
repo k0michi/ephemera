@@ -56,6 +56,10 @@ class MockPostService extends PostServiceBase {
 }
 
 class MockAttachmentService implements IAttachmentService {
+  get attachmentsDir(): string {
+    return './attachments';
+  }
+
   async fileDigest(filePath: string): Promise<string> {
     return 'hash';
   }
