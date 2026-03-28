@@ -148,10 +148,10 @@ export class AttachmentService implements IAttachmentService {
 
     // Validation complete
 
-    using lock = await this.rwLock.acquireWrite(path.basename(srcFile));
-
     const hash = await FSHelper.digest(srcFile, 'sha256');
     const destFile = this.getFilePath(hash);
+
+    using lock = await this.rwLock.acquireWrite(hash);
 
     await fs.mkdir(this.attachmentsDir, { recursive: true });
     await fs.copyFile(srcFile, destFile);
