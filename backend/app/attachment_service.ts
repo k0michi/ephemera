@@ -13,7 +13,7 @@ import mime from 'mime-types';
 import sharp from 'sharp';
 import FSHelper from './fs_helper.js';
 import ffmpeg from 'fluent-ffmpeg';
-import type { PooledDatabase } from './app.js';
+import type { PooledDatabase, Transaction } from './app.js';
 
 export interface AttachmentType {
   type: string;
@@ -21,13 +21,13 @@ export interface AttachmentType {
 }
 
 export interface IAttachmentService {
-  copyFrom(srcFile: string, tx: PooledDatabase): Promise<string>;
+  copyFrom(srcFile: string, tx: Transaction): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
 
   getType(hash: string): Promise<AttachmentType>;
 
-  linkPost(postId: string, attachmentIds: string[], tx: PooledDatabase): Promise<void>;
+  linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void>;
 
   getFilePath(hash: string): string;
 
@@ -120,7 +120,7 @@ export class AttachmentService implements IAttachmentService {
     }
   }
 
-  async copyFrom(srcFile: string, tx: PooledDatabase): Promise<string> {
+  async copyFrom(srcFile: string, tx: Transaction): Promise<string> {
     // Validation
 
     const size = await FSHelper.size(srcFile);
@@ -195,7 +195,7 @@ export class AttachmentService implements IAttachmentService {
     return { type, ext };
   }
 
-  async linkPost(postId: string, attachmentIds: string[], tx: PooledDatabase): Promise<void> {
+  async linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void> {
     const rows = attachmentIds.map((attachmentId) => ({
       postId: postId,
       attachmentId: attachmentId,

@@ -7,15 +7,19 @@ import Config from './config.js';
 import PostService from "./post_service.js";
 import { ApiError } from "./api_error.js";
 import type { ApiResponse, Attachment } from "@ephemera/shared/api/api.js";
-import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
+import { drizzle, MySql2Database, type MySql2PreparedQueryHKT, type MySql2QueryResultHKT } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { AttachmentService } from './attachment_service.js';
 import { PeerService } from './peer_service.js';
+import type { ExtractTablesWithRelations } from 'drizzle-orm';
+import type { MySqlTransaction } from 'drizzle-orm/mysql-core';
 
 export type PooledDatabase = MySql2Database<Record<string, never>> & {
   $client: mysql.Pool;
 };
+
+export type Transaction = MySqlTransaction<MySql2QueryResultHKT, MySql2PreparedQueryHKT, Record<string, never>, ExtractTablesWithRelations<Record<string, never>>>;
 
 class Ephemera extends Application {
   config?: Config;
