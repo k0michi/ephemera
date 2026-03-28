@@ -6,7 +6,7 @@ export default class AttachmentCleanerJob implements ISchedulerJob {
 
   constructor(private attachmentService: IAttachmentService) { }
 
-  async run(): Promise<void> {
+  async run(signal: AbortSignal): Promise<void> {
     await this.attachmentService.removeOrphans();
     await this.attachmentService.removeUnlinkedFiles();
   }
