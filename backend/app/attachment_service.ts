@@ -246,7 +246,7 @@ export class AttachmentService implements IAttachmentService {
 
     for (const orphan of candidates) {
       try {
-        await using lock = await this.rwLock.acquireWrite(orphan.id);
+        using lock = await this.rwLock.acquireWrite(orphan.id);
 
         const stillOrphan = await this.database
           .select({ id: postAttachments.attachmentId })
