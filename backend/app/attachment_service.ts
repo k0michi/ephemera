@@ -170,11 +170,12 @@ export class AttachmentService implements IAttachmentService {
 
     try {
       const handle = await fs.open(this.getFilePath(hash), 'r');
+      const realAsyncDispose = handle[Symbol.asyncDispose];
       const disposableHandle = handle;
 
       disposableHandle[Symbol.asyncDispose] = async () => {
         try {
-          await handle[Symbol.asyncDispose]();
+          await realAsyncDispose.call(handle);
         } finally {
           lock[Symbol.dispose]();
         }
