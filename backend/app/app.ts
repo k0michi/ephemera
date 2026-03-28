@@ -13,12 +13,16 @@ import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { AttachmentService } from './attachment_service.js';
 import { PeerService } from './peer_service.js';
 import type { PooledDatabase } from './database.js';
+import { SchedulerService } from './scheduler_service.js';
+import AttachmentCleanerJob from './attachment_cleaner_job.js';
+import { createFixedRateWithSkipTicker } from './ticker.js';
 
 class Ephemera extends Application {
   config?: Config;
   postService?: PostService;
   attachmentService?: AttachmentService;
   peerService?: PeerService;
+  schedulerService?: SchedulerService;
   db?: PooledDatabase;
 
   constructor() {
@@ -99,6 +103,9 @@ class Ephemera extends Application {
     this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db));
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
     this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService);
+    this.schedulerService = new SchedulerService();
+    this.schedulerService.register(new AttachmentCleanerJob(this.attachmentService), createFixedRateWithSkipTicker(24 * 60 * 60 * 1000, this.schedulerService.signal));
+
     this.app.use(express.json());
     this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService, this.peerService));
 
