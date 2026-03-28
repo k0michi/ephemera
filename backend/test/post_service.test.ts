@@ -7,12 +7,12 @@ import type { CreatePostSignalPayload } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
-import type { Pool } from 'mysql2';
 import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
 import TestHelper from './test_helper.js';
 import { type IPeerService } from '../app/peer_service.js';
 import type { PooledDatabase } from '../app/app.js';
+import { createPool, type Pool } from 'mysql2/promise';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -25,7 +25,7 @@ describe('PostService', () => {
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
 
-    const db = drizzle(container.getConnectionUri());
+    const db = drizzle(createPool(container.getConnectionUri()));
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
@@ -64,7 +64,7 @@ describe('PostService', () => {
   }, 60_000);
 
   afterEach(async () => {
-    await TestHelper.endPool(pool);
+    await pool.end();
     await container.stop();
   });
 

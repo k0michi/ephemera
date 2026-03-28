@@ -1,6 +1,5 @@
 import { MariaDbContainer, type StartedMariaDbContainer } from "@testcontainers/mariadb";
 import Config from "../app/config.js";
-import type { Pool } from "mysql2";
 import fsPromises from 'fs/promises';
 import sharp from "sharp";
 import { expect } from "vitest";
@@ -38,18 +37,6 @@ export default class TestHelper {
       publicKey: Base37.fromUint8Array(keyPair.publicKey),
     });
     return config;
-  }
-
-  static endPool(pool: Pool): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      pool.end(err => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
   }
 
   static async newTempFile(): Promise<string> {

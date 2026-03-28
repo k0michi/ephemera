@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AttachmentService } from "../app/attachment_service.js";
 import { drizzle } from "drizzle-orm/mysql2";
-import type { Pool } from "mysql2";
 import type { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import TestHelper from "./test_helper.js";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import FSHelper from "../app/fs_helper.js";
 import fsPromises from "fs/promises";
 import type { PooledDatabase } from "../app/app.js";
+import type { Pool } from "mysql2/promise";
+import { createPool } from "mysql2/promise";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;
@@ -18,7 +19,7 @@ describe('AttachmentService', () => {
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
 
-    const db = drizzle(container.getConnectionUri());
+    const db = drizzle(createPool(container.getConnectionUri()));
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
@@ -28,7 +29,7 @@ describe('AttachmentService', () => {
   }, 60_000);
 
   afterEach(async () => {
-    await TestHelper.endPool(pool);
+    await pool.end();
     await container.stop();
   });
 
