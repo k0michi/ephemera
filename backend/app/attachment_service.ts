@@ -13,7 +13,7 @@ import mime from 'mime-types';
 import sharp from 'sharp';
 import FSHelper from './fs_helper.js';
 import ffmpeg from 'fluent-ffmpeg';
-import type { PooledDatabase, Transaction } from './app.js';
+import type { PooledDatabase, Transaction } from './database.js';
 
 export interface AttachmentType {
   type: string;

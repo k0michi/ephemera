@@ -6,7 +6,7 @@ import TestHelper from "./test_helper.js";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import FSHelper from "../app/fs_helper.js";
 import fsPromises from "fs/promises";
-import type { PooledDatabase } from "../app/app.js";
+import type { PooledDatabase } from "../app/database.js";
 import type { Pool } from "mysql2/promise";
 import { createPool } from "mysql2/promise";
 

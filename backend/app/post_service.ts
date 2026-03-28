@@ -17,7 +17,7 @@ import { PostCursorUtil, type PostCursor } from "@ephemera/shared/lib/post_curso
 import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { unionAll } from "drizzle-orm/mysql-core";
-import type { PooledDatabase } from "./app.js";
+import type { PooledDatabase } from "./database.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;

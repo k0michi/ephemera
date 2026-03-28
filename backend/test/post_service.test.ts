@@ -11,7 +11,7 @@ import Config from '../app/config.js';
 import { AttachmentService } from '../app/attachment_service.js';
 import TestHelper from './test_helper.js';
 import { type IPeerService } from '../app/peer_service.js';
-import type { PooledDatabase } from '../app/app.js';
+import type { PooledDatabase } from '../app/database.js';
 import { createPool, type Pool } from 'mysql2/promise';
 
 describe('PostService', () => {

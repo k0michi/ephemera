@@ -11,7 +11,7 @@ import type { AttachmentType, IAttachmentService } from '../app/attachment_servi
 import fs from 'fs/promises';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import type { IPeerService } from '../app/peer_service.js';
-import type { PooledDatabase, Transaction } from '../app/app.js';
+import type { PooledDatabase, Transaction } from '../app/database.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -76,7 +76,7 @@ class MockAttachmentService implements IAttachmentService {
     return { type: 'image/png', ext: 'png' };
   }
 
-  async linkPost(postId: string, attachmentIds: string[]): Promise<void> {
+  async linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void> {
     return;
   }
 

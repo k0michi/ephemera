@@ -10,7 +10,7 @@ import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import SafeFetch from '@ephemera/shared/lib/safe_fetch.js';
-import type { PooledDatabase } from './app.js';
+import type { PooledDatabase } from './database.js';
 
 export interface IPeerService {
   publish(signal: ServerSignal): Promise<void>;
