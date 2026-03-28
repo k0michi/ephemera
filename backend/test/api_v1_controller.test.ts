@@ -84,8 +84,12 @@ class MockAttachmentService implements IAttachmentService {
     return `/attachments/${hash}`;
   }
 
-  async removeOrphans(): Promise<void> {
-    return;
+  async removeOrphans(): Promise<string[]> {
+    return [];
+  }
+
+  async removeUnlinkedFiles(): Promise<string[]> {
+    return [];
   }
 }
 
