@@ -1,23 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AttachmentService } from "../app/attachment_service.js";
-import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
-import type { Pool } from "mysql2";
+import { drizzle } from "drizzle-orm/mysql2";
 import type { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import TestHelper from "./test_helper.js";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import FSHelper from "../app/fs_helper.js";
 import fsPromises from "fs/promises";
+import type { PooledDatabase } from "../app/database.js";
+import type { Pool } from "mysql2/promise";
+import { createPool } from "mysql2/promise";
+import path from "path";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;
-  let database: MySql2Database;
+  let database: PooledDatabase;
   let pool: Pool;
   let attachmentService: AttachmentService;
 
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
 
-    const db = drizzle(container.getConnectionUri());
+    const db = drizzle(createPool(container.getConnectionUri()));
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
@@ -27,7 +30,7 @@ describe('AttachmentService', () => {
   }, 60_000);
 
   afterEach(async () => {
-    await TestHelper.endPool(pool);
+    await pool.end();
     await container.stop();
   });
 
@@ -104,4 +107,13 @@ describe('AttachmentService', () => {
       await expect(attachmentService.copyFrom(testVideo, tx)).rejects.toThrow();
     });
   }, 60_000);
+
+  it('should remove unlinked files', async () => {
+    const p = path.join(attachmentService.attachmentsDir, 'nonexistent');
+    await FSHelper.ensureDir(p);
+    await fsPromises.writeFile(p, 'dummy data');
+
+    const removedFiles = await attachmentService.removeUnlinkedFiles();
+    expect(removedFiles).toContain('nonexistent');
+  });
 });

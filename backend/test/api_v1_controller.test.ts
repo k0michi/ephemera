@@ -10,8 +10,8 @@ import { PostServiceBase, type IPostService, type PostFindOptions, type PostFind
 import type { AttachmentType, IAttachmentService } from '../app/attachment_service.js';
 import fs from 'fs/promises';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
 import type { IPeerService } from '../app/peer_service.js';
+import type { PooledDatabase, Transaction } from '../app/database.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -56,6 +56,10 @@ class MockPostService extends PostServiceBase {
 }
 
 class MockAttachmentService implements IAttachmentService {
+  get attachmentsDir(): string {
+    return './attachments';
+  }
+
   async fileDigest(filePath: string): Promise<string> {
     return 'hash';
   }
@@ -64,7 +68,7 @@ class MockAttachmentService implements IAttachmentService {
     return 0;
   }
 
-  async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
+  async copyFrom(srcFile: string, tx: Transaction): Promise<string> {
     return 'hash';
   }
 
@@ -76,7 +80,7 @@ class MockAttachmentService implements IAttachmentService {
     return { type: 'image/png', ext: 'png' };
   }
 
-  async linkPost(postId: string, attachmentIds: string[]): Promise<void> {
+  async linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void> {
     return;
   }
 
@@ -84,8 +88,12 @@ class MockAttachmentService implements IAttachmentService {
     return `/attachments/${hash}`;
   }
 
-  async removeOrphans(): Promise<void> {
-    return;
+  async removeOrphans(): Promise<string[]> {
+    return [];
+  }
+
+  async removeUnlinkedFiles(): Promise<string[]> {
+    return [];
   }
 }
 

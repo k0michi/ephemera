@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import type Config from './config.js';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
 import crypto from 'crypto';
 import path from 'path';
 import { attachments, postAttachments } from './db/schema.js';
@@ -14,6 +13,8 @@ import mime from 'mime-types';
 import sharp from 'sharp';
 import FSHelper from './fs_helper.js';
 import ffmpeg from 'fluent-ffmpeg';
+import type { PooledDatabase, Transaction } from './database.js';
+import { KeyedRWLock } from './keyed_rw_lock.js';
 
 export interface AttachmentType {
   type: string;
@@ -21,22 +22,27 @@ export interface AttachmentType {
 }
 
 export interface IAttachmentService {
-  copyFrom(srcFile: string, tx: MySql2Database): Promise<string>;
+  get attachmentsDir(): string;
+
+  copyFrom(srcFile: string, tx: Transaction): Promise<string>;
 
   open(hash: string): Promise<fs.FileHandle>;
 
   getType(hash: string): Promise<AttachmentType>;
 
-  linkPost(postId: string, attachmentIds: string[], tx: MySql2Database): Promise<void>;
+  linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void>;
 
   getFilePath(hash: string): string;
 
-  removeOrphans(): Promise<void>;
+  removeOrphans(): Promise<string[]>;
+
+  removeUnlinkedFiles(): Promise<string[]>;
 }
 
 export class AttachmentService implements IAttachmentService {
   private config: Config;
-  private database: MySql2Database;
+  private database: PooledDatabase;
+  private rwLock = new KeyedRWLock();
   private static _kMaxAttachmentSize: number = 16 * 1024 * 1024; // 16 MB
   private static _kMaxAttachmentWidth: number = 4096; // 4096 pixels
   private static _kAllowedAttachmentTypes: Set<string> = new Set([
@@ -47,7 +53,7 @@ export class AttachmentService implements IAttachmentService {
     'video/mp4',
   ]);
 
-  constructor(config: Config, database: MySql2Database) {
+  constructor(config: Config, database: PooledDatabase) {
     this.config = config;
     this.database = database;
   }
@@ -120,7 +126,7 @@ export class AttachmentService implements IAttachmentService {
     }
   }
 
-  async copyFrom(srcFile: string, tx: MySql2Database): Promise<string> {
+  async copyFrom(srcFile: string, tx: Transaction): Promise<string> {
     // Validation
 
     const size = await FSHelper.size(srcFile);
@@ -147,6 +153,8 @@ export class AttachmentService implements IAttachmentService {
     const hash = await FSHelper.digest(srcFile, 'sha256');
     const destFile = this.getFilePath(hash);
 
+    using lock = await this.rwLock.acquireWrite(hash);
+
     await fs.mkdir(this.attachmentsDir, { recursive: true });
     await fs.copyFile(srcFile, destFile);
 
@@ -160,11 +168,25 @@ export class AttachmentService implements IAttachmentService {
   }
 
   async open(hash: string): Promise<fs.FileHandle> {
-    const filePath = this.getFilePath(hash);
+    const lock = await this.rwLock.acquireRead(hash);
+
     try {
-      return await fs.open(filePath, 'r');
+      const handle = await fs.open(this.getFilePath(hash), 'r');
+      const realAsyncDispose = handle[Symbol.asyncDispose];
+      const disposableHandle = handle;
+
+      disposableHandle[Symbol.asyncDispose] = async () => {
+        try {
+          await realAsyncDispose.call(handle);
+        } finally {
+          lock[Symbol.dispose]();
+        }
+      };
+
+      return disposableHandle;
     } catch (e) {
-      throw new ApiError('Attachment not found', 404);
+      lock[Symbol.dispose]();
+      throw e;
     }
   }
 
@@ -195,7 +217,7 @@ export class AttachmentService implements IAttachmentService {
     return { type, ext };
   }
 
-  async linkPost(postId: string, attachmentIds: string[], tx: MySql2Database): Promise<void> {
+  async linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void> {
     const rows = attachmentIds.map((attachmentId) => ({
       postId: postId,
       attachmentId: attachmentId,
@@ -214,8 +236,8 @@ export class AttachmentService implements IAttachmentService {
     return path.join(this.attachmentsDir, hash);
   }
 
-  async removeOrphans(): Promise<void> {
-    const orphans = await this.database
+  async removeOrphans(): Promise<string[]> {
+    const candidates = await this.database
       .select({
         id: attachments.id,
       })
@@ -223,29 +245,63 @@ export class AttachmentService implements IAttachmentService {
       .leftJoin(postAttachments, eq(attachments.id, postAttachments.attachmentId))
       .where(isNull(postAttachments.postId));
 
-    console.log(`Found ${orphans.length} orphaned attachments.`);
+    const removed = [];
 
-    const deletedIds: string[] = [];
-
-    for (const orphan of orphans) {
+    for (const orphan of candidates) {
       try {
-        await fs.unlink(this.getFilePath(orphan.id));
-        console.log(`Deleted attachment file: ${orphan.id}`);
-        deletedIds.push(orphan.id);
-      } catch (e: any) {
-        if (e.code === 'ENOENT') {
-          deletedIds.push(orphan.id);
-        } else {
-          console.error(`Failed to delete attachment file ${orphan.id}:`, e);
+        using lock = await this.rwLock.acquireWrite(orphan.id);
+
+        const stillOrphan = await this.database
+          .select({ id: postAttachments.attachmentId })
+          .from(postAttachments)
+          .where(eq(postAttachments.attachmentId, orphan.id))
+          .limit(1);
+
+        if (stillOrphan.length > 0) {
+          continue;
         }
+
+        await this.database.delete(attachments).where(eq(attachments.id, orphan.id));
+
+        try {
+          await fs.unlink(this.getFilePath(orphan.id));
+        } catch (e) {
+          if ((e as NodeJS.ErrnoException).code !== 'ENOENT') {
+            throw e;
+          }
+        }
+
+        console.log(`Successfully cleaned up: ${orphan.id}`);
+        removed.push(orphan.id);
+      } catch (e) {
+        continue;
       }
     }
 
-    if (deletedIds.length > 0) {
-      await this.database
-        .delete(attachments)
-        .where(inArray(attachments.id, deletedIds))
-        .execute();
+    return removed;
+  }
+
+  async removeUnlinkedFiles(): Promise<string[]> {
+    const files = await fs.readdir(this.attachmentsDir);
+
+    const removed = [];
+
+    for (const fileId of files) {
+      using lock = await this.rwLock.acquireWrite(fileId, 0);
+
+      const [record] = await this.database
+        .select({ id: attachments.id })
+        .from(attachments)
+        .where(eq(attachments.id, fileId));
+
+      if (!record) {
+        await fs.unlink(this.getFilePath(fileId));
+
+        console.log(`Successfully removed unlinked file: ${fileId}`);
+        removed.push(fileId);
+      }
     }
+
+    return removed;
   }
 }
