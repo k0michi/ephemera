@@ -164,7 +164,7 @@ export type RichTextAnchorAttribute =
 export type RichTextAnchorElement = [
   elementName: 'anchor',
   attributes: Array<RichTextAnchorAttribute | RichTextGlobalAttribute>,
-  childNodes: RichTextNode[]
+  childNodes: never[]
 ];
 
 export type RichTextBoldElement = [
