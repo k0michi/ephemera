@@ -32,6 +32,9 @@ export interface IAttachmentService {
 
   linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void>;
 
+  /**
+   * Get the file path for a given attachment hash. This does not check if the file exists.
+   */
   getFilePath(hash: string): string;
 
   removeOrphans(): Promise<string[]>;
@@ -229,10 +232,6 @@ export class AttachmentService implements IAttachmentService {
   }
 
   getFilePath(hash: string): string {
-    if (!Hex.isValid(hash) || hash.length !== 64) {
-      throw new ApiError('Invalid attachment hash', 400);
-    }
-
     return path.join(this.attachmentsDir, hash);
   }
 
