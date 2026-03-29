@@ -282,7 +282,15 @@ export class AttachmentService implements IAttachmentService {
   }
 
   async removeUnlinkedFiles(): Promise<string[]> {
-    const files = await fs.readdir(this.attachmentsDir);
+    let files: string[] = [];
+
+    try {
+      files = await fs.readdir(this.attachmentsDir);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw e;
+      }
+    }
 
     const removed = [];
 
