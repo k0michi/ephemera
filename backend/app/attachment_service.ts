@@ -186,7 +186,7 @@ export class AttachmentService implements IAttachmentService {
       return disposableHandle;
     } catch (e) {
       lock[Symbol.dispose]();
-      throw e;
+      throw new ApiError('Attachment not found', 404);
     }
   }
 
