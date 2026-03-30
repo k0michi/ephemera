@@ -294,18 +294,23 @@ export class AttachmentService implements IAttachmentService {
     const removed = [];
 
     for (const fileId of files) {
-      using lock = await this.rwLock.acquireWrite(fileId, 0);
+      try {
+        using lock = await this.rwLock.acquireWrite(fileId, 0);
 
-      const [record] = await this.database
-        .select({ id: attachments.id })
-        .from(attachments)
-        .where(eq(attachments.id, fileId));
+        const [record] = await this.database
+          .select({ id: attachments.id })
+          .from(attachments)
+          .where(eq(attachments.id, fileId));
 
-      if (!record) {
-        await fs.unlink(this.getFilePath(fileId));
+        if (!record) {
+          await fs.unlink(this.getFilePath(fileId));
 
-        console.log(`Successfully removed unlinked file: ${fileId}`);
-        removed.push(fileId);
+          console.log(`Successfully removed unlinked file: ${fileId}`);
+          removed.push(fileId);
+        }
+      } catch (e) {
+        console.log(`Failed to remove unlinked file ${fileId}:`, e);
+        continue;
       }
     }
 
