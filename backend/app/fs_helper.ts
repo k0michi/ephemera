@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
+import path from 'path';
 
 export default class FSHelper {
   static async digest(filePath: string, algorithm: string) {
@@ -23,5 +24,10 @@ export default class FSHelper {
   static async size(filePath: string): Promise<number> {
     const stats = await fs.stat(filePath);
     return stats.size;
+  }
+
+  static async ensureParentDir(filePath: string): Promise<void> {
+    const parent = path.join(filePath, '..');
+    await fs.mkdir(parent, { recursive: true });
   }
 }
