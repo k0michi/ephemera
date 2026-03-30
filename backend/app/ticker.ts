@@ -1,17 +1,8 @@
-function sleep(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-
-    signal.addEventListener('abort', () => {
-      clearTimeout(timer);
-      reject(new Error('Aborted'));
-    }, { once: true });
-  });
-}
+import { setTimeout } from 'timers/promises';
 
 export async function* createFixedDelayTicker(ms: number, signal: AbortSignal) {
   while (!signal.aborted) {
-    await sleep(ms, signal);
+    await setTimeout(ms, undefined, { signal });
     yield Date.now();
   }
 }
@@ -23,7 +14,7 @@ export async function* createFixedRateWithoutSkipTicker(ms: number, signal: Abor
     const delay = nextTick - Date.now();
 
     if (delay > 0) {
-      await sleep(delay, signal);
+      await setTimeout(delay, undefined, { signal });
     }
 
     if (signal.aborted) {
@@ -42,7 +33,7 @@ export async function* createFixedRateWithSkipTicker(ms: number, signal: AbortSi
     const nextTick = Math.ceil((now + 1) / ms) * ms;
     const delay = nextTick - now;
 
-    await sleep(delay, signal);
+    await setTimeout(delay, undefined, { signal });
 
     if (signal.aborted) {
       break;
