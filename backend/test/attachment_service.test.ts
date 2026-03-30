@@ -110,7 +110,7 @@ describe('AttachmentService', () => {
 
   it('should remove unlinked files', async () => {
     const p = path.join(attachmentService.attachmentsDir, 'nonexistent');
-    await FSHelper.ensureDir(p);
+    await FSHelper.ensureParentDir(p);
     await fsPromises.writeFile(p, 'dummy data');
 
     const removedFiles = await attachmentService.removeUnlinkedFiles();

@@ -26,7 +26,7 @@ export default class FSHelper {
     return stats.size;
   }
 
-  static async ensureDir(filePath: string): Promise<void> {
+  static async ensureParentDir(filePath: string): Promise<void> {
     const parent = path.join(filePath, '..');
     await fs.mkdir(parent, { recursive: true });
   }
