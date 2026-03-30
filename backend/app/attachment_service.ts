@@ -170,7 +170,15 @@ export class AttachmentService implements IAttachmentService {
     return hash;
   }
 
+  validateAttachment(hash: string) {
+    if (!Hex.isValid(hash) || hash.length !== 64) {
+      throw new ApiError('Invalid attachment hash', 400);
+    }
+  }
+
   async open(hash: string): Promise<fs.FileHandle> {
+    this.validateAttachment(hash);
+
     const lock = await this.rwLock.acquireRead(hash);
 
     try {
