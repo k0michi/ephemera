@@ -29,26 +29,37 @@ export class KeyedRWLock {
   async acquireRead(key: string, timeout?: number): Promise<Disposable> {
     const entry = this.getOrCreate(key);
     entry.ref++;
-    const release = await entry.lock.acquireRead(timeout);
+    try {
+      const release = await entry.lock.acquireRead(timeout);
 
-    return {
-      [Symbol.dispose]: () => {
-        release[Symbol.dispose]();
-        this.releaseRef(key);
-      },
-    };
+      return {
+        [Symbol.dispose]: () => {
+          release[Symbol.dispose]();
+          this.releaseRef(key);
+        },
+      };
+    } catch (e) {
+      this.releaseRef(key);
+      throw e;
+    }
   }
 
   async acquireWrite(key: string, timeout?: number): Promise<Disposable> {
     const entry = this.getOrCreate(key);
     entry.ref++;
-    const release = await entry.lock.acquireWrite(timeout);
 
-    return {
-      [Symbol.dispose]: () => {
-        release[Symbol.dispose]();
-        this.releaseRef(key);
-      },
-    };
+    try {
+      const release = await entry.lock.acquireWrite(timeout);
+
+      return {
+        [Symbol.dispose]: () => {
+          release[Symbol.dispose]();
+          this.releaseRef(key);
+        },
+      };
+    } catch (e) {
+      this.releaseRef(key);
+      throw e;
+    }
   }
 }
