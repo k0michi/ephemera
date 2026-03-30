@@ -273,6 +273,7 @@ export class AttachmentService implements IAttachmentService {
         console.log(`Successfully cleaned up: ${orphan.id}`);
         removed.push(orphan.id);
       } catch (e) {
+        console.log(`Failed to clean up orphaned attachment ${orphan.id}:`, e);
         continue;
       }
     }
