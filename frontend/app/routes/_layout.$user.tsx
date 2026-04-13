@@ -4,6 +4,19 @@ import { Container, Row, Col, Card } from "react-bootstrap";
 import Identicon from "components/identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import Crypto from "@ephemera/shared/lib/crypto";
+import type { Route } from "./+types/_layout.$user";
+
+export function loader() {
+  return {
+    host: process.env.EPHEMERA_HOST
+  };
+}
+
+export function meta({ loaderData, params }: Route.MetaArgs) {
+  return [
+    { title: `${params.user} | Ephemera@${loaderData.host}` },
+  ];
+}
 
 export default function User() {
   const params = useParams();

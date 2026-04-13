@@ -5,6 +5,19 @@ import { Card, ListGroup } from "react-bootstrap";
 import { useReader } from "lib/store";
 import { useEffect, useState } from "react";
 import { EphemeraStoreContext } from "~/store";
+import type { Route } from "./+types/_layout.servers";
+
+export function loader() {
+  return {
+    host: process.env.EPHEMERA_HOST
+  };
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: `Servers | Ephemera@${loaderData.host}` },
+  ];
+}
 
 interface ServerListItemProps {
   server: PeerManifest;
