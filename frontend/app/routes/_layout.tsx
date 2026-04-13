@@ -11,7 +11,7 @@ export default function Layout() {
   const store = useReader(EphemeraStoreContext);
 
   useEffect(() => {
-    store.prepareKeyPair();
+    store.initialize();
   }, [store]);
 
   return (

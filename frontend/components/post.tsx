@@ -33,14 +33,13 @@ export default function Post({ post, onDelete }: PostProps) {
   }, [post, now]);
 
   const store = useReader(EphemeraStoreContext);
-  const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
+  const publicKeys = Object.keys(store.keyPairs);
 
   const postPublicKey = post[0][1][1];
 
   const handleDeletePost = async (post: CreatePostSignal) => {
     try {
-      // TODO: proper null handling
-      const keyPair = NullableHelper.unwrap(store.keyPair);
+      const keyPair = NullableHelper.unwrap(store.keyPairs[post[0][1][1]]);
       const digest = await SignalCrypto.digest(post[0]);
       await store.getClient().deletePost(keyPair, Hex.fromUint8Array(digest));
 
@@ -147,7 +146,7 @@ export default function Post({ post, onDelete }: PostProps) {
                   <BsThreeDots className="text-secondary" />
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  {canDelete(post, myPublicKeyBase37) ? (
+                  {canDelete(post, publicKeys) ? (
                     <Dropdown.Item onClick={() => handleDeletePost(post)}>
                       Delete post
                     </Dropdown.Item>
@@ -166,12 +165,8 @@ function isLocal(host: string): boolean {
   return host === window.location.host;
 }
 
-function canDelete(post: CreatePostSignal, myPublicKey: string | null): boolean {
-  if (myPublicKey === null) {
-    return false;
-  }
-
-  return post[0][1][1] === myPublicKey && isLocal(post[0][1][0]);
+function canDelete(post: CreatePostSignal, myPublicKeys: string[]): boolean {
+  return myPublicKeys.includes(post[0][1][1]) && isLocal(post[0][1][0]);
 }
 
 function formatDate(timestamp: number, now: number): string {

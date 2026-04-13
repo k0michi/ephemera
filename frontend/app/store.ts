@@ -4,6 +4,7 @@ import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
 import type { ExportedKeyPair, CreatePostSignal } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
+import z from "zod";
 
 export interface LogEntry {
   type: 'success' | 'danger' | 'warning' | 'info';
@@ -11,20 +12,85 @@ export interface LogEntry {
   id: number;
 }
 
+const v1IdentitySchema = z.object({
+  publicKey: z.string(),
+  privateKey: z.string(),
+  createdAt: z.number(),
+});
+
 export class EphemeraStore extends Store {
-  private _keyPair: KeyPair | null = null;
-  private _kPublicKeyStorageKey = 'ephemera_publicKey';
-  private _kPrivateKeyStorageKey = 'ephemera_privateKey';
+  private _keyPairs: Record<string, KeyPair> = {};
   private _logEntries: LogEntry[] = [];
   private _nextLogId: number = 0;
   private _kMaxLogEntries: number = 8;
+  private _processingQueue: Promise<void> = Promise.resolve();
+  private _db: IDBDatabase | null = null;
+  private _initialized: boolean = false;
+
+  private _kDBName = 'ephemera';
+  private _kIdentitiesStoreName = 'identities';
+  private _kDBVersion = 1;
+
+  private _kPublicKeyStorageKey = 'ephemera_publicKey';
+  private _kPrivateKeyStorageKey = 'ephemera_privateKey';
 
   constructor() {
     super();
   }
 
-  get keyPair(): KeyPair | null {
-    return this._keyPair;
+  get keyPairs(): Record<string, KeyPair> {
+    return this._keyPairs;
+  }
+
+  private enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this._processingQueue = this._processingQueue.then(async () => {
+        try {
+          const result = await operation();
+          resolve(result);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  }
+
+  async initialize(): Promise<void> {
+    if (this._initialized) {
+      return;
+    }
+
+    await this.enqueue(async () => {
+      const db = await this.openDB();
+      this._db = db;
+
+      const identities = await new Promise<{ publicKey: string; privateKey: string }[]>((resolve, reject) => {
+        const tx = db.transaction(this._kIdentitiesStoreName, 'readonly');
+        const store = tx.objectStore(this._kIdentitiesStoreName);
+        const request = store.getAll();
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      for (const identity of identities) {
+        const parseResult = v1IdentitySchema.safeParse(identity);
+
+        if (!parseResult.success) {
+          continue;
+        }
+
+        const { publicKey, privateKey } = parseResult.data;
+
+        this._keyPairs[publicKey] = {
+          publicKey: Base37.toUint8Array(publicKey),
+          privateKey: Base37.toUint8Array(privateKey),
+        };
+      }
+
+      this._initialized = true;
+      this.notifyListeners();
+    });
   }
 
   get logEntries(): LogEntry[] {
@@ -62,75 +128,73 @@ export class EphemeraStore extends Store {
     return globalThis.localStorage;
   }
 
-  revokeKeyPair() {
-    this._keyPair = null;
-
-    const localStorage = this.getLocalStorage();
-
-    localStorage.removeItem(this._kPublicKeyStorageKey);
-    localStorage.removeItem(this._kPrivateKeyStorageKey);
-    this.notifyListeners();
-  }
-
-  prepareKeyPair() {
-    if (this._keyPair) {
-      return;
+  getDB(): IDBDatabase {
+    if (!this._db) {
+      throw new Error("Database is not initialized");
     }
 
-    const localStorage = this.getLocalStorage();
+    return this._db;
+  }
 
-    const publicKeyData = localStorage.getItem(this._kPublicKeyStorageKey);
-    const privateKeyData = localStorage.getItem(this._kPrivateKeyStorageKey);
+  async revokeKeyPair(publicKey: string): Promise<void> {
+    await this.enqueue(async () => {
+      const db = this.getDB();
 
-    if (publicKeyData && privateKeyData) {
-      const publicKeyArray: number[] = JSON.parse(publicKeyData);
-      const privateKeyArray: number[] = JSON.parse(privateKeyData);
+      const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
+      const store = tx.objectStore(this._kIdentitiesStoreName);
 
-      this._keyPair = {
-        publicKey: new Uint8Array(publicKeyArray),
-        privateKey: new Uint8Array(privateKeyArray),
+      await new Promise<void>((resolve, reject) => {
+        const request = store.delete(publicKey);
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      this._keyPairs = Object.fromEntries(Object.entries(this._keyPairs).filter(([key]) => key !== publicKey));
+      this.notifyListeners();
+    });
+  }
+
+  async generateKeyPair(): Promise<void> {
+    const keyPair = Crypto.generateKeyPair();
+
+    await this.enqueue(async () => {
+      const db = this.getDB();
+
+      const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
+      const store = tx.objectStore(this._kIdentitiesStoreName);
+
+      await new Promise<void>((resolve, reject) => {
+        const request = store.put({
+          publicKey: Base37.fromUint8Array(keyPair.publicKey),
+          privateKey: Base37.fromUint8Array(keyPair.privateKey),
+          createdAt: Date.now(),
+        });
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      this._keyPairs = {
+        ...this._keyPairs,
+        [Base37.fromUint8Array(keyPair.publicKey)]: keyPair,
       };
       this.notifyListeners();
-      return;
-    }
-
-    const keyPair = Crypto.generateKeyPair();
-    this._keyPair = keyPair;
-
-    localStorage.setItem(this._kPublicKeyStorageKey, JSON.stringify(Array.from(keyPair.publicKey)));
-    localStorage.setItem(this._kPrivateKeyStorageKey, JSON.stringify(Array.from(keyPair.privateKey)));
-
-    this.notifyListeners();
-  }
-
-  /**
-   * @throws Error if sending the post fails.
-   */
-  async sendPost(post: string): Promise<void> {
-    if (!this._keyPair) {
-      throw new Error("Key pair is not prepared");
-    }
-
-    const client = new Client(window.location.host);
-    await client.sendPost(this._keyPair, post);
+    });
   }
 
   getClient(): Client {
     return new Client(window.location.host);
   }
 
-  exportKeyPair(): ExportedKeyPair | null {
-    if (!this._keyPair) {
-      return null;
-    }
-
+  exportKeyPair(keyPair: KeyPair): ExportedKeyPair {
     return {
-      publicKey: Base37.fromUint8Array(this._keyPair.publicKey),
-      privateKey: Base37.fromUint8Array(this._keyPair.privateKey),
+      publicKey: Base37.fromUint8Array(keyPair.publicKey),
+      privateKey: Base37.fromUint8Array(keyPair.privateKey),
     };
   }
 
-  importKeyPair(exported: ExportedKeyPair) {
+  async importKeyPair(exported: ExportedKeyPair) {
     const publicKey = Base37.toUint8Array(exported.publicKey);
     const privateKey = Base37.toUint8Array(exported.privateKey);
     const keyPair = { publicKey, privateKey };
@@ -139,14 +203,29 @@ export class EphemeraStore extends Store {
       throw new Error("Invalid key pair");
     }
 
-    this._keyPair = keyPair;
+    await this.enqueue(async () => {
+      const db = this.getDB();
 
-    const localStorage = this.getLocalStorage();
+      const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
+      const store = tx.objectStore(this._kIdentitiesStoreName);
 
-    localStorage.setItem(this._kPublicKeyStorageKey, JSON.stringify(Array.from(publicKey)));
-    localStorage.setItem(this._kPrivateKeyStorageKey, JSON.stringify(Array.from(privateKey)));
+      await new Promise<void>((resolve, reject) => {
+        const request = store.put({
+          publicKey: exported.publicKey,
+          privateKey: exported.privateKey,
+          createdAt: Date.now(),
+        });
 
-    this.notifyListeners();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      this._keyPairs = {
+        ...this._keyPairs,
+        [exported.publicKey]: keyPair
+      };
+      this.notifyListeners();
+    });
   }
 
   getHost(): string | null {
@@ -155,6 +234,77 @@ export class EphemeraStore extends Store {
     }
 
     return window.location.host;
+  }
+
+  private async migrateFromLocalStorage(db: IDBDatabase): Promise<void> {
+    const localStorage = this.getLocalStorage();
+
+    const publicKeyData = localStorage.getItem(this._kPublicKeyStorageKey);
+    const privateKeyData = localStorage.getItem(this._kPrivateKeyStorageKey);
+
+    if (!publicKeyData || !privateKeyData) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
+      const store = tx.objectStore(this._kIdentitiesStoreName);
+
+      const publicKeyArray: number[] = JSON.parse(publicKeyData);
+      const privateKeyArray: number[] = JSON.parse(privateKeyData);
+
+      const keyPair = {
+        publicKey: new Uint8Array(publicKeyArray),
+        privateKey: new Uint8Array(privateKeyArray),
+      };
+
+      const request = store.put({
+        publicKey: Base37.fromUint8Array(keyPair.publicKey),
+        privateKey: Base37.fromUint8Array(keyPair.privateKey),
+        createdAt: Date.now(),
+      });
+
+      request.onsuccess = () => {
+        localStorage.removeItem(this._kPublicKeyStorageKey);
+        localStorage.removeItem(this._kPrivateKeyStorageKey);
+        this.addLog('success', 'Migrated key pair from localStorage to IndexedDB');
+        resolve();
+      };
+
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  private async migrate(db: IDBDatabase): Promise<void> {
+    await this.migrateFromLocalStorage(db);
+  }
+
+  private async openDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this._kDBName, this._kDBVersion);
+      request.onupgradeneeded = (e) => {
+        const db = request.result;
+        const oldVersion = e.oldVersion;
+        const newVersion = e.newVersion;
+
+        if (oldVersion < 1) {
+          db.createObjectStore(this._kIdentitiesStoreName, { keyPath: 'publicKey' });
+        }
+      };
+
+      request.onsuccess = async () => {
+        const db = request.result;
+
+        try {
+          await this.migrate(db);
+          resolve(db);
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      request.onerror = () => reject(request.error);
+    });
   }
 }
 

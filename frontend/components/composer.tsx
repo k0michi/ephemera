@@ -75,7 +75,7 @@ export default function Composer({ }: ComposerProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked: isReading, tryLock: tryLockReading } = useMutex();
   const { isLocked: isSubmitting, tryLock: tryLockSubmitting } = useMutex();
-  const keyPairs = [...NullableHelper.toIterable(useSelector(EphemeraStoreContext, state => state.keyPair))];
+  const keyPairs = Object.values(useSelector(EphemeraStoreContext, state => state.keyPairs));
 
   const [selectedPublicKey, setSelectedPublicKey] = useState(keyPairs[0]?.publicKey ?? null);
 
