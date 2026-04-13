@@ -14,7 +14,7 @@ export function loader() {
 
 export function meta({ loaderData, params }: Route.MetaArgs) {
   return [
-    { title: `${params.user} | Ephemera@${loaderData.host}` },
+    { title: `@${params.user} | Ephemera@${loaderData.host}` },
   ];
 }
 
