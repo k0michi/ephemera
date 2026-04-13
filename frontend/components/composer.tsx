@@ -169,7 +169,17 @@ export default function Composer({ }: ComposerProps) {
     }
 
     try {
-      await store.getClient().sendPost(value, attachments.map(a => a.file));
+      if (selectedPublicKey == null) {
+        throw new Error("No identity selected");
+      }
+
+      const keyPair = keyPairs.find(k => ArrayHelper.equals(k.publicKey, selectedPublicKey));
+
+      if (!keyPair) {
+        throw new Error("Selected identity not found");
+      }
+
+      await store.getClient().sendPost(keyPair, value, attachments.map(a => a.file));
       store.addLog("success", "Post submitted successfully!");
       setValue("");
       handleRemoveAttachment();

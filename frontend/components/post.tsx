@@ -10,6 +10,7 @@ import { BsThreeDots } from "react-icons/bs";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
 import React from "react";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -38,8 +39,10 @@ export default function Post({ post, onDelete }: PostProps) {
 
   const handleDeletePost = async (post: CreatePostSignal) => {
     try {
+      // TODO: proper null handling
+      const keyPair = NullableHelper.unwrap(store.keyPair);
       const digest = await SignalCrypto.digest(post[0]);
-      await store.getClient().deletePost(Hex.fromUint8Array(digest));
+      await store.getClient().deletePost(keyPair, Hex.fromUint8Array(digest));
 
       if (onDelete) {
         onDelete(post);

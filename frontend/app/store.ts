@@ -111,12 +111,12 @@ export class EphemeraStore extends Store {
       throw new Error("Key pair is not prepared");
     }
 
-    const client = new Client(window.location.host, this._keyPair);
-    await client.sendPost(post);
+    const client = new Client(window.location.host);
+    await client.sendPost(this._keyPair, post);
   }
 
   getClient(): Client {
-    return new Client(window.location.host, this._keyPair);
+    return new Client(window.location.host);
   }
 
   exportKeyPair(): ExportedKeyPair | null {
