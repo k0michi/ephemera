@@ -7,7 +7,7 @@ import { BsImage } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
-import { XLg } from "react-bootstrap-icons";
+import { BsXLg } from "react-icons/bs";
 import Crypto from "@ephemera/shared/lib/crypto";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import Hex from "@ephemera/shared/lib/hex";
@@ -251,7 +251,7 @@ export default function Composer({ }: ComposerProps) {
                   aria-label="Remove attachment"
                   disabled={isSubmitting}
                 >
-                  <XLg size={12} aria-hidden="true" />
+                  <BsXLg size={12} aria-hidden="true" />
                 </Button>
               </div>
             ))}

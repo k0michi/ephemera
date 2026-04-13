@@ -6,7 +6,7 @@ import Identicon from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import ServerIdenticon from "./server_identicon";
 import { NavLink } from "./nav_link";
-import { HddNetwork } from "react-bootstrap-icons";
+import { BsHddNetwork } from "react-icons/bs";
 
 function UserMenu() {
   const navigate = useNavigate();
@@ -68,7 +68,7 @@ export default function Nav() {
                 </Link>
               </div>
 
-              <NavLink to="/servers" label="Servers" icon={<HddNetwork size={16} />} />
+              <NavLink to="/servers" label="Servers" icon={<BsHddNetwork size={16} />} />
             </div>
           </Col>
           <Col xs="auto">
