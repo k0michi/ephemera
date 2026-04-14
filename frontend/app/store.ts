@@ -5,6 +5,7 @@ import Client from '@ephemera/shared/lib/client.js';
 import type { ExportedKeyPair, CreatePostSignal } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
 import z from "zod";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 
 export interface LogEntry {
   type: 'success' | 'danger' | 'warning' | 'info';
@@ -244,20 +245,15 @@ export class EphemeraStore extends Store {
     return window.location.host;
   }
 
-  private async migrateFromLocalStorage(db: IDBDatabase): Promise<void> {
-    const localStorage = this.getLocalStorage();
+  private migrateV0ToV1(db: IDBDatabase, tx: IDBTransaction): void {
+    db.createObjectStore(this._kIdentitiesStoreName, { keyPath: 'publicKey' });
 
+    // Migrate localStorage keys
+    const localStorage = this.getLocalStorage();
     const publicKeyData = localStorage.getItem(this._kPublicKeyStorageKey);
     const privateKeyData = localStorage.getItem(this._kPrivateKeyStorageKey);
 
-    if (!publicKeyData || !privateKeyData) {
-      return;
-    }
-
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
-      const store = tx.objectStore(this._kIdentitiesStoreName);
-
+    if (publicKeyData != null && privateKeyData !== null) {
       const publicKeyArray: number[] = JSON.parse(publicKeyData);
       const privateKeyArray: number[] = JSON.parse(privateKeyData);
 
@@ -266,21 +262,26 @@ export class EphemeraStore extends Store {
         privateKey: new Uint8Array(privateKeyArray),
       };
 
-      const request = store.put({
+      const store = tx.objectStore(this._kIdentitiesStoreName);
+      store.put({
         publicKey: Base37.fromUint8Array(keyPair.publicKey),
         privateKey: Base37.fromUint8Array(keyPair.privateKey),
         createdAt: Date.now(),
       });
 
-      request.onsuccess = () => {
+      tx.oncomplete = () => {
         localStorage.removeItem(this._kPublicKeyStorageKey);
         localStorage.removeItem(this._kPrivateKeyStorageKey);
-        this.addLog('success', 'Migrated key pair from localStorage to IndexedDB');
-        resolve();
       };
+    }
 
-      request.onerror = () => reject(request.error);
-    });
+    tx.oncomplete = () => {
+      this.addLog('success', 'Database migration to v1 completed');
+    };
+
+    tx.onerror = () => {
+      this.addLog('danger', 'Database migration to v1 failed');
+    };
   }
 
   private async openDB(): Promise<IDBDatabase> {
@@ -292,21 +293,11 @@ export class EphemeraStore extends Store {
         const newVersion = e.newVersion;
 
         if (oldVersion < 1) {
-          db.createObjectStore(this._kIdentitiesStoreName, { keyPath: 'publicKey' });
+          this.migrateV0ToV1(db, NullableHelper.unwrap(request.transaction));
         }
       };
 
-      request.onsuccess = async () => {
-        const db = request.result;
-
-        try {
-          await this.migrateFromLocalStorage(db);
-          resolve(db);
-        } catch (e) {
-          reject(e);
-        }
-      };
-
+      request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
   }
