@@ -263,31 +263,29 @@ export class EphemeraStore extends Store implements Disposable {
   private migrateV0ToV1(db: IDBDatabase, tx: IDBTransaction): void {
     db.createObjectStore(this._kIdentitiesStoreName, { keyPath: 'publicKey' });
 
-    // Migrate localStorage keys
-    const localStorage = this.getLocalStorage();
-    const publicKeyData = localStorage.getItem(this._kPublicKeyStorageKey);
-    const privateKeyData = localStorage.getItem(this._kPrivateKeyStorageKey);
+    const ls = this.getLocalStorage();
+    const publicKeyData = ls.getItem(this._kPublicKeyStorageKey);
+    const privateKeyData = ls.getItem(this._kPrivateKeyStorageKey);
 
     if (publicKeyData != null && privateKeyData !== null) {
-      const publicKeyArray: number[] = JSON.parse(publicKeyData);
-      const privateKeyArray: number[] = JSON.parse(privateKeyData);
+      try {
+        const publicKeyArray: number[] = JSON.parse(publicKeyData);
+        const privateKeyArray: number[] = JSON.parse(privateKeyData);
 
-      const keyPair = {
-        publicKey: new Uint8Array(publicKeyArray),
-        privateKey: new Uint8Array(privateKeyArray),
-      };
+        const store = tx.objectStore(this._kIdentitiesStoreName);
+        store.put({
+          publicKey: Base37.fromUint8Array(new Uint8Array(publicKeyArray)),
+          privateKey: Base37.fromUint8Array(new Uint8Array(privateKeyArray)),
+          createdAt: Date.now(),
+        });
 
-      const store = tx.objectStore(this._kIdentitiesStoreName);
-      store.put({
-        publicKey: Base37.fromUint8Array(keyPair.publicKey),
-        privateKey: Base37.fromUint8Array(keyPair.privateKey),
-        createdAt: Date.now(),
-      });
-
-      tx.addEventListener('complete', () => {
-        localStorage.removeItem(this._kPublicKeyStorageKey);
-        localStorage.removeItem(this._kPrivateKeyStorageKey);
-      });
+        tx.addEventListener('complete', () => {
+          ls.removeItem(this._kPublicKeyStorageKey);
+          ls.removeItem(this._kPrivateKeyStorageKey);
+        });
+      } catch (e) {
+        this.addLog('warning', 'Failed to migrate existing identity. A new identity will be generated.');
+      }
     }
 
     tx.addEventListener('complete', () => {
