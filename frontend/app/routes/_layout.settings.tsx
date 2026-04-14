@@ -91,7 +91,7 @@ export default function Settings({ }: SettingsProps) {
             Object.entries(keyPairs).map(([id, kp]) => (
               <tr key={id}>
                 <td>
-                  <RoundedIdenticon data={kp.publicKey} style={{ width: 32, height: 32 }} />
+                  <RoundedIdenticon data={kp.publicKey} size={32} />
                 </td>
                 <td className="font-monospace fw-bold text-break">
                   @{id}
