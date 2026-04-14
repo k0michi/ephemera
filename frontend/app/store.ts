@@ -19,7 +19,7 @@ const v1IdentitySchema = z.object({
   createdAt: z.number(),
 });
 
-export class EphemeraStore extends Store {
+export class EphemeraStore extends Store implements Disposable {
   private _keyPairs: Record<string, KeyPair> = {};
   private _logEntries: LogEntry[] = [];
   private _nextLogId: number = 0;
@@ -37,6 +37,11 @@ export class EphemeraStore extends Store {
 
   constructor() {
     super();
+  }
+
+  [Symbol.dispose](): void {
+    this._db?.close();
+    this._db = null;
   }
 
   get keyPairs(): Record<string, KeyPair> {
