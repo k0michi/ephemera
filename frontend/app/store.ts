@@ -39,9 +39,15 @@ export class EphemeraStore extends Store implements Disposable {
     super();
   }
 
+  closeDB() {
+    if (this._db) {
+      this._db.close();
+      this._db = null;
+    }
+  }
+
   [Symbol.dispose](): void {
-    this._db?.close();
-    this._db = null;
+    this.closeDB();
   }
 
   get keyPairs(): Record<string, KeyPair> {
@@ -302,7 +308,14 @@ export class EphemeraStore extends Store implements Disposable {
         }
       };
 
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        resolve(request.result);
+
+        request.result.onversionchange = () => {
+          this.closeDB();
+          this.addLog('warning', 'Database version changed, please reload the page.');
+        };
+      };
       request.onerror = () => reject(request.error);
     });
   }
