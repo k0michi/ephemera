@@ -95,9 +95,12 @@ export class EphemeraStore extends Store implements Disposable {
 
         const { publicKey, privateKey } = parseResult.data;
 
-        this._keyPairs[publicKey] = {
-          publicKey: Base37.toUint8Array(publicKey),
-          privateKey: Base37.toUint8Array(privateKey),
+        this._keyPairs = {
+          ...this._keyPairs,
+          [publicKey]: {
+            publicKey: Base37.toUint8Array(publicKey),
+            privateKey: Base37.toUint8Array(privateKey),
+          },
         };
       }
 
