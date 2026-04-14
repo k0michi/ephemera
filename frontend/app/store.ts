@@ -282,10 +282,6 @@ export class EphemeraStore extends Store {
     });
   }
 
-  private async migrate(db: IDBDatabase): Promise<void> {
-    await this.migrateFromLocalStorage(db);
-  }
-
   private async openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this._kDBName, this._kDBVersion);
@@ -303,7 +299,7 @@ export class EphemeraStore extends Store {
         const db = request.result;
 
         try {
-          await this.migrate(db);
+          await this.migrateFromLocalStorage(db);
           resolve(db);
         } catch (e) {
           reject(e);
