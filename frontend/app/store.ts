@@ -116,6 +116,7 @@ export class EphemeraStore extends Store {
       this._logEntries = this._logEntries.slice(-this._kMaxLogEntries);
     }
 
+    console.log(`[${type.toUpperCase()}] ${message}`);
     this.notifyListeners();
   }
 
