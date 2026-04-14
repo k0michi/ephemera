@@ -1,4 +1,5 @@
 import RWLock from './rw_lock.js';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
 
 export class KeyedRWLock {
   private entries = new Map<string, { lock: RWLock; ref: number }>();
@@ -33,8 +34,8 @@ export class KeyedRWLock {
       const release = await entry.lock.acquireRead(timeout);
 
       return {
-        [Symbol.dispose]: () => {
-          release[Symbol.dispose]();
+        [SymbolHelper.dispose]: () => {
+          release[SymbolHelper.dispose]();
           this.releaseRef(key);
         },
       };
@@ -52,8 +53,8 @@ export class KeyedRWLock {
       const release = await entry.lock.acquireWrite(timeout);
 
       return {
-        [Symbol.dispose]: () => {
-          release[Symbol.dispose]();
+        [SymbolHelper.dispose]: () => {
+          release[SymbolHelper.dispose]();
           this.releaseRef(key);
         },
       };

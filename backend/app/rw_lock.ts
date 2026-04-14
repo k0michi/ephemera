@@ -1,4 +1,5 @@
 import { RWLock as _RWLock } from 'async-rwlock';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
 
 /**
  * Disposable wrapper around async-rwlock.
@@ -10,7 +11,7 @@ export default class RWLock {
     await this._lock.readLock(timeout);
 
     return {
-      [Symbol.dispose]: () => {
+      [SymbolHelper.dispose]: () => {
         this._lock.unlock();
       },
     };
@@ -20,7 +21,7 @@ export default class RWLock {
     await this._lock.writeLock(timeout);
 
     return {
-      [Symbol.dispose]: () => {
+      [SymbolHelper.dispose]: () => {
         this._lock.unlock();
       },
     };

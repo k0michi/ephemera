@@ -1,7 +1,5 @@
+import SymbolHelper from "@ephemera/shared/lib/symbol_helper";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-
-import 'core-js/modules/es.symbol.dispose';
-import 'core-js/modules/es.symbol.async-dispose';
 
 export function useDisposableState<T extends Disposable>(): [
   T | null,
@@ -12,7 +10,7 @@ export function useDisposableState<T extends Disposable>(): [
   useEffect(() => {
     return () => {
       if (resource) {
-        resource[Symbol.dispose]();
+        resource[SymbolHelper.dispose]();
         console.debug("Disposed resource:", resource);
       }
     };

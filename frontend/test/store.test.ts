@@ -4,6 +4,7 @@ import { EphemeraStore } from '../app/store.js';
 import Base37 from "@ephemera/shared/lib/base37";
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
 
 describe('EphemeraStore', () => {
   let store: EphemeraStore;
@@ -24,7 +25,7 @@ describe('EphemeraStore', () => {
   });
 
   afterEach(() => {
-    store[Symbol.dispose]();
+    store[SymbolHelper.dispose]();
   });
 
   it('should migrate data from localStorage to IndexedDB during v0 to v1 upgrade', async () => {

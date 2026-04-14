@@ -7,6 +7,7 @@
 		"@js-temporal/polyfill": "^0.5.1",
 		"@noble/curves": "^2.0.1",
 		"@types/whatwg-url": "^13.0.0",
+		"core-js": "^3.49.0",
 		"ipaddr.js": "^2.3.0",
 		"typescript": "^5.9.3",
 		"undici": "^7.24.4",

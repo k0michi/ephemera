@@ -6,6 +6,7 @@ import type { ExportedKeyPair, CreatePostSignal } from "@ephemera/shared/api/api
 import Base37 from "@ephemera/shared/lib/base37";
 import z from "zod";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
+import SymbolHelper from "@ephemera/shared/lib/symbol_helper.js";
 
 export interface LogEntry {
   type: 'success' | 'danger' | 'warning' | 'info';
@@ -46,7 +47,7 @@ export class EphemeraStore extends Store implements Disposable {
     }
   }
 
-  [Symbol.dispose](): void {
+  [SymbolHelper.dispose](): void {
     this.closeDB();
   }
 

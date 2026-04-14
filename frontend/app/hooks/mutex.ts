@@ -1,7 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-
-import 'core-js/modules/es.symbol.dispose';
-import 'core-js/modules/es.symbol.async-dispose';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper';
 
 export function useMutex(initialState = false) {
   const [isLocked, setIsLocked] = useState(initialState);
@@ -16,7 +14,7 @@ export function useMutex(initialState = false) {
     setIsLocked(true);
 
     return {
-      [Symbol.dispose]() {
+      [SymbolHelper.dispose]() {
         isLockedRef.current = false;
         setIsLocked(false);
       }

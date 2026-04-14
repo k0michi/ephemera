@@ -1,5 +1,4 @@
-import 'core-js/modules/es.symbol.dispose';
-import 'core-js/modules/es.symbol.async-dispose';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper';
 
 export class DisposableURL implements Disposable {
   private _url: string | null = null;
@@ -16,7 +15,7 @@ export class DisposableURL implements Disposable {
     return this._url;
   }
 
-  [Symbol.dispose]() {
+  [SymbolHelper.dispose]() {
     if (this._url !== null) {
       URL.revokeObjectURL(this._url);
       this._url = null;
