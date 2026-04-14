@@ -90,6 +90,11 @@ export class EphemeraStore extends Store {
 
       this._initialized = true;
       this.notifyListeners();
+
+      // If no identities exist, generate a new one
+      if (identities.length === 0) {
+        await this._generateKeyPair();
+      }
     });
   }
 
@@ -156,31 +161,33 @@ export class EphemeraStore extends Store {
   }
 
   async generateKeyPair(): Promise<void> {
+    await this.enqueue(() => this._generateKeyPair());
+  }
+
+  async _generateKeyPair(): Promise<void> {
     const keyPair = Crypto.generateKeyPair();
 
-    await this.enqueue(async () => {
-      const db = this.getDB();
+    const db = this.getDB();
 
-      const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
-      const store = tx.objectStore(this._kIdentitiesStoreName);
+    const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
+    const store = tx.objectStore(this._kIdentitiesStoreName);
 
-      await new Promise<void>((resolve, reject) => {
-        const request = store.put({
-          publicKey: Base37.fromUint8Array(keyPair.publicKey),
-          privateKey: Base37.fromUint8Array(keyPair.privateKey),
-          createdAt: Date.now(),
-        });
-
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+    await new Promise<void>((resolve, reject) => {
+      const request = store.put({
+        publicKey: Base37.fromUint8Array(keyPair.publicKey),
+        privateKey: Base37.fromUint8Array(keyPair.privateKey),
+        createdAt: Date.now(),
       });
 
-      this._keyPairs = {
-        ...this._keyPairs,
-        [Base37.fromUint8Array(keyPair.publicKey)]: keyPair,
-      };
-      this.notifyListeners();
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
     });
+
+    this._keyPairs = {
+      ...this._keyPairs,
+      [Base37.fromUint8Array(keyPair.publicKey)]: keyPair,
+    };
+    this.notifyListeners();
   }
 
   getClient(): Client {
