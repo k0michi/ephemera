@@ -11,7 +11,13 @@ export default function Layout() {
   const store = useReader(EphemeraStore);
 
   useEffect(() => {
-    store.initialize();
+    (async () => {
+      try {
+        await store.initialize();
+      } catch (error) {
+        store.addLog("danger", error instanceof Error ? error.message : "Failed to initialize the application.");
+      }
+    })();
   }, [store]);
 
   return (

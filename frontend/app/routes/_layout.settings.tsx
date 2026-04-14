@@ -63,7 +63,13 @@ export default function Settings({ }: SettingsProps) {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Manage Identities</h5>
         <div className="d-flex gap-2">
-          <Button variant="outline-primary" size="sm" onClick={() => store.generateKeyPair()}>
+          <Button variant="outline-primary" size="sm" onClick={async () => {
+            try {
+              await store.generateKeyPair();
+            } catch (error) {
+              store.addLog("danger", error instanceof Error ? error.message : "Failed to generate key pair.");
+            }
+          }}>
             <BsPlusLg className="me-1" /> Generate
           </Button>
           <Button variant="outline-secondary" size="sm" onClick={handleImportKeyPair}>
