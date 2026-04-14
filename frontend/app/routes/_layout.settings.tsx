@@ -38,7 +38,7 @@ export default function Settings({ }: SettingsProps) {
       const text = await file.text();
       const parsed = exportedKeyPairSchema.parse(JSON.parse(text));
 
-      store.importKeyPair(parsed);
+      await store.importKeyPair(parsed);
       store.addLog("success", "Key pair imported successfully!");
     } catch (error) {
       store.addLog("danger", error instanceof Error ? error.message : "Failed to import.");
