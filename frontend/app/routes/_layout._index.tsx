@@ -1,13 +1,17 @@
-import { useReader, useSelector } from "lib/store";
-import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_layout._index";
 import Composer from "components/composer";
 import Timeline from "components/timeline";
 
-export function meta({ }: Route.MetaArgs) {
+export function loader() {
+  return {
+    host: process.env.EPHEMERA_HOST
+  };
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: "Ephemera" },
-    { name: "description", content: "Welcome to Ephemera" },
+    { title: `Ephemera@${loaderData.host}` },
+    { name: "description", content: "A decentralized bulletin board." },
   ];
 }
 

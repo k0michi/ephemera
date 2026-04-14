@@ -15,6 +15,7 @@ import FSHelper from './fs_helper.js';
 import ffmpeg from 'fluent-ffmpeg';
 import type { PooledDatabase, Transaction } from './database.js';
 import { KeyedRWLock } from './keyed_rw_lock.js';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
 
 export interface AttachmentType {
   type: string;
@@ -183,20 +184,20 @@ export class AttachmentService implements IAttachmentService {
 
     try {
       const handle = await fs.open(this.getFilePath(hash), 'r');
-      const realAsyncDispose = handle[Symbol.asyncDispose];
+      const realAsyncDispose = handle[SymbolHelper.asyncDispose];
       const disposableHandle = handle;
 
-      disposableHandle[Symbol.asyncDispose] = async () => {
+      disposableHandle[SymbolHelper.asyncDispose] = async () => {
         try {
           await realAsyncDispose.call(handle);
         } finally {
-          lock[Symbol.dispose]();
+          lock[SymbolHelper.dispose]();
         }
       };
 
       return disposableHandle;
     } catch (e) {
-      lock[Symbol.dispose]();
+      lock[SymbolHelper.dispose]();
       throw new ApiError('Attachment not found', 404);
     }
   }

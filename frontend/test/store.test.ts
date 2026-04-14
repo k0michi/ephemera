@@ -1,56 +1,58 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { EphemeraStore } from '../app/store';
-import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
-
-const mockKeyPair = {
-  publicKey: new Uint8Array([1, 2, 3]),
-  privateKey: new Uint8Array([4, 5, 6]),
-};
-
-vi.spyOn(Crypto, 'generateKeyPair').mockReturnValue(mockKeyPair);
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import 'fake-indexeddb/auto';
+import { EphemeraStore } from '../app/store.js';
+import Base37 from "@ephemera/shared/lib/base37";
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import Crypto from '@ephemera/shared/lib/crypto.js';
+import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
 
 describe('EphemeraStore', () => {
   let store: EphemeraStore;
-  let localStorageMock: Record<string, string>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    localStorage.clear();
+
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.deleteDatabase('ephemera');
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => {
+        reject(new Error('IndexedDB delete blocked'));
+      };
+    });
+
     store = new EphemeraStore();
-    localStorageMock = {};
-
-    globalThis.localStorage = {
-      getItem: (k: string) => localStorageMock[k] ?? null,
-      setItem: (k: string, v: string) => { localStorageMock[k] = v; },
-      removeItem: (k: string) => { delete localStorageMock[k]; },
-      clear: () => { localStorageMock = {}; },
-      key: () => null,
-      length: 0,
-    } as any;
   });
 
-  describe('prepareKeyPair', () => {
-    it('should generate and store keyPair if not present', () => {
-      store.prepareKeyPair();
-      expect(store.keyPair).toEqual(mockKeyPair);
-      expect(localStorageMock['ephemera_publicKey']).toBe(JSON.stringify(Array.from(mockKeyPair.publicKey)));
-      expect(localStorageMock['ephemera_privateKey']).toBe(JSON.stringify(Array.from(mockKeyPair.privateKey)));
-    });
+  afterEach(() => {
+    store[SymbolHelper.dispose]();
+  });
 
-    it('should load keyPair from localStorage if present', () => {
-      localStorageMock['ephemera_publicKey'] = JSON.stringify([9, 8, 7]);
-      localStorageMock['ephemera_privateKey'] = JSON.stringify([6, 5, 4]);
-      store.prepareKeyPair();
-      expect(store.keyPair).toEqual({
-        publicKey: new Uint8Array([9, 8, 7]),
-        privateKey: new Uint8Array([6, 5, 4]),
-      });
-    });
+  it('should migrate data from localStorage to IndexedDB during v0 to v1 upgrade', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const mockPublicKeyArray = Array.from(keyPair.publicKey);
+    const mockPrivateKeyArray = Array.from(keyPair.privateKey);
 
-    it('should not regenerate keyPair if already present', () => {
-      store.prepareKeyPair();
-      store.revokeKeyPair();
-      expect(store.keyPair).toBeNull();
-      expect(localStorageMock['ephemera_publicKey']).toBeUndefined();
-      expect(localStorageMock['ephemera_privateKey']).toBeUndefined();
-    });
+    const expectedPublicKeyStr = Base37.fromUint8Array(new Uint8Array(mockPublicKeyArray));
+    const expectedPrivateKeyStr = Base37.fromUint8Array(new Uint8Array(mockPrivateKeyArray));
+
+    localStorage.setItem('ephemera_publicKey', JSON.stringify(mockPublicKeyArray));
+    localStorage.setItem('ephemera_privateKey', JSON.stringify(mockPrivateKeyArray));
+
+    await store.initialize();
+
+    const pairs = store.keyPairs;
+    expect(pairs[expectedPublicKeyStr]).toBeDefined();
+    expect(Base37.fromUint8Array(NullableHelper.unwrap(pairs[expectedPublicKeyStr]).privateKey)).toBe(expectedPrivateKeyStr);
+
+    expect(localStorage.getItem('ephemera_publicKey')).toBeNull();
+    expect(localStorage.getItem('ephemera_privateKey')).toBeNull();
+  });
+
+  it('should generate a new key if no identities exist in localStorage or DB', async () => {
+    await store.initialize();
+
+    const ids = Object.keys(store.keyPairs);
+    expect(ids.length).toBe(1);
   });
 });

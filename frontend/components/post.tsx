@@ -1,15 +1,16 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import styles from "./post.module.css";
 import { Card, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
-import Identicon from "./identicon";
+import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
-import { EphemeraStoreContext } from "~/store";
 import { useReader } from "lib/store";
 import { Link } from "react-router";
 import { BsThreeDots } from "react-icons/bs";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
 import React from "react";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import { EphemeraStore } from "~/store";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -31,15 +32,16 @@ export default function Post({ post, onDelete }: PostProps) {
     };
   }, [post, now]);
 
-  const store = useReader(EphemeraStoreContext);
-  const myPublicKeyBase37 = store.keyPair ? Base37.fromUint8Array(store.keyPair.publicKey) : null;
+  const store = useReader(EphemeraStore);
+  const publicKeys = Object.keys(store.keyPairs);
 
   const postPublicKey = post[0][1][1];
 
   const handleDeletePost = async (post: CreatePostSignal) => {
     try {
+      const keyPair = NullableHelper.unwrap(store.keyPairs[post[0][1][1]]);
       const digest = await SignalCrypto.digest(post[0]);
-      await store.getClient().deletePost(Hex.fromUint8Array(digest));
+      await store.getClient().deletePost(keyPair, Hex.fromUint8Array(digest));
 
       if (onDelete) {
         onDelete(post);
@@ -56,13 +58,10 @@ export default function Post({ post, onDelete }: PostProps) {
           {/* Icon */}
           <div style={{ flexShrink: 0 }}>
             <Link to={`/${postPublicKey}`}>
-              <Identicon data={Base37.toUint8Array(post[0][1][1])} style={{
+              <RoundedIdenticon data={Base37.toUint8Array(post[0][1][1])} style={{
                 display: 'block',
-                width: 48,
-                height: 48,
-                borderRadius: 6,
                 verticalAlign: 'middle',
-              }} />
+              }} size={48} />
             </Link>
           </div>
           {/* Content */}
@@ -144,7 +143,7 @@ export default function Post({ post, onDelete }: PostProps) {
                   <BsThreeDots className="text-secondary" />
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  {canDelete(post, myPublicKeyBase37) ? (
+                  {canDelete(post, publicKeys) ? (
                     <Dropdown.Item onClick={() => handleDeletePost(post)}>
                       Delete post
                     </Dropdown.Item>
@@ -163,12 +162,8 @@ function isLocal(host: string): boolean {
   return host === window.location.host;
 }
 
-function canDelete(post: CreatePostSignal, myPublicKey: string | null): boolean {
-  if (myPublicKey === null) {
-    return false;
-  }
-
-  return post[0][1][1] === myPublicKey && isLocal(post[0][1][0]);
+function canDelete(post: CreatePostSignal, myPublicKeys: string[]): boolean {
+  return myPublicKeys.includes(post[0][1][1]) && isLocal(post[0][1][0]);
 }
 
 function formatDate(timestamp: number, now: number): string {

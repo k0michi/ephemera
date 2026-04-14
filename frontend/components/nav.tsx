@@ -1,52 +1,13 @@
 import { useReader, useSelector } from "lib/store";
 import { Container, Dropdown, Row, Col } from "react-bootstrap";
 import { Link, useNavigate } from "react-router";
-import { EphemeraStoreContext } from "~/store";
-import Identicon from "./identicon";
-import Base37 from "@ephemera/shared/lib/base37";
 import ServerIdenticon from "./server_identicon";
 import { NavLink } from "./nav_link";
-import { HddNetwork } from "react-bootstrap-icons";
-
-function UserMenu() {
-  const navigate = useNavigate();
-
-  const key = useSelector(EphemeraStoreContext, (store) => {
-    return store.keyPair?.publicKey || null;
-  });
-
-  return (
-    <Dropdown align="end">
-      <Dropdown.Toggle
-        variant="link"
-        bsPrefix="btn p-0 border-0"
-        id="user-menu"
-        aria-label="User menu"
-        style={{ padding: 0 }}
-      >
-        {key !== null ?
-          <Identicon data={key} style={{ width: 32, height: 32, borderRadius: 4 }} />
-          :
-          <div style={{ width: 32, height: 32, borderRadius: 4, backgroundColor: '#e0e0e0' }}></div>
-        }
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        <Dropdown.Item disabled>{
-          key !== null ? `@${Base37.fromUint8Array(key)}` : 'Not signed in'
-        }</Dropdown.Item>
-        <Dropdown.Divider />
-        <Dropdown.Item onClick={
-          () => {
-            navigate('/settings');
-          }
-        }>Settings</Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown>
-  );
-}
+import { BsGear, BsHddNetwork } from "react-icons/bs";
+import { EphemeraStore } from "~/store";
 
 export default function Nav() {
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   return (
     <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
@@ -68,11 +29,9 @@ export default function Nav() {
                 </Link>
               </div>
 
-              <NavLink to="/servers" label="Servers" icon={<HddNetwork size={16} />} />
+              <NavLink to="/servers" label="Servers" icon={<BsHddNetwork size={16} />} />
+              <NavLink to="/settings" label="Settings" icon={<BsGear size={16} />} />
             </div>
-          </Col>
-          <Col xs="auto">
-            <UserMenu />
           </Col>
         </Row>
       </Container>

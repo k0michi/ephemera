@@ -183,3 +183,33 @@ export default function Identicon({
     />
   );
 };
+
+export interface RoundedIdenticonProps extends IdenticonProps {
+  size?: number;
+}
+
+export function RoundedIdenticon({
+  size = 48,
+  ...props
+}: RoundedIdenticonProps) {
+  const { style, ...rest } = props;
+
+  const roundedStyle: React.CSSProperties = {
+    // @ts-ignore
+    '--size': size,
+
+    borderRadius: 'calc(pow(var(--size), 0.4) * 1px)',
+
+    width: size,
+    height: size,
+
+    ...style,
+  };
+
+  return (
+    <Identicon
+      {...rest}
+      style={roundedStyle}
+    />
+  );
+}

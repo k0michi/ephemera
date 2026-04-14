@@ -92,20 +92,14 @@ export default class Client {
    * e.g. "example.com". Does not include scheme (http/https) or path.
    */
   _host: string;
-  _keyPair: KeyPair | null;
   _version: Version = 0;
 
-  constructor(host: string, keyPair: KeyPair | null) {
+  constructor(host: string) {
     this._host = host;
-    this._keyPair = keyPair;
   }
 
   get host(): string {
     return this._host;
-  }
-
-  get keyPair(): KeyPair | null {
-    return this._keyPair;
   }
 
   /**
@@ -113,18 +107,14 @@ export default class Client {
    * 
    * @throws Error if the request fails or the post is invalid.
    */
-  async sendPost(post: string, attachments: File[] = []): Promise<void> {
-    if (!this._keyPair) {
-      throw new Error("Key pair does not exist");
-    }
-
+  async sendPost(keyPair: KeyPair, post: string, attachments: File[] = []): Promise<void> {
     const validationResult = PostUtil.validate(post);
 
     if (!validationResult[0]) {
       throw new Error(`Post validation failed: ${validationResult[1]}`);
     }
 
-    const publicKeyBase37 = Base37.fromUint8Array(this._keyPair.publicKey);
+    const publicKeyBase37 = Base37.fromUint8Array(keyPair.publicKey);
 
     const footers: Attachment[] = [];
 
@@ -142,7 +132,7 @@ export default class Client {
       post,
       footers
     ] satisfies CreatePostSignalPayload;
-    const signed: CreatePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
+    const signed: CreatePostSignal = await SignalCrypto.sign(payload, keyPair.privateKey);
 
     const formData = new FormData();
     formData.append("post", JSON.stringify(signed));
@@ -176,20 +166,16 @@ export default class Client {
     return parsed as GetPostsResponse;
   }
 
-  async deletePost(postId: string): Promise<void> {
-    if (!this._keyPair) {
-      throw new Error("Key pair does not exist");
-    }
-
+  async deletePost(keyPair: KeyPair, postId: string): Promise<void> {
     const payload: DeletePostSignalPayload = [
       this._version,
-      [this._host, Base37.fromUint8Array(this._keyPair.publicKey), Date.now(), "delete_post"],
+      [this._host, Base37.fromUint8Array(keyPair.publicKey), Date.now(), "delete_post"],
       [
         postId
       ],
       []
     ];
-    const signed: DeletePostSignal = await SignalCrypto.sign(payload, this._keyPair.privateKey);
+    const signed: DeletePostSignal = await SignalCrypto.sign(payload, keyPair.privateKey);
 
     const response = await Fetcher.delete(`/api/v1/post`, {
       post: signed

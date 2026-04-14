@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect } from "react";
-import { Form, Button, Card, Spinner } from "react-bootstrap";
+import { Form, Button, Card, Spinner, Dropdown } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
-import { useReader } from "lib/store";
-import { EphemeraStoreContext } from "~/store";
-import { BsImage } from "react-icons/bs";
+import { useReader, useSelector } from "lib/store";
+import { BsImage, BsPersonCircle } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
-import { XLg } from "react-bootstrap-icons";
+import { BsXLg } from "react-icons/bs";
 import Crypto from "@ephemera/shared/lib/crypto";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import Hex from "@ephemera/shared/lib/hex";
 import ArrayHelper from "@ephemera/shared/lib/array_helper";
+import Base37 from "@ephemera/shared/lib/base37";
+import { RoundedIdenticon } from "./identicon";
+import { BsCheckLg } from "react-icons/bs";
+import { EphemeraStore } from "~/store";
 
 export interface ComposerProps {
 }
@@ -72,11 +75,22 @@ export default function Composer({ }: ComposerProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked: isReading, tryLock: tryLockReading } = useMutex();
   const { isLocked: isSubmitting, tryLock: tryLockSubmitting } = useMutex();
+  const keyPairs = Object.values(useSelector(EphemeraStore, state => state.keyPairs));
+
+  const [selectedPublicKey, setSelectedPublicKey] = useState(keyPairs[0]?.publicKey ?? null);
+
+  useEffect(() => {
+    if (selectedPublicKey == null && keyPairs.length > 0) {
+      setSelectedPublicKey(NullableHelper.unwrap(keyPairs[0]?.publicKey));
+    }
+  }, [keyPairs, selectedPublicKey]);
+
+  const selectedPublicKeyBase37 = selectedPublicKey ? Base37.fromUint8Array(selectedPublicKey) : null;
 
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   const addAttachedFiles = async (files: File[]) => {
     const attachableFiles = files.filter(file => allowedFileTypes.has(file.type));
@@ -155,7 +169,17 @@ export default function Composer({ }: ComposerProps) {
     }
 
     try {
-      await store.getClient().sendPost(value, attachments.map(a => a.file));
+      if (selectedPublicKey == null) {
+        throw new Error("No identity selected");
+      }
+
+      const keyPair = keyPairs.find(k => ArrayHelper.equals(k.publicKey, selectedPublicKey));
+
+      if (!keyPair) {
+        throw new Error("Selected identity not found");
+      }
+
+      await store.getClient().sendPost(keyPair, value, attachments.map(a => a.file));
       store.addLog("success", "Post submitted successfully!");
       setValue("");
       handleRemoveAttachment();
@@ -171,6 +195,123 @@ export default function Composer({ }: ComposerProps) {
     <Card>
       <Card.Body>
         <Form onSubmit={handleSubmit}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '0.75rem',
+            fontSize: '0.9rem',
+            width: '100%'
+          }}>
+            <span style={{
+              fontWeight: 'bold',
+              color: '#666',
+              flexShrink: 0,
+              userSelect: 'none'
+            }}>
+              From
+            </span>
+
+            <Dropdown
+              style={{ flexGrow: 1, minWidth: 0 }}
+              onSelect={(id) => {
+                const kp = keyPairs.find(k => Base37.fromUint8Array(k.publicKey) === id);
+                if (kp) setSelectedPublicKey(kp.publicKey);
+              }}
+            >
+              <Dropdown.Toggle
+                variant="light"
+                className="d-flex align-items-center w-100"
+                style={{
+                  backgroundColor: '#f8f9fa',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '6px',
+                  padding: '0.375rem 0.75rem',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  boxShadow: 'none'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  flexGrow: 1,
+                  minWidth: 0,
+                  textAlign: 'left'
+                }}>
+                  {NullableHelper.map(selectedPublicKey, (pk) => (
+                    <RoundedIdenticon data={pk} size={22} style={{ flexShrink: 0 }} />
+                  ))}
+
+                  <span style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flexGrow: 1
+                  }}>
+                    {selectedPublicKeyBase37 ? `@${selectedPublicKeyBase37}` : '(No identity)'}
+                  </span>
+                </div>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu style={{
+                width: '100%',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                border: '1px solid #dee2e6'
+              }}>
+                {keyPairs.length > 0 ? (
+                  keyPairs.map((kp) => {
+                    const id = Base37.fromUint8Array(kp.publicKey);
+                    const isSelected = selectedPublicKeyBase37 === id;
+                    return (
+                      <Dropdown.Item
+                        key={id}
+                        eventKey={id}
+                        className="d-flex align-items-center"
+                        style={{
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem'
+                        }}
+                      >
+                        <div style={{
+                          width: '1.25rem',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          {isSelected && (
+                            <BsCheckLg
+                              style={{
+                                fontSize: '1rem',
+                                color: 'inherit'
+                              }}
+                            />
+                          )}
+                        </div>
+
+                        <RoundedIdenticon data={kp.publicKey} size={20} style={{ flexShrink: 0 }} />
+
+                        <span style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          flexGrow: 1
+                        }}>
+                          @{id}
+                        </span>
+                      </Dropdown.Item>
+                    );
+                  })
+                ) : (
+                  <Dropdown.Item disabled>No identity available</Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+
           <Form.Group controlId="composerTextarea">
             <Form.Control
               as="textarea"
@@ -251,7 +392,7 @@ export default function Composer({ }: ComposerProps) {
                   aria-label="Remove attachment"
                   disabled={isSubmitting}
                 >
-                  <XLg size={12} aria-hidden="true" />
+                  <BsXLg size={12} aria-hidden="true" />
                 </Button>
               </div>
             ))}
@@ -314,7 +455,7 @@ export default function Composer({ }: ComposerProps) {
             </div>
           </div>
         </Form>
-      </Card.Body>
-    </Card>
+      </Card.Body >
+    </Card >
   );
 }

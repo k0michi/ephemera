@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { KeyedRWLock } from "../app/keyed_rw_lock.js";
+import SymbolHelper from "@ephemera/shared/lib/symbol_helper.js";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -12,13 +13,13 @@ describe('KeyedRWLock', () => {
     const pending = (async () => {
       const write = await lock.acquireWrite('key1');
       acquired = true;
-      write[Symbol.dispose]();
+      write[SymbolHelper.dispose]();
     })();
 
     await sleep(20);
     expect(acquired).toBe(false);
 
-    read1[Symbol.dispose]();
+    read1[SymbolHelper.dispose]();
 
     await pending;
     expect(acquired).toBe(true);
@@ -32,13 +33,13 @@ describe('KeyedRWLock', () => {
     const pending = (async () => {
       const read1 = await lock.acquireRead('key1');
       acquired = true;
-      read1[Symbol.dispose]();
+      read1[SymbolHelper.dispose]();
     })();
 
     await sleep(20);
     expect(acquired).toBe(false);
 
-    write[Symbol.dispose]();
+    write[SymbolHelper.dispose]();
 
     await pending;
     expect(acquired).toBe(true);
@@ -53,13 +54,13 @@ describe('KeyedRWLock', () => {
     const pending = (async () => {
       const read2 = await lock.acquireRead('key1');
       acquiredSecondRead = true;
-      read2[Symbol.dispose]();
+      read2[SymbolHelper.dispose]();
     })();
 
     await sleep(20);
     expect(acquiredSecondRead).toBe(true);
 
-    read1[Symbol.dispose]();
+    read1[SymbolHelper.dispose]();
     await pending;
   });
 });
