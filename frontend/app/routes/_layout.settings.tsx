@@ -155,9 +155,9 @@ export default function Settings({ }: SettingsProps) {
           </Button>
           <Button
             variant="danger"
-            onClick={() => {
+            onClick={async () => {
               if (targetKeyPair) {
-                store.revokeKeyPair(Base37.fromUint8Array(targetKeyPair.publicKey));
+                await store.revokeKeyPair(Base37.fromUint8Array(targetKeyPair.publicKey));
                 setTargetKeyPair(null);
               }
             }}
