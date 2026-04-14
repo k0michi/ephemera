@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Form, Button, Card, Spinner, Dropdown } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { useReader, useSelector } from "lib/store";
-import { EphemeraStoreContext } from "~/store";
 import { BsImage, BsPersonCircle } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
@@ -15,6 +14,7 @@ import ArrayHelper from "@ephemera/shared/lib/array_helper";
 import Base37 from "@ephemera/shared/lib/base37";
 import { RoundedIdenticon } from "./identicon";
 import { BsCheckLg } from "react-icons/bs";
+import { EphemeraStore } from "~/store";
 
 export interface ComposerProps {
 }
@@ -75,7 +75,7 @@ export default function Composer({ }: ComposerProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { isLocked: isReading, tryLock: tryLockReading } = useMutex();
   const { isLocked: isSubmitting, tryLock: tryLockSubmitting } = useMutex();
-  const keyPairs = Object.values(useSelector(EphemeraStoreContext, state => state.keyPairs));
+  const keyPairs = Object.values(useSelector(EphemeraStore, state => state.keyPairs));
 
   const [selectedPublicKey, setSelectedPublicKey] = useState(keyPairs[0]?.publicKey ?? null);
 
@@ -90,7 +90,7 @@ export default function Composer({ }: ComposerProps) {
   const minLength = PostUtil.kMinPostLength;
   const maxLength = PostUtil.kMaxPostLength;
   const count = PostUtil.weightedLength(value);
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   const addAttachedFiles = async (files: File[]) => {
     const attachableFiles = files.filter(file => allowedFileTypes.has(file.type));

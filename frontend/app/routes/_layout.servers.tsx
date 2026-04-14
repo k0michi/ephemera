@@ -4,8 +4,8 @@ import { Link } from "react-router";
 import { Card, ListGroup } from "react-bootstrap";
 import { useReader } from "lib/store";
 import { useEffect, useState } from "react";
-import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_layout.servers";
+import { EphemeraStore } from "~/store";
 
 export function loader() {
   return {
@@ -89,7 +89,7 @@ function ServerCard({ title, servers, emptyMessage }: ServerCardProps) {
 }
 
 export default function Servers() {
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
   const [servers, setServers] = useState<PeerManifest[] | null>(null);
   const [localServer, setLocalServer] = useState<PeerManifest | null>(null);
 

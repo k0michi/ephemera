@@ -7,8 +7,8 @@ import { useState } from 'react';
 import { Table, Button, Modal } from 'react-bootstrap';
 import { BsTrash, BsDownload, BsPlusLg, BsUpload } from 'react-icons/bs';
 import FileHelper from '~/file_helper';
-import { EphemeraStoreContext } from '~/store';
 import type { Route } from './+types/_layout.settings';
+import { EphemeraStore } from '~/store';
 
 export function loader() {
   return {
@@ -25,8 +25,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export interface SettingsProps { }
 
 export default function Settings({ }: SettingsProps) {
-  const keyPairs = useSelector(EphemeraStoreContext, (store) => store.keyPairs);
-  const store = useReader(EphemeraStoreContext);
+  const keyPairs = useSelector(EphemeraStore, (store) => store.keyPairs);
+  const store = useReader(EphemeraStore);
 
   const [targetKeyPair, setTargetKeyPair] = useState<KeyPair | null>(null);
 

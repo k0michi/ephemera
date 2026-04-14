@@ -2,13 +2,13 @@ import Notifier from "components/notifier";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link, Outlet, useNavigate } from "react-router";
 
-import { EphemeraStoreContext } from "~/store";
 import { useReader, useSelector } from "lib/store";
 import { useEffect } from "react";
 import Nav from "components/nav";
+import { EphemeraStore } from "~/store";
 
 export default function Layout() {
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   useEffect(() => {
     store.initialize();

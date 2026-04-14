@@ -1,13 +1,13 @@
 import { useReader, useSelector } from "lib/store";
 import { Container, Dropdown, Row, Col } from "react-bootstrap";
 import { Link, useNavigate } from "react-router";
-import { EphemeraStoreContext } from "~/store";
 import ServerIdenticon from "./server_identicon";
 import { NavLink } from "./nav_link";
 import { BsGear, BsHddNetwork } from "react-icons/bs";
+import { EphemeraStore } from "~/store";
 
 export default function Nav() {
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
 
   return (
     <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>

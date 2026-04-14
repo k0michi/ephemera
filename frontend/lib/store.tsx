@@ -27,30 +27,49 @@ export class Store {
   }
 }
 
-export function createStoreContext<T extends Store>(type: new () => T) {
-  const Context = React.createContext<T | null>(null);
-  const OriginalProvider = Context.Provider;
+const StoreRegistryContext = React.createContext<Map<Function, Store>>(new Map());
 
-  const Provider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
-    const store = React.useRef(new type()).current;
-    return <OriginalProvider value={store}>{children}</OriginalProvider>;
-  };
+export function StoreProvider<T extends Store>({
+  create,
+  children,
+}: {
+  create: () => T;
+  children: React.ReactNode;
+}) {
+  const parentRegistry = React.useContext(StoreRegistryContext);
+  const [store] = React.useState(create);
 
-  return Object.assign(Context, { Provider });
+  const registry = React.useMemo(() => {
+    const newRegistry = new Map(parentRegistry);
+    newRegistry.set(store.constructor, store);
+    return newRegistry;
+  }, [parentRegistry, create, store]);
+
+  return (
+    <StoreRegistryContext.Provider value={registry}>
+      {children}
+    </StoreRegistryContext.Provider>
+  );
 }
 
-export function useReader<T extends Store>(Context: React.Context<T | null>): T {
-  const store = React.useContext(Context);
-  if (!store) {
-    throw new Error("Store context is not provided");
+export function useReader<T extends Store>(StoreClass: new (...args: any[]) => T): T {
+  const registry = React.useContext(StoreRegistryContext);
+
+  if (registry === null) {
+    throw new Error("useReader must be used within a StoreContext");
   }
-  return store;
+
+  const store = registry.get(StoreClass);
+
+  if (store === undefined) {
+    throw new Error(`No store found for ${StoreClass.name}`);
+  }
+
+  return store as T;
 }
 
-export function useWatcher<T extends Store>(
-  Context: React.Context<T | null>
-): T {
-  const store = useReader(Context);
+export function useWatcher<T extends Store>(StoreClass: new (...args: any[]) => T): T {
+  const store = useReader(StoreClass);
   useSyncExternalStore(
     (onStoreChange) => store.subscribe(onStoreChange),
     () => store.version,
@@ -60,10 +79,10 @@ export function useWatcher<T extends Store>(
 }
 
 export function useSelector<T extends Store, U>(
-  Context: React.Context<T | null>,
+  StoreClass: new (...args: any[]) => T,
   selector: (store: T) => U
 ): U {
-  const store = useReader(Context);
+  const store = useReader(StoreClass);
   return useSyncExternalStore(
     (onStoreChange) => store.subscribe(onStoreChange),
     () => selector(store),

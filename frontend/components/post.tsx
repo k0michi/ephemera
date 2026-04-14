@@ -3,7 +3,6 @@ import styles from "./post.module.css";
 import { Card, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
-import { EphemeraStoreContext } from "~/store";
 import { useReader } from "lib/store";
 import { Link } from "react-router";
 import { BsThreeDots } from "react-icons/bs";
@@ -11,6 +10,7 @@ import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
 import React from "react";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import { EphemeraStore } from "~/store";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -32,7 +32,7 @@ export default function Post({ post, onDelete }: PostProps) {
     };
   }, [post, now]);
 
-  const store = useReader(EphemeraStoreContext);
+  const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
 
   const postPublicKey = post[0][1][1];

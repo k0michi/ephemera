@@ -1,4 +1,4 @@
-import { createStoreContext, Store } from "../lib/store.js";
+import { Store } from "../lib/store.js";
 
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import Client from '@ephemera/shared/lib/client.js';
@@ -322,5 +322,3 @@ export class EphemeraStore extends Store implements Disposable {
     });
   }
 }
-
-export const EphemeraStoreContext = createStoreContext(EphemeraStore);

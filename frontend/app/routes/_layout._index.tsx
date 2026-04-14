@@ -1,5 +1,3 @@
-import { useReader, useSelector } from "lib/store";
-import { EphemeraStoreContext } from "~/store";
 import type { Route } from "./+types/_layout._index";
 import Composer from "components/composer";
 import Timeline from "components/timeline";
