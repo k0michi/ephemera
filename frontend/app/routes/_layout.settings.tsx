@@ -1,7 +1,7 @@
 import { exportedKeyPairSchema } from '@ephemera/shared/api/api_schema';
 import Base37 from '@ephemera/shared/lib/base37';
 import type { KeyPair } from '@ephemera/shared/lib/crypto';
-import Identicon from 'components/identicon';
+import { RoundedIdenticon } from 'components/identicon';
 import { useReader, useSelector } from 'lib/store';
 import { useState } from 'react';
 import { Table, Button, Modal } from 'react-bootstrap';
@@ -91,7 +91,7 @@ export default function Settings({ }: SettingsProps) {
             Object.entries(keyPairs).map(([id, kp]) => (
               <tr key={id}>
                 <td>
-                  <Identicon data={kp.publicKey} style={{ width: 32, height: 32, borderRadius: '4px' }} />
+                  <RoundedIdenticon data={kp.publicKey} style={{ width: 32, height: 32 }} />
                 </td>
                 <td className="font-monospace fw-bold text-break">
                   @{id}
@@ -131,7 +131,7 @@ export default function Settings({ }: SettingsProps) {
           {targetKeyPair && (
             <>
               <div className="d-flex align-items-center gap-3 mb-3 p-2 border rounded bg-light" style={{ minWidth: 0 }}>
-                <Identicon data={targetKeyPair.publicKey} style={{ width: 40, height: 40, flexShrink: 0 }} />
+                <RoundedIdenticon data={targetKeyPair.publicKey} size={40} style={{ flexShrink: 0 }} />
 
                 <span className="font-monospace fw-bold" style={{
                   overflow: 'hidden',

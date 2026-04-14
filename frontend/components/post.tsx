@@ -1,7 +1,7 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import styles from "./post.module.css";
 import { Card, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
-import Identicon from "./identicon";
+import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import { EphemeraStoreContext } from "~/store";
 import { useReader } from "lib/store";
@@ -58,13 +58,10 @@ export default function Post({ post, onDelete }: PostProps) {
           {/* Icon */}
           <div style={{ flexShrink: 0 }}>
             <Link to={`/${postPublicKey}`}>
-              <Identicon data={Base37.toUint8Array(post[0][1][1])} style={{
+              <RoundedIdenticon data={Base37.toUint8Array(post[0][1][1])} style={{
                 display: 'block',
-                width: 48,
-                height: 48,
-                borderRadius: 6,
                 verticalAlign: 'middle',
-              }} />
+              }} size={48} />
             </Link>
           </div>
           {/* Content */}

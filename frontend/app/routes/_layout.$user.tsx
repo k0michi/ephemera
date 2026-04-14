@@ -1,7 +1,7 @@
 import Timeline from "components/timeline";
 import { useParams } from "react-router";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import Identicon from "components/identicon";
+import { RoundedIdenticon } from "components/identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import Crypto from "@ephemera/shared/lib/crypto";
 import type { Route } from "./+types/_layout.$user";
@@ -40,7 +40,7 @@ export default function User() {
       {isValidKey ? <>
         <Card className="p-3 d-flex flex-row align-items-center gap-3">
           {identiconData && (
-            <Identicon data={identiconData} style={{ width: 48, height: 48, borderRadius: 6 }} />
+            <RoundedIdenticon data={identiconData} size={48} />
           )}
           <div
             className="fw-bold fs-5"

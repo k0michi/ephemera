@@ -13,7 +13,7 @@ import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import Hex from "@ephemera/shared/lib/hex";
 import ArrayHelper from "@ephemera/shared/lib/array_helper";
 import Base37 from "@ephemera/shared/lib/base37";
-import Identicon from "./identicon";
+import { RoundedIdenticon } from "./identicon";
 import { BsCheckLg } from "react-icons/bs";
 
 export interface ComposerProps {
@@ -241,7 +241,7 @@ export default function Composer({ }: ComposerProps) {
                   textAlign: 'left'
                 }}>
                   {NullableHelper.map(selectedPublicKey, (pk) => (
-                    <Identicon data={pk} style={{ width: 22, height: 22, borderRadius: '3px', flexShrink: 0 }} />
+                    <RoundedIdenticon data={pk} size={22} style={{ flexShrink: 0 }} />
                   ))}
 
                   <span style={{
@@ -292,7 +292,7 @@ export default function Composer({ }: ComposerProps) {
                           )}
                         </div>
 
-                        <Identicon data={kp.publicKey} style={{ width: 20, height: 20, borderRadius: '2px', flexShrink: 0 }} />
+                        <RoundedIdenticon data={kp.publicKey} size={20} style={{ flexShrink: 0 }} />
 
                         <span style={{
                           overflow: 'hidden',
