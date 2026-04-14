@@ -6,9 +6,9 @@ export default class NullableHelper {
     return value;
   }
 
-  static map<T, U>(value: NonNullable<T>, fn: (val: T) => U): U;
-  static map<T, U>(value: undefined, fn: (val: T) => U): undefined;
-  static map<T, U>(value: null, fn: (val: T) => U): null;
+  static map<T, U>(value: NonNullable<T>, fn: (val: NonNullable<T>) => U): U;
+  static map<T, U>(value: undefined, fn: (val: NonNullable<T>) => U): undefined;
+  static map<T, U>(value: null, fn: (val: NonNullable<T>) => U): null;
   static map<T, U>(value: NonNullable<T> | undefined, fn: (val: NonNullable<T>) => U): U | undefined;
   static map<T, U>(value: NonNullable<T> | null, fn: (val: NonNullable<T>) => U): U | null;
   static map<T, U>(
