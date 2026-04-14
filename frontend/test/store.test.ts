@@ -3,6 +3,7 @@ import 'fake-indexeddb/auto';
 import { EphemeraStore } from '../app/store.js';
 import Base37 from "@ephemera/shared/lib/base37";
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import Crypto from '@ephemera/shared/lib/crypto.js';
 
 describe('EphemeraStore', () => {
   let store: EphemeraStore;
@@ -27,8 +28,9 @@ describe('EphemeraStore', () => {
   });
 
   it('should migrate data from localStorage to IndexedDB during v0 to v1 upgrade', async () => {
-    const mockPublicKeyArray = [1, 2, 3, 4, 5];
-    const mockPrivateKeyArray = [9, 8, 7, 6, 5];
+    const keyPair = Crypto.generateKeyPair();
+    const mockPublicKeyArray = Array.from(keyPair.publicKey);
+    const mockPrivateKeyArray = Array.from(keyPair.privateKey);
 
     const expectedPublicKeyStr = Base37.fromUint8Array(new Uint8Array(mockPublicKeyArray));
     const expectedPrivateKeyStr = Base37.fromUint8Array(new Uint8Array(mockPrivateKeyArray));
