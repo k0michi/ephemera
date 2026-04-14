@@ -269,19 +269,19 @@ export class EphemeraStore extends Store {
         createdAt: Date.now(),
       });
 
-      tx.oncomplete = () => {
+      tx.addEventListener('complete', () => {
         localStorage.removeItem(this._kPublicKeyStorageKey);
         localStorage.removeItem(this._kPrivateKeyStorageKey);
-      };
+      });
     }
 
-    tx.oncomplete = () => {
+    tx.addEventListener('complete', () => {
       this.addLog('success', 'Database migration to v1 completed');
-    };
+    });
 
-    tx.onerror = () => {
+    tx.addEventListener('error', () => {
       this.addLog('danger', 'Database migration to v1 failed');
-    };
+    });
   }
 
   private async openDB(): Promise<IDBDatabase> {
