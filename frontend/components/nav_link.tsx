@@ -1,5 +1,5 @@
 import styles from "./nav_link.module.css";
-import { useLocation, Link } from "react-router";
+import { NavLink as RouterNavLink } from "react-router";
 import { useEffect, useState } from "react";
 import { deriveColor } from "./server_identicon";
 import Crypto from "@ephemera/shared/lib/crypto";
@@ -8,11 +8,10 @@ export interface NavLinkProps {
   to: string;
   label: string;
   icon: React.ReactNode;
+  end?: boolean;
 }
 
 export function NavLink(props: NavLinkProps) {
-  const location = useLocation();
-  const active = location.pathname.startsWith(props.to);
   const [defaultActiveColor, setDefaultActiveColor] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,18 +23,19 @@ export function NavLink(props: NavLinkProps) {
   }, []);
 
   return (
-    <Link
+    <RouterNavLink
       to={props.to}
-      className={`${styles['nav-link']} ${active ? styles['active'] : ''}`}
-      style={
-        {
-          "--nav-link-active-color": defaultActiveColor,
-        } as React.CSSProperties
+      end={props.end ?? false}
+      className={({ isActive }) =>
+        `${styles['nav-link']} ${isActive ? styles['active'] : ''}`
       }
+      style={({ isActive }) => ({
+        "--nav-link-active-color": isActive ? defaultActiveColor : undefined,
+      } as React.CSSProperties)}
     >
       {props.icon}
       <span>{props.label}</span>
       <span className={`${styles['nav-link-indicator']}`} />
-    </Link>
+    </RouterNavLink>
   );
 }
