@@ -3,7 +3,7 @@ import { Container, Dropdown, Row, Col } from "react-bootstrap";
 import { Link, useNavigate } from "react-router";
 import ServerIdenticon from "./server_identicon";
 import { NavLink } from "./nav_link";
-import { BsGear, BsHddNetwork } from "react-icons/bs";
+import { BsGear, BsHddNetwork, BsHouse } from "react-icons/bs";
 import { EphemeraStore } from "~/store";
 
 export default function Nav() {
@@ -24,11 +24,9 @@ export default function Nav() {
                     data={new TextEncoder().encode(store.getHost() || '')}
                   />
                 </Link>
-                <Link to="/" style={{ textDecoration: "none" }}>
-                  <div style={{ fontSize: "1.5rem", color: "black" }}>Ephemera</div>
-                </Link>
               </div>
 
+              <NavLink to="/" label="Home" icon={<BsHouse size={16} />} end />
               <NavLink to="/servers" label="Servers" icon={<BsHddNetwork size={16} />} />
               <NavLink to="/settings" label="Settings" icon={<BsGear size={16} />} />
             </div>
