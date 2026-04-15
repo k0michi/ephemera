@@ -29,9 +29,11 @@ export function NavLink(props: NavLinkProps) {
       className={({ isActive }) =>
         `${styles['nav-link']} ${isActive ? styles['active'] : ''}`
       }
-      style={({ isActive }) => ({
-        "--nav-link-active-color": isActive ? defaultActiveColor : undefined,
-      } as React.CSSProperties)}
+      style={
+        {
+          "--nav-link-active-color": defaultActiveColor,
+        } as React.CSSProperties
+      }
     >
       {props.icon}
       <span>{props.label}</span>
