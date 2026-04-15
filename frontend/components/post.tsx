@@ -1,11 +1,11 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import styles from "./post.module.css";
-import { Card, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Card, Dropdown, OverlayTrigger, Tooltip, Modal, Button } from "react-bootstrap";
 import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import { useReader } from "lib/store";
 import { Link } from "react-router";
-import { BsThreeDots } from "react-icons/bs";
+import { BsThreeDots, BsTrash } from "react-icons/bs";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
 import React from "react";
@@ -19,6 +19,7 @@ export interface PostProps {
 
 export default function Post({ post, onDelete }: PostProps) {
   const [now, setNow] = React.useState(Date.now());
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
@@ -34,10 +35,9 @@ export default function Post({ post, onDelete }: PostProps) {
 
   const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
-
   const postPublicKey = post[0][1][1];
 
-  const handleDeletePost = async (post: CreatePostSignal) => {
+  const handleDeletePost = async () => {
     try {
       const keyPair = NullableHelper.unwrap(store.keyPairs[post[0][1][1]]);
       const digest = await SignalCrypto.digest(post[0]);
@@ -48,41 +48,43 @@ export default function Post({ post, onDelete }: PostProps) {
       }
     } catch (e) {
       store.addLog("danger", e instanceof Error ? e.message : "Failed to delete post.");
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
   return (
-    <Card className={styles.post}>
-      <Card.Body style={{ padding: 12 }}>
-        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-          {/* Icon */}
-          <div style={{ flexShrink: 0 }}>
-            <Link to={`/${postPublicKey}`}>
-              <RoundedIdenticon data={Base37.toUint8Array(post[0][1][1])} style={{
-                display: 'block',
-                verticalAlign: 'middle',
-              }} size={48} />
-            </Link>
-          </div>
-          {/* Content */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            {/* Username */}
-            <div className="text-secondary fs-6" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-              <Link
-                to={`/${postPublicKey}`}
-                className={styles.postUsernameLink}
-                style={{
-                  color: 'inherit',
-                  minWidth: 0,
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                }}
-              >
-                @{post[0][1][1]}
+    <>
+      <Card className={styles.post}>
+        <Card.Body style={{ padding: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+            {/* Icon */}
+            <div style={{ flexShrink: 0 }}>
+              <Link to={`/${postPublicKey}`}>
+                <RoundedIdenticon data={Base37.toUint8Array(post[0][1][1])} style={{
+                  display: 'block',
+                  verticalAlign: 'middle',
+                }} size={48} />
               </Link>
-              {
-                !isLocal(post[0][1][0]) ?
+            </div>
+            {/* Content */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              {/* Username & Date Row */}
+              <div className="text-secondary fs-6" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <Link
+                  to={`/${postPublicKey}`}
+                  className={styles.postUsernameLink}
+                  style={{
+                    color: 'inherit',
+                    minWidth: 0,
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                  }}
+                >
+                  @{post[0][1][1]}
+                </Link>
+                {!isLocal(post[0][1][0]) && (
                   <>
                     {'•'}
                     <span style={{ flexShrink: 0 }}>
@@ -91,70 +93,84 @@ export default function Post({ post, onDelete }: PostProps) {
                       </Link>
                     </span>
                   </>
-                  : null
-              }
-              {'•'}
-              <OverlayTrigger
-                placement="top"
-                delay={{ show: 500, hide: 0 }}
-                overlay={(props) => {
-                  return <Tooltip {...props} placement="top">
-                    {new Date(post[0][1][2]).toLocaleString()}
-                  </Tooltip>;
-                }}
-              >
-                <span style={{ flexShrink: 0 }}>
-                  {formatDate(post[0][1][2], now)}
-                </span>
-              </OverlayTrigger>
-            </div>
-            {/* Body */}
-            <div style={{ marginBottom: 8 }}>
-              <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
-            </div>
-            <div>
-              {post[0][3]?.filter((footer) => footer[0] === 'attachment').map((footer) => {
-                const type = footer[1];
-                const attachmentHash = footer[2];
+                )}
+                {'•'}
+                <OverlayTrigger
+                  placement="top"
+                  delay={{ show: 500, hide: 0 }}
+                  overlay={(props) => (
+                    <Tooltip {...props} placement="top">
+                      {new Date(post[0][1][2]).toLocaleString()}
+                    </Tooltip>
+                  )}
+                >
+                  <span style={{ flexShrink: 0 }}>
+                    {formatDate(post[0][1][2], now)}
+                  </span>
+                </OverlayTrigger>
+              </div>
 
-                return (
-                  type.startsWith('image/') ? (
-                    <img
-                      key={attachmentHash}
-                      src={`${store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0])}`}
-                      alt="post attachment"
-                      style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
-                    />
+              {/* Body */}
+              <div style={{ marginBottom: 8 }}>
+                <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
+              </div>
+
+              {/* Attachments */}
+              <div>
+                {post[0][3]?.filter((footer) => footer[0] === 'attachment').map((footer) => {
+                  const type = footer[1];
+                  const attachmentHash = footer[2];
+                  const url = store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0]);
+
+                  return type.startsWith('image/') ? (
+                    <img key={attachmentHash} src={url} alt="post attachment" style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />
                   ) : type.startsWith('video/') ? (
-                    <video
-                      key={attachmentHash}
-                      src={`${store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0])}`}
-                      controls
-                      style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
-                    />
-                  ) : null
-                );
-              })}
-            </div>
-            {/* Footer */}
-            <div>
-              <Dropdown>
-                <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
-                  <BsThreeDots className="text-secondary" />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  {canDelete(post, publicKeys) ? (
-                    <Dropdown.Item onClick={() => handleDeletePost(post)}>
-                      Delete post
-                    </Dropdown.Item>
-                  ) : null}
-                </Dropdown.Menu>
-              </Dropdown>
+                    <video key={attachmentHash} src={url} controls style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />
+                  ) : null;
+                })}
+              </div>
+
+              {/* Menu */}
+              <div>
+                <Dropdown>
+                  <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
+                    <BsThreeDots className="text-secondary" />
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', }}>
+                    {canDelete(post, publicKeys) ? (
+                      <Dropdown.Item
+                        onClick={() => setShowDeleteModal(true)}
+                        className="text-danger d-flex align-items-center gap-2"
+                      >
+                        <BsTrash /> Delete post
+                      </Dropdown.Item>
+                    ) : null}
+                  </Dropdown.Menu>
+                </Dropdown>
+              </div>
             </div>
           </div>
-        </div>
-      </Card.Body>
-    </Card>
+        </Card.Body>
+      </Card>
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Post</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to delete this post?</p>
+          <p className="text-danger fw-bold">This action cannot be undone.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeletePost}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 }
 
