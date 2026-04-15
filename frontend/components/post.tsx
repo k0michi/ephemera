@@ -1,6 +1,6 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import styles from "./post.module.css";
-import { Card, Dropdown, OverlayTrigger, Tooltip, Modal, Button } from "react-bootstrap";
+import { Card, Dropdown, OverlayTrigger, Tooltip, Modal, Button, Spinner } from "react-bootstrap";
 import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import { useReader } from "lib/store";
@@ -11,6 +11,7 @@ import Hex from "@ephemera/shared/lib/hex";
 import React from "react";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import { EphemeraStore } from "~/store";
+import { useMutex } from "../app/hooks/mutex";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -20,6 +21,7 @@ export interface PostProps {
 export default function Post({ post, onDelete }: PostProps) {
   const [now, setNow] = React.useState(Date.now());
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const { isLocked, tryLock } = useMutex();
 
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
@@ -38,6 +40,12 @@ export default function Post({ post, onDelete }: PostProps) {
   const postPublicKey = post[0][1][1];
 
   const handleDeletePost = async () => {
+    using lock = tryLock();
+
+    if (lock === null) {
+      return;
+    }
+
     try {
       const keyPair = NullableHelper.unwrap(store.keyPairs[post[0][1][1]]);
       const digest = await SignalCrypto.digest(post[0]);
@@ -153,8 +161,12 @@ export default function Post({ post, onDelete }: PostProps) {
         </Card.Body>
       </Card>
 
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-        <Modal.Header closeButton>
+      <Modal
+        show={showDeleteModal}
+        onHide={() => !isLocked && setShowDeleteModal(false)}
+        centered
+      >
+        <Modal.Header closeButton={!isLocked}>
           <Modal.Title>Delete Post</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -162,11 +174,33 @@ export default function Post({ post, onDelete }: PostProps) {
           <p className="text-danger fw-bold">This action cannot be undone.</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDeleteModal(false)}
+            disabled={isLocked}
+          >
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDeletePost}>
-            Delete
+          <Button
+            variant="danger"
+            onClick={handleDeletePost}
+            disabled={isLocked}
+          >
+            {isLocked ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
