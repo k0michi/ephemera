@@ -61,6 +61,8 @@ export default function Post({ post, onDelete }: PostProps) {
     }
   };
 
+  const blank = post[0][2] === "";
+
   return (
     <>
       <Card className={styles.post}>
@@ -120,7 +122,14 @@ export default function Post({ post, onDelete }: PostProps) {
 
               {/* Body */}
               <div style={{ marginBottom: 8 }}>
-                <Card.Text style={{ whiteSpace: 'pre-wrap' }}>{post[0][2]}</Card.Text>
+                <Card.Text
+                  style={{
+                    whiteSpace: 'pre-wrap',
+                    ...(blank && { color: '#999', fontStyle: 'italic' })
+                  }}
+                >
+                  {blank ? "(intentionally left blank)" : post[0][2]}
+                </Card.Text>
               </div>
 
               {/* Attachments */}
