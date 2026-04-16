@@ -61,7 +61,8 @@ export default function Post({ post, onDelete }: PostProps) {
     }
   };
 
-  const blank = post[0][2] === "";
+  const attachments = post[0][3].filter((footer) => footer[0] === 'attachment');
+  const blank = post[0][2] === "" && attachments.length === 0;
 
   return (
     <>
@@ -134,7 +135,7 @@ export default function Post({ post, onDelete }: PostProps) {
 
               {/* Attachments */}
               <div>
-                {post[0][3]?.filter((footer) => footer[0] === 'attachment').map((footer) => {
+                {attachments.map((footer) => {
                   const type = footer[1];
                   const attachmentHash = footer[2];
                   const url = store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0]);
