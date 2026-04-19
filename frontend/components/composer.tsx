@@ -2,18 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { Form, Button, Card, Spinner, Dropdown } from "react-bootstrap";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { useReader, useSelector } from "lib/store";
-import { BsImage, BsPersonCircle } from "react-icons/bs";
+import { BsImage, BsXLg, BsCheckLg, BsPaperclip } from "react-icons/bs";
 import { useMutex } from "~/hooks/mutex";
 import { useDisposableState } from "~/hooks/disposable_state";
 import { DisposableURL } from "lib/disposable_url";
-import { BsXLg } from "react-icons/bs";
 import Crypto from "@ephemera/shared/lib/crypto";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import Hex from "@ephemera/shared/lib/hex";
 import ArrayHelper from "@ephemera/shared/lib/array_helper";
 import Base37 from "@ephemera/shared/lib/base37";
 import { RoundedIdenticon } from "./identicon";
-import { BsCheckLg } from "react-icons/bs";
 import { EphemeraStore } from "~/store";
 
 export interface ComposerProps {
@@ -78,6 +76,7 @@ export default function Composer({ }: ComposerProps) {
   const keyPairs = Object.values(useSelector(EphemeraStore, state => state.keyPairs));
 
   const [selectedPublicKey, setSelectedPublicKey] = useState(keyPairs[0]?.publicKey ?? null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (selectedPublicKey == null && keyPairs.length > 0) {
@@ -138,7 +137,6 @@ export default function Composer({ }: ComposerProps) {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     const files = Array.from(e.clipboardData.files);
-
     if (files.length > 0) {
       if (containsAttachable(e.clipboardData.files)) {
         addAttachedFiles(files);
@@ -147,7 +145,34 @@ export default function Composer({ }: ComposerProps) {
     }
   };
 
-  //const handleDrop = (e:React.DragEvent) => {}
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+
+    if (files.length > 0) {
+      addAttachedFiles(files);
+    }
+  };
 
   const handleRemoveAttachment = () => {
     setAttachments([]);
@@ -312,18 +337,26 @@ export default function Composer({ }: ComposerProps) {
             </Dropdown>
           </div>
 
-          <Form.Group controlId="composerTextarea">
+          <Form.Group controlId="composerTextarea" style={{ position: 'relative' }}>
             <Form.Control
               as="textarea"
               rows={3}
               value={value}
-              onChange={e => {
-                setValue(PostUtil.sanitize(e.target.value))
-              }}
+              onChange={e => setValue(PostUtil.sanitize(e.target.value))}
               onPaste={handlePaste}
-              placeholder="What are you doing?"
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              placeholder={isDragging ? "" : "What are you doing?"}
               aria-label="Post content"
-              style={{ resize: 'none' }}
+              style={{
+                resize: 'none',
+                transition: 'all 0.2s ease',
+                backgroundColor: isDragging ? '#f8f9fa' : undefined,
+                borderColor: isDragging ? '#007bff' : undefined,
+                color: isDragging ? 'transparent' : 'inherit',
+              }}
               disabled={isSubmitting}
               onKeyDown={e => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -332,6 +365,30 @@ export default function Composer({ }: ComposerProps) {
                 }
               }}
             />
+
+            {isDragging && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  borderRadius: '0.375rem',
+                  color: '#007bff',
+                  zIndex: 10,
+                }}
+              >
+                <BsPaperclip size={24} style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: '600' }}>Drop files here...</span>
+              </div>
+            )}
           </Form.Group>
           <div
             style={{
