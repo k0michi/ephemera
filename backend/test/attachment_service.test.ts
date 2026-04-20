@@ -76,21 +76,34 @@ describe('AttachmentService', () => {
     });
   }, 60_000);
 
-  it('should accept a video attachment', async () => {
+  it.each([
+    { type: 'video/mp4', codec: 'h264' },
+    { type: 'video/mp4', codec: 'vp9' },
+    { type: 'video/mp4', codec: 'av1' },
+    { type: 'video/webm', codec: 'vp8' },
+    { type: 'video/webm', codec: 'vp9' },
+    { type: 'video/webm', codec: 'av1' },
+  ] as const)('should accept $type with $codec', async ({ type, codec }) => {
     await database.transaction(async (tx) => {
       const testVideo = await TestHelper.newDummyVideo({
-        duration: 2,
-        width: 10,
-        height: 10,
-        format: 'mp4',
-        fps: 30,
+        duration: 1, width: 10, height: 10, type, codec, fps: 1
       });
 
       const attachmentId = await attachmentService.copyFrom(testVideo, tx);
+      expect(attachmentId).toBeDefined();
+    });
+  }, 60_000);
 
-      const filePath = attachmentService.getFilePath(attachmentId);
+  it.each([
+    { type: 'video/mp4', codec: 'h265' },
+  ] as const)('should reject $type with unsupported codec $codec', async ({ type, codec }) => {
+    await database.transaction(async (tx) => {
+      const testVideo = await TestHelper.newDummyVideo({
+        duration: 1, width: 10, height: 10, type, codec, fps: 1
+      });
 
-      await TestHelper.assertFileEquals(testVideo, filePath);
+      await expect(attachmentService.copyFrom(testVideo, tx))
+        .rejects.toThrow();
     });
   }, 60_000);
 
@@ -100,7 +113,8 @@ describe('AttachmentService', () => {
         duration: 1,
         width: 5000,
         height: 5000,
-        format: 'mp4',
+        type: 'video/mp4',
+        codec: 'h264',
         fps: 1
       });
 

@@ -9,6 +9,8 @@ import ffmpeg from 'fluent-ffmpeg';
 import Crypto from "@ephemera/shared/lib/crypto.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
 
+export type VideoCodec = 'h264' | 'vp8' | 'vp9' | 'av1' | 'h265';
+
 export default class TestHelper {
   static startDbContainer() {
     return new MariaDbContainer('mariadb:11')
@@ -92,17 +94,31 @@ export default class TestHelper {
     width,
     height,
     duration,
-    format = 'mp4',
+    type = 'video/mp4',
+    codec,
     fps = 30
   }: {
     width: number;
     height: number;
     duration: number;
-    format: 'mp4' | 'webm';
+    type: 'video/mp4' | 'video/webm';
+    codec?: VideoCodec;
     fps?: number;
   }): Promise<string> {
+    const extension = type === 'video/webm' ? 'webm' : 'mp4';
+
     let outputPath = await this.newTempFile();
-    outputPath += `.${format}`;
+    outputPath += `.${extension}`;
+
+    const effectiveCodec = codec ?? (type === 'video/mp4' ? 'h264' : 'vp9');
+
+    const encoderMap: Record<VideoCodec, string> = {
+      'h264': 'libx264',
+      'vp8': 'libvpx',
+      'vp9': 'libvpx-vp9',
+      'av1': 'libaom-av1',
+      'h265': 'libx265'
+    };
 
     const dummyImagePath = await this.newDummyImage({
       width,
@@ -118,20 +134,24 @@ export default class TestHelper {
           `-t ${duration}`
         ]);
 
-      if (format === 'mp4') {
-        command
-          .videoCodec('libx264')
-          .outputOptions([
-            '-pix_fmt yuv420p',
-            `-r ${fps}`
-          ]);
-      } else {
-        command
-          .videoCodec('libvpx-vp9')
-          .outputOptions([`-r ${fps}`]);
+      command.videoCodec(encoderMap[effectiveCodec]);
+
+      const outputOptions = [`-r ${fps}`];
+
+      if (['h264', 'h265', 'av1'].includes(effectiveCodec)) {
+        outputOptions.push('-pix_fmt yuv420p');
+      }
+
+      if (effectiveCodec === 'h265' && type === 'video/mp4') {
+        outputOptions.push('-tag:v hvc1');
+      }
+
+      if (effectiveCodec === 'av1') {
+        outputOptions.push('-cpu-used 8');
       }
 
       command
+        .outputOptions(outputOptions)
         .on('error', (err) => {
           reject(err);
         })
