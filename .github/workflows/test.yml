@@ -18,7 +18,7 @@ jobs:
       - name: Install ffmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg libx265-dev
+          sudo apt-get install -y ffmpeg
       - name: Install dependencies
         run: npm ci
       - name: Type check
