@@ -86,7 +86,7 @@ describe('AttachmentService', () => {
   ] as const)('should accept $type with $codec', async ({ type, codec }) => {
     await database.transaction(async (tx) => {
       const testVideo = await TestHelper.newDummyVideo({
-        duration: 1, width: 10, height: 10, type, codec, fps: 1
+        duration: 1, width: 32, height: 32, type, codec, fps: 1
       });
 
       const attachmentId = await attachmentService.copyFrom(testVideo, tx);
@@ -99,7 +99,7 @@ describe('AttachmentService', () => {
   ] as const)('should reject $type with unsupported codec $codec', async ({ type, codec }) => {
     await database.transaction(async (tx) => {
       const testVideo = await TestHelper.newDummyVideo({
-        duration: 1, width: 10, height: 10, type, codec, fps: 1
+        duration: 1, width: 32, height: 32, type, codec, fps: 1
       });
 
       await expect(attachmentService.copyFrom(testVideo, tx))
