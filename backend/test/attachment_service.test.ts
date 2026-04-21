@@ -40,7 +40,7 @@ describe('AttachmentService', () => {
         {
           width: 800,
           height: 600,
-          format: 'png',
+          type: 'image/png',
           alpha: true
         }
       );
@@ -59,7 +59,7 @@ describe('AttachmentService', () => {
         {
           width: 10000,
           height: 10000,
-          format: 'png',
+          type: 'image/png',
           alpha: true
         }
       );

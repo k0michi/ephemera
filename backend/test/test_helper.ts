@@ -9,7 +9,9 @@ import ffmpeg from 'fluent-ffmpeg';
 import Crypto from "@ephemera/shared/lib/crypto.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
 
+export type ImageType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif';
 export type VideoCodec = 'h264' | 'vp8' | 'vp9' | 'av1' | 'h265';
+export type VideoType = 'video/mp4' | 'video/webm';
 
 export default class TestHelper {
   static startDbContainer() {
@@ -48,8 +50,19 @@ export default class TestHelper {
     return filePath;
   }
 
-  static async newDummyImage({ width, height, format, alpha }: { width: number, height: number, format: 'png' | 'jpeg' | 'webp' | 'gif', alpha: boolean }): Promise<string> {
-    const size = width * height * (alpha ? 4 : 3);
+  static async newDummyImage({
+    width,
+    height,
+    type,
+    alpha
+  }: {
+    width: number;
+    height: number;
+    type: ImageType;
+    alpha: boolean;
+  }): Promise<string> {
+    const channels = alpha ? 4 : 3;
+    const size = width * height * channels;
     const randomBuffer = Buffer.alloc(size);
 
     for (let i = 0; i < size; i++) {
@@ -58,28 +71,25 @@ export default class TestHelper {
 
     let image = sharp(randomBuffer, {
       raw: {
-        width: width,
-        height: height,
-        channels: alpha ? 4 : 3,
+        width,
+        height,
+        channels,
       }
     });
 
-    switch (format) {
-      case 'png':
-        image = image.png();
-        break;
-      case 'jpeg':
-        image = image.jpeg();
-        break;
-      case 'webp':
-        image = image.webp();
-        break;
-      case 'gif':
-        image = image.gif();
-        break;
-    }
+    const mimeMap: Record<ImageType, { ext: string; render: () => sharp.Sharp }> = {
+      'image/png': { ext: 'png', render: () => image.png() },
+      'image/jpeg': { ext: 'jpg', render: () => image.jpeg() },
+      'image/webp': { ext: 'webp', render: () => image.webp() },
+      'image/gif': { ext: 'gif', render: () => image.gif() },
+    };
 
-    const filePath = await this.newTempFile();
+    const { ext, render } = mimeMap[type];
+    image = render();
+
+    let filePath = await this.newTempFile();
+    filePath += `.${ext}`;
+
     await image.toFile(filePath);
     return filePath;
   }
@@ -101,7 +111,7 @@ export default class TestHelper {
     width: number;
     height: number;
     duration: number;
-    type: 'video/mp4' | 'video/webm';
+    type: VideoType;
     codec: VideoCodec;
     fps: number;
   }): Promise<string> {
@@ -121,7 +131,7 @@ export default class TestHelper {
     const dummyImagePath = await this.newDummyImage({
       width,
       height,
-      format: 'png',
+      type: 'image/png',
       alpha: false
     });
 
