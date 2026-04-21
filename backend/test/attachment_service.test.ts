@@ -91,6 +91,8 @@ describe('AttachmentService', () => {
 
       const attachmentId = await attachmentService.copyFrom(testVideo, tx);
       expect(attachmentId).toBeDefined();
+
+      await TestHelper.assertFileEquals(testVideo, attachmentService.getFilePath(attachmentId));
     });
   }, 60_000);
 
