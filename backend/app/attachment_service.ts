@@ -125,7 +125,11 @@ export class AttachmentService implements IAttachmentService {
 
       const codec = videoStream.codec_name;
 
-      if (codec !== undefined && !AttachmentService._kAllowedVideoCodecs.has(codec)) {
+      if (codec === undefined) {
+        throw new ApiError('Could not determine video codec', 400);
+      }
+
+      if (!AttachmentService._kAllowedVideoCodecs.has(codec)) {
         throw new ApiError(`Video codec ${codec} is not allowed`, 400);
       }
     } catch (e) {
