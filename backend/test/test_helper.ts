@@ -96,21 +96,19 @@ export default class TestHelper {
     duration,
     type,
     codec,
-    fps = 30
+    fps
   }: {
     width: number;
     height: number;
     duration: number;
     type: 'video/mp4' | 'video/webm';
-    codec?: VideoCodec;
-    fps?: number;
+    codec: VideoCodec;
+    fps: number;
   }): Promise<string> {
     const extension = type === 'video/webm' ? 'webm' : 'mp4';
 
     let outputPath = await this.newTempFile();
     outputPath += `.${extension}`;
-
-    const effectiveCodec = codec ?? (type === 'video/mp4' ? 'h264' : 'vp9');
 
     const encoderMap: Record<VideoCodec, string> = {
       'h264': 'libx264',
@@ -134,19 +132,19 @@ export default class TestHelper {
           `-t ${duration}`
         ]);
 
-      command.videoCodec(encoderMap[effectiveCodec]);
+      command.videoCodec(encoderMap[codec]);
 
       const outputOptions = [`-r ${fps}`];
 
-      if (['h264', 'h265', 'av1'].includes(effectiveCodec)) {
+      if (['h264', 'h265', 'av1'].includes(codec)) {
         outputOptions.push('-pix_fmt yuv420p');
       }
 
-      if (effectiveCodec === 'h265' && type === 'video/mp4') {
+      if (codec === 'h265' && type === 'video/mp4') {
         outputOptions.push('-tag:v hvc1');
       }
 
-      if (effectiveCodec === 'av1') {
+      if (codec === 'av1') {
         outputOptions.push('-cpu-used 8');
       }
 
