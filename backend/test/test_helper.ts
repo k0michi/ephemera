@@ -94,7 +94,7 @@ export default class TestHelper {
     width,
     height,
     duration,
-    type = 'video/mp4',
+    type,
     codec,
     fps = 30
   }: {
