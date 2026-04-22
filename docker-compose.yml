@@ -23,6 +23,8 @@ services:
       - EPHEMERA_DB_USER=ephemera
       - EPHEMERA_DB_PASSWORD=${EPHEMERA_DB_PASSWORD:-ephemera_pw}
       - EPHEMERA_DB_NAME=ephemera_db
+      - EPHEMERA_REDIS_HOST=redis
+      - EPHEMERA_REDIS_PORT=6379
       - EPHEMERA_PUBLIC_KEY=${EPHEMERA_PUBLIC_KEY:-}
       - EPHEMERA_PRIVATE_KEY=${EPHEMERA_PRIVATE_KEY:-}
       - EPHEMERA_PEER_HOST=peer:50051
@@ -30,6 +32,7 @@ services:
       - backend_data:/app/backend/data
     depends_on:
       - mariadb
+      - redis
   frontend:
     restart: unless-stopped
     build:
@@ -49,6 +52,11 @@ services:
       - MARIADB_PASSWORD=${EPHEMERA_DB_PASSWORD:-ephemera_pw}
     volumes:
       - mariadb_data:/var/lib/mysql
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
   nginx:
     image: nginx:alpine
     restart: unless-stopped
@@ -75,4 +83,5 @@ services:
 
 volumes:
   mariadb_data:
+  redis_data:
   backend_data:

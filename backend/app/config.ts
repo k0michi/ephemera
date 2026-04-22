@@ -17,6 +17,8 @@ export default class Config {
   dbConnectionLimit: number;
   dbQueueLimit: number;
   dbConnectTimeout: number;
+  redisHost: string;
+  redisPort: number;
   peerHost: string;
   privateKey: string;
   publicKey: string;
@@ -40,6 +42,8 @@ export default class Config {
     dbConnectionLimit,
     dbQueueLimit,
     dbConnectTimeout,
+    redisHost,
+    redisPort,
     peerHost,
     privateKey,
     publicKey,
@@ -56,6 +60,8 @@ export default class Config {
     dbConnectionLimit?: number | undefined;
     dbQueueLimit?: number | undefined;
     dbConnectTimeout?: number | undefined;
+    redisHost: string;
+    redisPort: number;
     peerHost: string;
     privateKey: string;
     publicKey: string;
@@ -72,6 +78,8 @@ export default class Config {
     this.dbConnectionLimit = dbConnectionLimit ?? Config._kDefaultDBConnectionLimit;
     this.dbQueueLimit = dbQueueLimit ?? Config._kDefaultDBQueueLimit;
     this.dbConnectTimeout = dbConnectTimeout ?? Config._kDefaultDBConnectTimeout;
+    this.redisHost = redisHost;
+    this.redisPort = redisPort;
     this.peerHost = peerHost;
     this.privateKey = privateKey;
     this.publicKey = publicKey;
@@ -92,6 +100,8 @@ export default class Config {
       dbConnectionLimit: envParser.getNumberOptional('EPHEMERA_DB_CONNECTION_LIMIT', Config._kDefaultDBConnectionLimit),
       dbQueueLimit: envParser.getNumberOptional('EPHEMERA_DB_QUEUE_LIMIT', Config._kDefaultDBQueueLimit),
       dbConnectTimeout: envParser.getNumberOptional('EPHEMERA_DB_CONNECT_TIMEOUT', Config._kDefaultDBConnectTimeout),
+      redisHost: envParser.getStringRequired('EPHEMERA_REDIS_HOST'),
+      redisPort: envParser.getNumberRequired('EPHEMERA_REDIS_PORT'),
       peerHost: envParser.getStringRequired('EPHEMERA_PEER_HOST'),
       privateKey: envParser.getStringRequired('EPHEMERA_PRIVATE_KEY'),
       publicKey: envParser.getStringRequired('EPHEMERA_PUBLIC_KEY'),
