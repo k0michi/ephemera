@@ -40,7 +40,7 @@ describe('AttachmentService', () => {
         {
           width: 800,
           height: 600,
-          format: 'png',
+          type: 'image/png',
           alpha: true
         }
       );
@@ -59,7 +59,7 @@ describe('AttachmentService', () => {
         {
           width: 10000,
           height: 10000,
-          format: 'png',
+          type: 'image/png',
           alpha: true
         }
       );
@@ -76,21 +76,36 @@ describe('AttachmentService', () => {
     });
   }, 60_000);
 
-  it('should accept a video attachment', async () => {
+  it.each([
+    { type: 'video/mp4', codec: 'h264' },
+    { type: 'video/mp4', codec: 'vp9' },
+    { type: 'video/mp4', codec: 'av1' },
+    { type: 'video/webm', codec: 'vp8' },
+    { type: 'video/webm', codec: 'vp9' },
+    { type: 'video/webm', codec: 'av1' },
+  ] as const)('should accept $type with $codec', async ({ type, codec }) => {
     await database.transaction(async (tx) => {
       const testVideo = await TestHelper.newDummyVideo({
-        duration: 2,
-        width: 10,
-        height: 10,
-        format: 'mp4',
-        fps: 30,
+        duration: 1, width: 32, height: 32, type, codec, fps: 1
       });
 
       const attachmentId = await attachmentService.copyFrom(testVideo, tx);
+      expect(attachmentId).toBeDefined();
 
-      const filePath = attachmentService.getFilePath(attachmentId);
+      await TestHelper.assertFileEquals(testVideo, attachmentService.getFilePath(attachmentId));
+    });
+  }, 60_000);
 
-      await TestHelper.assertFileEquals(testVideo, filePath);
+  it.each([
+    { type: 'video/mp4', codec: 'h265' },
+  ] as const)('should reject $type with unsupported codec $codec', async ({ type, codec }) => {
+    await database.transaction(async (tx) => {
+      const testVideo = await TestHelper.newDummyVideo({
+        duration: 1, width: 32, height: 32, type, codec, fps: 1
+      });
+
+      await expect(attachmentService.copyFrom(testVideo, tx))
+        .rejects.toThrow();
     });
   }, 60_000);
 
@@ -100,7 +115,8 @@ describe('AttachmentService', () => {
         duration: 1,
         width: 5000,
         height: 5000,
-        format: 'mp4',
+        type: 'video/mp4',
+        codec: 'h264',
         fps: 1
       });
 

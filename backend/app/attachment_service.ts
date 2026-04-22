@@ -55,6 +55,13 @@ export class AttachmentService implements IAttachmentService {
     'image/gif',
     'image/webp',
     'video/mp4',
+    'video/webm',
+  ]);
+  private static _kAllowedVideoCodecs: Set<string> = new Set([
+    'h264',
+    'vp8',
+    'vp9',
+    'av1'
   ]);
 
   constructor(config: Config, database: PooledDatabase) {
@@ -118,8 +125,12 @@ export class AttachmentService implements IAttachmentService {
 
       const codec = videoStream.codec_name;
 
-      if (codec !== 'h264') {
-        throw new ApiError('Only H.264 encoded videos are allowed', 400);
+      if (codec === undefined) {
+        throw new ApiError('Could not determine video codec', 400);
+      }
+
+      if (!AttachmentService._kAllowedVideoCodecs.has(codec)) {
+        throw new ApiError(`Video codec ${codec} is not allowed`, 400);
       }
     } catch (e) {
       if (e instanceof ApiError) {
