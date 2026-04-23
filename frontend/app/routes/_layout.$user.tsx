@@ -31,12 +31,12 @@ export default function User() {
   const store = useReader(EphemeraStore);
   const muted = useSelector(EphemeraStore, s => s.mutedIdentities).includes(userKey);
 
-  const muteUser = () => {
-    store.addMutedIdentity(userKey);
+  const muteUser = async () => {
+    await store.addMutedIdentity(userKey);
   };
 
-  const unmuteUser = () => {
-    store.removeMutedIdentity(userKey);
+  const unmuteUser = async () => {
+    await store.removeMutedIdentity(userKey);
   };
 
   let identiconData: Uint8Array | null = null;

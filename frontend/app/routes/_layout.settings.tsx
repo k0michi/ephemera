@@ -61,12 +61,12 @@ export default function Settings({ }: SettingsProps) {
     );
   };
 
-  const handleUnmuteIdentity = (id: string) => {
-    store.removeMutedIdentity(id);
+  const handleUnmuteIdentity = async (id: string) => {
+    await store.removeMutedIdentity(id);
   };
 
-  const handleUnmuteServer = (server: string) => {
-    store.removeMutedServer(server);
+  const handleUnmuteServer = async (server: string) => {
+    await store.removeMutedServer(server);
   };
 
   return (
