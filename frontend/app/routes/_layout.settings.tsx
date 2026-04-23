@@ -208,7 +208,7 @@ export default function Settings({ }: SettingsProps) {
             mutedServers.map(server => (
               <tr key={server}>
                 <td className="text-center text-muted">
-                  <ServerIdenticon data={new TextEncoder().encode(store.getHost() ?? '')} style={{ width: 32, height: 32 }} />
+                  <ServerIdenticon data={new TextEncoder().encode(server)} style={{ width: 32, height: 32 }} />
                 </td>
                 <td className="font-monospace">
                   {server}
