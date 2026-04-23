@@ -111,7 +111,7 @@ export default function Settings({ }: SettingsProps) {
                 <td>
                   <RoundedIdenticon data={kp.publicKey} size={32} />
                 </td>
-                <td className="font-monospace fw-bold text-break">
+                <td className="font-monospace">
                   @{id}
                 </td>
                 <td>
@@ -166,7 +166,7 @@ export default function Settings({ }: SettingsProps) {
                 <td>
                   <RoundedIdenticon data={Base37.toUint8Array(id)} size={32} />
                 </td>
-                <td className="font-monospace text-muted text-break">
+                <td className="font-monospace">
                   @{id}
                 </td>
                 <td className="text-end">
@@ -210,7 +210,7 @@ export default function Settings({ }: SettingsProps) {
                 <td className="text-center text-muted">
                   <ServerIdenticon data={new TextEncoder().encode(store.getHost() ?? '')} style={{ width: 32, height: 32 }} />
                 </td>
-                <td className="fw-bold">
+                <td className="font-monospace">
                   {server}
                 </td>
                 <td className="text-end">
