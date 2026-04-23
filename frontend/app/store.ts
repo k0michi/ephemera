@@ -283,14 +283,16 @@ export class EphemeraStore extends Store implements Disposable {
       return;
     }
 
-    const db = this.getDB();
-    const tx = db.transaction(this._kMutedIdentitiesStoreName, 'readwrite');
-    const store = tx.objectStore(this._kMutedIdentitiesStoreName);
+    await this.enqueue(async () => {
+      const db = this.getDB();
+      const tx = db.transaction(this._kMutedIdentitiesStoreName, 'readwrite');
+      const store = tx.objectStore(this._kMutedIdentitiesStoreName);
 
-    await EphemeraStore.promisifyRequest(store.put({ publicKey, createdAt: Date.now() }));
+      await EphemeraStore.promisifyRequest(store.put({ publicKey, createdAt: Date.now() }));
 
-    this._mutedIdentities = [...this._mutedIdentities, publicKey];
-    this.notifyListeners();
+      this._mutedIdentities = [...this._mutedIdentities, publicKey];
+      this.notifyListeners();
+    });
   }
 
   async removeMutedIdentity(publicKey: string) {
@@ -298,14 +300,16 @@ export class EphemeraStore extends Store implements Disposable {
       return;
     }
 
-    const db = this.getDB();
-    const tx = db.transaction(this._kMutedIdentitiesStoreName, 'readwrite');
-    const store = tx.objectStore(this._kMutedIdentitiesStoreName);
+    await this.enqueue(async () => {
+      const db = this.getDB();
+      const tx = db.transaction(this._kMutedIdentitiesStoreName, 'readwrite');
+      const store = tx.objectStore(this._kMutedIdentitiesStoreName);
 
-    await EphemeraStore.promisifyRequest(store.delete(publicKey));
+      await EphemeraStore.promisifyRequest(store.delete(publicKey));
 
-    this._mutedIdentities = this._mutedIdentities.filter((key) => key !== publicKey);
-    this.notifyListeners();
+      this._mutedIdentities = this._mutedIdentities.filter((key) => key !== publicKey);
+      this.notifyListeners();
+    });
   }
 
   async addMutedServer(host: string) {
@@ -313,14 +317,16 @@ export class EphemeraStore extends Store implements Disposable {
       return;
     }
 
-    const db = this.getDB();
-    const tx = db.transaction(this._kMutedServersStoreName, 'readwrite');
-    const store = tx.objectStore(this._kMutedServersStoreName);
+    await this.enqueue(async () => {
+      const db = this.getDB();
+      const tx = db.transaction(this._kMutedServersStoreName, 'readwrite');
+      const store = tx.objectStore(this._kMutedServersStoreName);
 
-    await EphemeraStore.promisifyRequest(store.put({ host, createdAt: Date.now() }));
+      await EphemeraStore.promisifyRequest(store.put({ host, createdAt: Date.now() }));
 
-    this._mutedServers = [...this._mutedServers, host];
-    this.notifyListeners();
+      this._mutedServers = [...this._mutedServers, host];
+      this.notifyListeners();
+    });
   }
 
   async removeMutedServer(host: string) {
@@ -328,14 +334,16 @@ export class EphemeraStore extends Store implements Disposable {
       return;
     }
 
-    const db = this.getDB();
-    const tx = db.transaction(this._kMutedServersStoreName, 'readwrite');
-    const store = tx.objectStore(this._kMutedServersStoreName);
+    await this.enqueue(async () => {
+      const db = this.getDB();
+      const tx = db.transaction(this._kMutedServersStoreName, 'readwrite');
+      const store = tx.objectStore(this._kMutedServersStoreName);
 
-    await EphemeraStore.promisifyRequest(store.delete(host));
+      await EphemeraStore.promisifyRequest(store.delete(host));
 
-    this._mutedServers = this._mutedServers.filter((h) => h !== host);
-    this.notifyListeners();
+      this._mutedServers = this._mutedServers.filter((h) => h !== host);
+      this.notifyListeners();
+    });
   }
 
   getHost(): string | null {
