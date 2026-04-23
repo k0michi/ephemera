@@ -5,7 +5,7 @@ import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import { useReader } from "lib/store";
 import { Link } from "react-router";
-import { BsThreeDots, BsTrash } from "react-icons/bs";
+import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
 import React from "react";
@@ -38,6 +38,7 @@ export default function Post({ post, onDelete }: PostProps) {
   const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
   const postPublicKey = post[0][1][1];
+  const postHost = post[0][1][0];
 
   const handleDeletePost = async () => {
     using lock = tryLock();
@@ -155,6 +156,22 @@ export default function Post({ post, onDelete }: PostProps) {
                     <BsThreeDots className="text-secondary" />
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', }}>
+                    {canMuteIdentity(post, publicKeys) && (
+                      <Dropdown.Item
+                        onClick={() => store.addMutedIdentity(postPublicKey)}
+                        className="d-flex align-items-center gap-2"
+                      >
+                        <BsVolumeMute /> Mute @{postPublicKey}
+                      </Dropdown.Item>
+                    )}
+                    {canMuteServer(post) && (
+                      <Dropdown.Item
+                        onClick={() => store.addMutedServer(postHost)}
+                        className="d-flex align-items-center gap-2"
+                      >
+                        <BsServer /> Mute server {postHost}
+                      </Dropdown.Item>
+                    )}
                     {canDelete(post, publicKeys) ? (
                       <Dropdown.Item
                         onClick={() => setShowDeleteModal(true)}
@@ -222,8 +239,20 @@ function isLocal(host: string): boolean {
   return host === window.location.host;
 }
 
+function isMine(post: CreatePostSignal, myPublicKeys: string[]): boolean {
+  return myPublicKeys.includes(post[0][1][1]);
+}
+
 function canDelete(post: CreatePostSignal, myPublicKeys: string[]): boolean {
-  return myPublicKeys.includes(post[0][1][1]) && isLocal(post[0][1][0]);
+  return isMine(post, myPublicKeys) && isLocal(post[0][1][0]);
+}
+
+function canMuteIdentity(post: CreatePostSignal, myPublicKeys: string[]): boolean {
+  return !isMine(post, myPublicKeys);
+}
+
+function canMuteServer(post: CreatePostSignal): boolean {
+  return !isLocal(post[0][1][0]);
 }
 
 function formatDate(timestamp: number, now: number): string {
