@@ -199,12 +199,7 @@ export class EphemeraStore extends Store implements Disposable {
       const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
       const store = tx.objectStore(this._kIdentitiesStoreName);
 
-      await new Promise<void>((resolve, reject) => {
-        const request = store.delete(publicKey);
-
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+      await EphemeraStore.promisifyRequest(store.delete(publicKey));
 
       this._keyPairs = Object.fromEntries(Object.entries(this._keyPairs).filter(([key]) => key !== publicKey));
       this.notifyListeners();
@@ -223,16 +218,11 @@ export class EphemeraStore extends Store implements Disposable {
     const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
     const store = tx.objectStore(this._kIdentitiesStoreName);
 
-    await new Promise<void>((resolve, reject) => {
-      const request = store.put({
-        publicKey: Base37.fromUint8Array(keyPair.publicKey),
-        privateKey: Base37.fromUint8Array(keyPair.privateKey),
-        createdAt: Date.now(),
-      });
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await EphemeraStore.promisifyRequest(store.put({
+      publicKey: Base37.fromUint8Array(keyPair.publicKey),
+      privateKey: Base37.fromUint8Array(keyPair.privateKey),
+      createdAt: Date.now(),
+    }));
 
     this._keyPairs = {
       ...this._keyPairs,
@@ -267,22 +257,24 @@ export class EphemeraStore extends Store implements Disposable {
       const tx = db.transaction(this._kIdentitiesStoreName, 'readwrite');
       const store = tx.objectStore(this._kIdentitiesStoreName);
 
-      await new Promise<void>((resolve, reject) => {
-        const request = store.put({
-          publicKey: exported.publicKey,
-          privateKey: exported.privateKey,
-          createdAt: Date.now(),
-        });
-
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+      await EphemeraStore.promisifyRequest(store.put({
+        publicKey: exported.publicKey,
+        privateKey: exported.privateKey,
+        createdAt: Date.now(),
+      }));
 
       this._keyPairs = {
         ...this._keyPairs,
         [exported.publicKey]: keyPair
       };
       this.notifyListeners();
+    });
+  }
+
+  static promisifyRequest<T>(request: IDBRequest<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
     });
   }
 
@@ -295,12 +287,7 @@ export class EphemeraStore extends Store implements Disposable {
     const tx = db.transaction(this._kMutedIdentitiesStoreName, 'readwrite');
     const store = tx.objectStore(this._kMutedIdentitiesStoreName);
 
-    await new Promise<void>((resolve, reject) => {
-      const request = store.put({ publicKey, createdAt: Date.now() });
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await EphemeraStore.promisifyRequest(store.put({ publicKey, createdAt: Date.now() }));
 
     this._mutedIdentities = [...this._mutedIdentities, publicKey];
     this.notifyListeners();
@@ -315,12 +302,7 @@ export class EphemeraStore extends Store implements Disposable {
     const tx = db.transaction(this._kMutedIdentitiesStoreName, 'readwrite');
     const store = tx.objectStore(this._kMutedIdentitiesStoreName);
 
-    await new Promise<void>((resolve, reject) => {
-      const request = store.delete(publicKey);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await EphemeraStore.promisifyRequest(store.delete(publicKey));
 
     this._mutedIdentities = this._mutedIdentities.filter((key) => key !== publicKey);
     this.notifyListeners();
@@ -335,12 +317,7 @@ export class EphemeraStore extends Store implements Disposable {
     const tx = db.transaction(this._kMutedServersStoreName, 'readwrite');
     const store = tx.objectStore(this._kMutedServersStoreName);
 
-    await new Promise<void>((resolve, reject) => {
-      const request = store.put({ host, createdAt: Date.now() });
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await EphemeraStore.promisifyRequest(store.put({ host, createdAt: Date.now() }));
 
     this._mutedServers = [...this._mutedServers, host];
     this.notifyListeners();
@@ -355,12 +332,7 @@ export class EphemeraStore extends Store implements Disposable {
     const tx = db.transaction(this._kMutedServersStoreName, 'readwrite');
     const store = tx.objectStore(this._kMutedServersStoreName);
 
-    await new Promise<void>((resolve, reject) => {
-      const request = store.delete(host);
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    await EphemeraStore.promisifyRequest(store.delete(host));
 
     this._mutedServers = this._mutedServers.filter((h) => h !== host);
     this.notifyListeners();
