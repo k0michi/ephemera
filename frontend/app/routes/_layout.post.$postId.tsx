@@ -1,11 +1,5 @@
-import type { PeerManifest } from "@ephemera/shared/api/api";
-import ServerIdenticon from "components/server_identicon";
-import { Link, useLoaderData } from "react-router";
-import { Card, ListGroup } from "react-bootstrap";
-import { useReader } from "lib/store";
-import { useEffect, useState } from "react";
+import { useLoaderData } from "react-router";
 import type { Route } from "./+types/_layout.post.$postId";
-import { EphemeraStore } from "~/store";
 import Client from "@ephemera/shared/lib/client";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import Post from "components/post";
