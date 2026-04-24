@@ -1,5 +1,5 @@
 import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment, PeerManifest } from "../api/api.js";
-import { apiResponseSchema, getPeerResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
+import { apiResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -215,5 +215,18 @@ export default class Client {
     }
 
     return parsed.servers;
+  }
+
+  async getPost(postId: string): Promise<CreatePostSignal> {
+    const response = await Fetcher.get(`/api/v1/posts/${postId}`);
+    let parsed;
+
+    try {
+      parsed = getPostResponseSchema.parse(response);
+    } catch (e) {
+      throw new Error("Invalid response");
+    }
+
+    return parsed.post;
   }
 }
