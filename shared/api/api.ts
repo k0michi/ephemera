@@ -221,3 +221,12 @@ export interface GetRemoteServersRequest extends ApiRequest {
 export interface GetRemoteServersResponse extends ApiResponse {
   servers: PeerManifest[];
 }
+
+// GET /api/v1/posts/:post_id
+export interface GetPostRequest extends ApiRequest {
+  postId: string;
+}
+
+export interface GetPostResponse extends ApiResponse {
+  post: CreatePostSignal;
+}

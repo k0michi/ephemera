@@ -121,3 +121,11 @@ export const getRemoteServersRequestSchema = apiRequestSchema;
 export const getRemoteServersResponseSchema = apiResponseSchema.extend({
     servers: z.array(peerManifestSchema)
 });
+
+export const getPostRequestSchema = apiRequestSchema.extend({
+    postId: z.string()
+});
+
+export const getPostResponseSchema = apiResponseSchema.extend({
+    post: createPostSignalSchema
+});
