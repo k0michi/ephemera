@@ -12,6 +12,23 @@ describe("PostUtil.weightedLength", () => {
   });
 });
 
+describe("PostUtil.weightedSubstring", () => {
+  it("returns substring based on weighted length", () => {
+    expect(PostUtil.weightedSubstring("abc", 0, 2)).toBe("ab");
+    expect(PostUtil.weightedSubstring("abc", 1, 3)).toBe("bc");
+    expect(PostUtil.weightedSubstring("あいう", 0, 4)).toBe("あい");
+    expect(PostUtil.weightedSubstring("あいう", 2, 6)).toBe("いう");
+    expect(PostUtil.weightedSubstring("あいう", 3, 6)).toBe("う");
+    expect(PostUtil.weightedSubstring("あいう", 3, 5)).toBe("");
+    expect(PostUtil.weightedSubstring("aあb", 0, 3)).toBe("aあ");
+    expect(PostUtil.weightedSubstring("𠮷野家", 0, 4)).toBe("𠮷野");
+    expect(PostUtil.weightedSubstring("😃", 0, 1)).toBe("");
+    expect(PostUtil.weightedSubstring("😃", 0, 2)).toBe("😃");
+    expect(PostUtil.weightedSubstring("🧑‍🧑‍🧒", 0, 1)).toBe("");
+    expect(PostUtil.weightedSubstring("🧑‍🧑‍🧒", 0, 2)).toBe("🧑‍🧑‍🧒");
+  });
+});
+
 describe("PostUtil.validate", () => {
   it("returns false if over max length", () => {
     const long = "a".repeat(PostUtil.kMaxPostLength + 1);
