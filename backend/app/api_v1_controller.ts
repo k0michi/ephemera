@@ -182,13 +182,7 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Invalid request', 400);
     }
 
-    const id = parsed.id;
-
-    if (typeof id !== 'string') {
-      throw new ApiError('Invalid request', 400);
-    }
-
-    const post = await this.postService.get(id);
+    const post = await this.postService.get(parsed.id);
 
     if (!post) {
       throw new ApiError('Post not found', 404);
