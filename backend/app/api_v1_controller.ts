@@ -174,7 +174,15 @@ export default class ApiV1Controller implements IController {
   }
 
   async handleGetPost(req: express.Request, res: express.Response) {
-    const id = req.params.id;
+    let parsed;
+
+    try {
+      parsed = getPostRequestSchema.parse(req.params);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const id = parsed.id;
 
     if (typeof id !== 'string') {
       throw new ApiError('Invalid request', 400);

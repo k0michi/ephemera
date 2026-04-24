@@ -123,7 +123,7 @@ export const getRemoteServersResponseSchema = apiResponseSchema.extend({
 });
 
 export const getPostRequestSchema = apiRequestSchema.extend({
-    postId: z.string()
+    id: z.string()
 });
 
 export const getPostResponseSchema = apiResponseSchema.extend({

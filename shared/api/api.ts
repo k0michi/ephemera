@@ -222,9 +222,9 @@ export interface GetRemoteServersResponse extends ApiResponse {
   servers: PeerManifest[];
 }
 
-// GET /api/v1/posts/:post_id
+// GET /api/v1/posts/:id
 export interface GetPostRequest extends ApiRequest {
-  postId: string;
+  id: string;
 }
 
 export interface GetPostResponse extends ApiResponse {
