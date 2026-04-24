@@ -12,7 +12,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   const post = await client.getPost(params.postId);
 
   return {
-    host: process.env.EPHEMERA_HOST,
+    host: host,
     post: post
   };
 }
