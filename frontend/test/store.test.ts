@@ -4,7 +4,7 @@ import Base37 from "@ephemera/shared/lib/base37";
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
-import { afterEach,beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { EphemeraStore } from '../app/store.js';
 
@@ -23,7 +23,7 @@ describe('EphemeraStore', () => {
       };
     });
 
-    store = new EphemeraStore('example.com');
+    store = new EphemeraStore('example.com', Date.now());
   });
 
   afterEach(() => {

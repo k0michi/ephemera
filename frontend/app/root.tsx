@@ -17,8 +17,11 @@ import type { Route } from "./+types/root";
 import { EphemeraStore } from "./store";
 
 export function loader() {
+  const now = Date.now();
+
   return {
-    host: NullableHelper.unwrap(process.env.EPHEMERA_HOST)
+    host: NullableHelper.unwrap(process.env.EPHEMERA_HOST),
+    date: now
   };
 }
 
@@ -34,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <StoreProvider create={() => new EphemeraStore(loaderData.host)}>
+        <StoreProvider create={() => new EphemeraStore(loaderData.host, loaderData.date)}>
           {children}
         </StoreProvider>
         <ScrollRestoration />

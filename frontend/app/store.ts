@@ -1,4 +1,4 @@
-import type {ExportedKeyPair } from "@ephemera/shared/api/api";
+import type { ExportedKeyPair } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
 import Client from '@ephemera/shared/lib/client.js';
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
@@ -22,6 +22,7 @@ const v1IdentitySchema = z.object({
 
 export class EphemeraStore extends Store implements Disposable {
   private _host: string;
+  private _initialDate: number;
   private _keyPairs: Record<string, KeyPair> = {};
   private _logEntries: LogEntry[] = [];
   private _nextLogId: number = 0;
@@ -41,9 +42,10 @@ export class EphemeraStore extends Store implements Disposable {
   private _kPublicKeyStorageKey = 'ephemera_publicKey';
   private _kPrivateKeyStorageKey = 'ephemera_privateKey';
 
-  constructor(host: string) {
+  constructor(host: string, date: number) {
     super();
     this._host = host;
+    this._initialDate = date;
   }
 
   closeDB() {
@@ -71,6 +73,13 @@ export class EphemeraStore extends Store implements Disposable {
 
   get host(): string {
     return this._host;
+  }
+
+  /**
+   * Date.now() value at the time the page was rendered on the server.
+   */
+  get initialDate(): number {
+    return this._initialDate;
   }
 
   private enqueue<T>(operation: () => Promise<T>): Promise<T> {
