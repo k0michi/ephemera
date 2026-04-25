@@ -22,7 +22,7 @@ export default function Post({ post, onDelete }: PostProps) {
   const [now, setNow] = React.useState(Date.now());
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const { isLocked, tryLock } = useMutex();
-  const [digest, setDigest] = React.useState<string | null>(null);
+  const digest = Hex.fromUint8Array(SignalCrypto.digestSync(post[0]));
 
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
@@ -35,24 +35,6 @@ export default function Post({ post, onDelete }: PostProps) {
       clearTimeout(timer);
     };
   }, [post, now]);
-
-  React.useEffect(() => {
-    let isMounted = true;
-
-    const computeDigest = async () => {
-      const digest = await SignalCrypto.digest(post[0]);
-
-      if (isMounted) {
-        setDigest(Hex.fromUint8Array(digest));
-      }
-    };
-
-    computeDigest();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [post]);
 
   const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
