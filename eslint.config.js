@@ -17,14 +17,8 @@ export default [
         sourceType: "module",
         ecmaVersion: "latest",
       },
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
     },
     rules: {
-      ...tsPlugin.configs.recommended.rules,
-
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "unused-imports/no-unused-imports": "error",
