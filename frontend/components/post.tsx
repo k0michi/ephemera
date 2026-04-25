@@ -5,7 +5,7 @@ import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader, useSelector } from "lib/store";
 import React from "react";
-import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner,Tooltip } from "react-bootstrap";
+import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
 import { Link } from "react-router";
 
@@ -14,6 +14,7 @@ import { EphemeraStore } from "~/store";
 import { useMutex } from "../app/hooks/mutex";
 import { RoundedIdenticon } from "./identicon";
 import styles from "./post.module.css";
+import { useIsClient } from "~/hooks/is_client";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -21,10 +22,14 @@ export interface PostProps {
 }
 
 export default function Post({ post, onDelete }: PostProps) {
-  const [now, setNow] = React.useState(Date.now());
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const { isLocked, tryLock } = useMutex();
   const digest = Hex.fromUint8Array(SignalCrypto.digestSync(post[0]));
+  const isClient = useIsClient();
+  const initialDate = useSelector(EphemeraStore, s => s.initialDate);
+  const [now, setNow] = React.useState(
+    isClient ? Date.now() : initialDate
+  );
 
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
@@ -122,7 +127,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 >
                   <span style={{ flexShrink: 0 }}>
                     <Link to={isLocal(post, localHost) ? `/post/${digest}` : `https://${post[0][1][0]}/post/${digest}`} style={{ color: 'inherit' }} className={styles.postDateLink}>
-                      {formatDate(post[0][1][2], now)}
+                      {formatDate(post[0][1][2], now, isClient)}
                     </Link>
                   </span>
                 </OverlayTrigger>
@@ -261,7 +266,11 @@ function canMuteServer(post: CreatePostSignal, localHost: string): boolean {
   return !isLocal(post, localHost);
 }
 
-function formatDate(timestamp: number, now: number): string {
+function getFullYear(date: Date, isClient: boolean): number {
+  return isClient ? date.getFullYear() : date.getUTCFullYear();
+}
+
+function formatDate(timestamp: number, now: number, isClient: boolean): string {
   const diff = now - timestamp;
 
   const diffSeconds = Math.floor(diff / 1000);
@@ -288,12 +297,12 @@ function formatDate(timestamp: number, now: number): string {
 
   const date = new Date(timestamp);
   const nowDate = new Date();
-  const isSameYear = date.getFullYear() === nowDate.getFullYear();
+  const isSameYear = getFullYear(date, isClient) === getFullYear(nowDate, isClient);
 
   if (isSameYear) {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: isClient ? undefined : 'UTC' });
   } else {
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: isClient ? undefined : 'UTC' });
   }
 }
 
