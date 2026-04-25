@@ -1,10 +1,12 @@
-import { useReader, useSelector } from "lib/store";
-import { Container, Dropdown, Row, Col } from "react-bootstrap";
-import { Link, useNavigate } from "react-router";
-import ServerIdenticon from "./server_identicon";
-import { NavLink } from "./nav_link";
+import { useSelector } from "lib/store";
+import { Col,Container, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork } from "react-icons/bs";
+import { Link } from "react-router";
+
 import { EphemeraStore } from "~/store";
+
+import { NavLink } from "./nav_link";
+import ServerIdenticon from "./server_identicon";
 
 export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);

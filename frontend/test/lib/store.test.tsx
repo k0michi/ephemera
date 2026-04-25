@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect,it } from 'vitest';
+
 import { Store } from '../../lib/store';
 
 class TestStore extends Store {

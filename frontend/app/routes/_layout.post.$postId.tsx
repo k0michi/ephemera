@@ -1,9 +1,10 @@
-import { useLoaderData } from "react-router";
-import type { Route } from "./+types/_layout.post.$postId";
 import Client from "@ephemera/shared/lib/client";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
-import Post from "components/post";
 import PostUtil from "@ephemera/shared/lib/post_util";
+import Post from "components/post";
+import { useLoaderData } from "react-router";
+
+import type { Route } from "./+types/_layout.post.$postId";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const host = NullableHelper.unwrap(process.env.EPHEMERA_HOST);

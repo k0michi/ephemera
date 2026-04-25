@@ -1,17 +1,19 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
-import styles from "./post.module.css";
-import { Card, Dropdown, OverlayTrigger, Tooltip, Modal, Button, Spinner } from "react-bootstrap";
-import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
-import { useReader, useSelector } from "lib/store";
-import { Link } from "react-router";
-import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
-import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
-import React from "react";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
+import { useReader, useSelector } from "lib/store";
+import React from "react";
+import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner,Tooltip } from "react-bootstrap";
+import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
+import { Link } from "react-router";
+
 import { EphemeraStore } from "~/store";
+
 import { useMutex } from "../app/hooks/mutex";
+import { RoundedIdenticon } from "./identicon";
+import styles from "./post.module.css";
 
 export interface PostProps {
   post: CreatePostSignal;

@@ -1,15 +1,15 @@
-import { useState } from "react";
-import Timeline from "components/timeline";
-import { useParams } from "react-router";
-import { Container, Row, Col, Card, Dropdown } from "react-bootstrap";
-import { RoundedIdenticon } from "components/identicon";
 import Base37 from "@ephemera/shared/lib/base37";
 import Crypto from "@ephemera/shared/lib/crypto";
-import type { Route } from "./+types/_layout.$user";
-
-import { BsThreeDots, BsVolumeMute, BsVolumeUp } from "react-icons/bs";
+import { RoundedIdenticon } from "components/identicon";
+import Timeline from "components/timeline";
 import { useReader, useSelector } from "lib/store";
+import { Card, Dropdown } from "react-bootstrap";
+import { BsThreeDots, BsVolumeMute, BsVolumeUp } from "react-icons/bs";
+import { useParams } from "react-router";
+
 import { EphemeraStore } from "~/store";
+
+import type { Route } from "./+types/_layout.$user";
 
 export function loader() {
   return {

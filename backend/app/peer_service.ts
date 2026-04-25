@@ -1,16 +1,17 @@
-import grpc from '@grpc/grpc-js';
-import { Message, PubSubServiceClient } from '@ephemera/shared/peer/bridge.js';
-import type Config from './config.js';
 import type { PeerManifest, RelaySignal, ServerSignal } from '@ephemera/shared/api/api.js';
 import { createPostSignalSchema, deletePostSignalSchema, getPeerResponseSchema, relaySignalSchema, serverSignalSchema } from '@ephemera/shared/api/api_schema.js';
-import { remotePosts } from './db/schema.js';
-import Hex from '@ephemera/shared/lib/hex.js';
-import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
-import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
-import { and, asc, count, eq, inArray } from 'drizzle-orm';
+import Hex from '@ephemera/shared/lib/hex.js';
+import { KeyedCache } from '@ephemera/shared/lib/keyed_cache.js';
 import SafeFetch from '@ephemera/shared/lib/safe_fetch.js';
+import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
+import { Message, PubSubServiceClient } from '@ephemera/shared/peer/bridge.js';
+import grpc from '@grpc/grpc-js';
+import { and, asc, count, eq, inArray } from 'drizzle-orm';
+
+import type Config from './config.js';
 import type { PooledDatabase } from './database.js';
+import { remotePosts } from './db/schema.js';
 
 export interface IPeerService {
   publish(signal: ServerSignal): Promise<void>;

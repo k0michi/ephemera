@@ -1,11 +1,13 @@
 import type { PeerManifest } from "@ephemera/shared/api/api";
 import ServerIdenticon from "components/server_identicon";
-import { Link } from "react-router";
-import { Card, ListGroup } from "react-bootstrap";
 import { useReader } from "lib/store";
 import { useEffect, useState } from "react";
-import type { Route } from "./+types/_layout.servers";
+import { Card, ListGroup } from "react-bootstrap";
+import { Link } from "react-router";
+
 import { EphemeraStore } from "~/store";
+
+import type { Route } from "./+types/_layout.servers";
 
 export function loader() {
   return {

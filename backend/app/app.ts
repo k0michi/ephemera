@@ -1,20 +1,21 @@
 
-import express from 'express';
-import { Application } from '../lib/application.js';
+import type { ApiResponse } from "@ephemera/shared/api/api.js";
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
-import ApiV1Controller from './api_v1_controller.js';
-import Config from './config.js';
-import PostService from "./post_service.js";
-import { ApiError } from "./api_error.js";
-import type { ApiResponse, Attachment } from "@ephemera/shared/api/api.js";
 import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
-import { AttachmentService } from './attachment_service.js';
-import { PeerService } from './peer_service.js';
-import type { PooledDatabase } from './database.js';
-import { SchedulerService } from './scheduler_service.js';
+import express from 'express';
+import mysql from 'mysql2/promise';
+
+import { Application } from '../lib/application.js';
+import { ApiError } from "./api_error.js";
+import ApiV1Controller from './api_v1_controller.js';
 import AttachmentCleanerJob from './attachment_cleaner_job.js';
+import { AttachmentService } from './attachment_service.js';
+import Config from './config.js';
+import type { PooledDatabase } from './database.js';
+import { PeerService } from './peer_service.js';
+import PostService from "./post_service.js";
+import { SchedulerService } from './scheduler_service.js';
 import { createFixedRateWithSkipTicker } from './ticker.js';
 
 class Ephemera extends Application {

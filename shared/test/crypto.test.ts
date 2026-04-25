@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import Crypto, { type KeyPair } from '../lib/crypto.js';
+import { describe, expect,it } from 'vitest';
+
 import ArrayHelper from '../lib/array_helper.js';
+import Crypto, { type KeyPair } from '../lib/crypto.js';
 
 describe('Crypto', () => {
   describe('generateKeyPair', () => {

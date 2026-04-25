@@ -1,5 +1,6 @@
-import Base37 from "./base37.js";
 import { z } from "zod";
+
+import Base37 from "./base37.js";
 
 export type PostCursor = [string, string]; // [inserted_at, id]
 const postCursorSchema = z.tuple([

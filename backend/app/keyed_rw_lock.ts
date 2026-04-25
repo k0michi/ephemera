@@ -1,5 +1,6 @@
-import RWLock from './rw_lock.js';
 import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
+
+import RWLock from './rw_lock.js';
 
 export class KeyedRWLock {
   private entries = new Map<string, { lock: RWLock; ref: number }>();

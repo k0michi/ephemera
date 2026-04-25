@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import Config from '../app/config.js';
-import Crypto from '@ephemera/shared/lib/crypto.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
+import Crypto from '@ephemera/shared/lib/crypto.js';
+import { describe, expect, it, vi } from 'vitest';
+
+import Config from '../app/config.js';
 
 describe('Config', () => {
   it('should load configuration from environment variables', () => {

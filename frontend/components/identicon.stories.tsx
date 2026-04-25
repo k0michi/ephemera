@@ -1,4 +1,5 @@
 import type { Story } from "@ladle/react";
+
 import Identicon from "./identicon";
 
 export const List: Story = () => {

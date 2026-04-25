@@ -1,5 +1,5 @@
-import { RWLock as _RWLock } from 'async-rwlock';
 import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
+import { RWLock as _RWLock } from 'async-rwlock';
 
 /**
  * Disposable wrapper around async-rwlock.

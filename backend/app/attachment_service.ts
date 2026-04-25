@@ -1,21 +1,20 @@
-import fs from 'fs/promises';
-import type Config from './config.js';
-import crypto from 'crypto';
-import path from 'path';
-import { attachments, postAttachments } from './db/schema.js';
-import { eq, inArray, isNull } from 'drizzle-orm';
-import ArrayHelper from '@ephemera/shared/lib/array_helper.js';
-import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
-import { ApiError } from './api_error.js';
 import Hex from '@ephemera/shared/lib/hex.js';
-import { fileTypeFromFile } from 'file-type';
-import mime from 'mime-types';
-import sharp from 'sharp';
-import FSHelper from './fs_helper.js';
-import ffmpeg from 'fluent-ffmpeg';
-import type { PooledDatabase, Transaction } from './database.js';
-import { KeyedRWLock } from './keyed_rw_lock.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
+import { eq, isNull } from 'drizzle-orm';
+import { fileTypeFromFile } from 'file-type';
+import ffmpeg from 'fluent-ffmpeg';
+import fs from 'fs/promises';
+import mime from 'mime-types';
+import path from 'path';
+import sharp from 'sharp';
+
+import { ApiError } from './api_error.js';
+import type Config from './config.js';
+import type { PooledDatabase, Transaction } from './database.js';
+import { attachments, postAttachments } from './db/schema.js';
+import FSHelper from './fs_helper.js';
+import { KeyedRWLock } from './keyed_rw_lock.js';
 
 export interface AttachmentType {
   type: string;

@@ -1,19 +1,19 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { MariaDbContainer, StartedMariaDbContainer } from "@testcontainers/mariadb";
-import PostService from '../app/post_service.js';
-import Crypto from '@ephemera/shared/lib/crypto.js';
-import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import type { CreatePostSignalPayload } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
+import Crypto from '@ephemera/shared/lib/crypto.js';
+import Hex from '@ephemera/shared/lib/hex.js';
+import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
+import { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
-import Config from '../app/config.js';
-import { AttachmentService } from '../app/attachment_service.js';
-import TestHelper from './test_helper.js';
-import { type IPeerService } from '../app/peer_service.js';
-import type { PooledDatabase } from '../app/database.js';
 import { createPool, type Pool } from 'mysql2/promise';
-import Hex from '@ephemera/shared/lib/hex.js';
+import { afterEach,beforeEach, describe, expect, it } from 'vitest';
+
+import { AttachmentService } from '../app/attachment_service.js';
+import type { PooledDatabase } from '../app/database.js';
+import { type IPeerService } from '../app/peer_service.js';
+import PostService from '../app/post_service.js';
+import TestHelper from './test_helper.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;

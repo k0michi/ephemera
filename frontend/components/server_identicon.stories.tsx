@@ -1,8 +1,9 @@
-import type { Story } from "@ladle/react";
-import ServerIdenticon, { deriveColor } from "./server_identicon";
 import ArrayHelper from "@ephemera/shared/lib/array_helper";
-import { useEffect, useState } from "react";
 import Crypto from "@ephemera/shared/lib/crypto";
+import type { Story } from "@ladle/react";
+import { useEffect, useState } from "react";
+
+import ServerIdenticon, { deriveColor } from "./server_identicon";
 
 function* generateHostnames() {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";

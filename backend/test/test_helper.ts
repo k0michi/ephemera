@@ -1,13 +1,14 @@
+import Base37 from "@ephemera/shared/lib/base37.js";
+import Crypto from "@ephemera/shared/lib/crypto.js";
 import { MariaDbContainer, type StartedMariaDbContainer } from "@testcontainers/mariadb";
-import Config from "../app/config.js";
+import ffmpeg from 'fluent-ffmpeg';
 import fsPromises from 'fs/promises';
+import os from "os";
+import path from "path";
 import sharp from "sharp";
 import { expect } from "vitest";
-import path from "path";
-import os from "os";
-import ffmpeg from 'fluent-ffmpeg';
-import Crypto from "@ephemera/shared/lib/crypto.js";
-import Base37 from "@ephemera/shared/lib/base37.js";
+
+import Config from "../app/config.js";
 
 export type ImageType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif';
 export type VideoCodec = 'h264' | 'vp8' | 'vp9' | 'av1' | 'h265';

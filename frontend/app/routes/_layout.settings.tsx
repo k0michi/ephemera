@@ -2,14 +2,16 @@ import { exportedKeyPairSchema } from '@ephemera/shared/api/api_schema';
 import Base37 from '@ephemera/shared/lib/base37';
 import type { KeyPair } from '@ephemera/shared/lib/crypto';
 import { RoundedIdenticon } from 'components/identicon';
+import ServerIdenticon from 'components/server_identicon';
 import { useReader, useSelector } from 'lib/store';
 import { useState } from 'react';
-import { Table, Button, Modal } from 'react-bootstrap';
-import { BsTrash, BsDownload, BsPlusLg, BsUpload, BsVolumeUp } from 'react-icons/bs';
+import { Button, Modal,Table } from 'react-bootstrap';
+import { BsDownload, BsPlusLg, BsTrash, BsUpload, BsVolumeUp } from 'react-icons/bs';
+
 import FileHelper from '~/file_helper';
-import type { Route } from './+types/_layout.settings';
 import { EphemeraStore } from '~/store';
-import ServerIdenticon from 'components/server_identicon';
+
+import type { Route } from './+types/_layout.settings';
 
 export function loader() {
   return {

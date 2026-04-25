@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import { EventTargetReadable } from '../app/event_target_readable.js';
 
 describe('EventTargetReadable', () => {
