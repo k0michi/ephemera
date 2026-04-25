@@ -21,6 +21,7 @@ const v1IdentitySchema = z.object({
 });
 
 export class EphemeraStore extends Store implements Disposable {
+  private _host: string;
   private _keyPairs: Record<string, KeyPair> = {};
   private _logEntries: LogEntry[] = [];
   private _nextLogId: number = 0;
@@ -40,8 +41,9 @@ export class EphemeraStore extends Store implements Disposable {
   private _kPublicKeyStorageKey = 'ephemera_publicKey';
   private _kPrivateKeyStorageKey = 'ephemera_privateKey';
 
-  constructor() {
+  constructor(host: string) {
     super();
+    this._host = host;
   }
 
   closeDB() {
@@ -65,6 +67,10 @@ export class EphemeraStore extends Store implements Disposable {
 
   get mutedServers(): string[] {
     return this._mutedServers;
+  }
+
+  get host(): string {
+    return this._host;
   }
 
   private enqueue<T>(operation: () => Promise<T>): Promise<T> {
@@ -232,7 +238,7 @@ export class EphemeraStore extends Store implements Disposable {
   }
 
   getClient(): Client {
-    return new Client(window.location.host);
+    return new Client({ host: this._host });
   }
 
   exportKeyPair(keyPair: KeyPair): ExportedKeyPair {
@@ -344,14 +350,6 @@ export class EphemeraStore extends Store implements Disposable {
       this._mutedServers = this._mutedServers.filter((h) => h !== host);
       this.notifyListeners();
     });
-  }
-
-  getHost(): string | null {
-    if (!globalThis.location) {
-      return null;
-    }
-
-    return window.location.host;
   }
 
   private migrateV0ToV1(db: IDBDatabase, tx: IDBTransaction): void {

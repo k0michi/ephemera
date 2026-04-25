@@ -9,6 +9,25 @@ export default class PostUtil {
   static _kForbiddenCharactersRegex = /[\x00-\x09\x0b-\x1f\x7f\u0080-\u009f]/;
   static _kForbiddenCharactersRegexGlobal = new RegExp(PostUtil._kForbiddenCharactersRegex, 'g');
 
+  private static getSegmentWidth(segment: string): number {
+    const codePoints = Array.from(segment);
+    let segmentWidth = 0;
+
+    // Take the maximum width in the grapheme cluster
+    for (const cp of codePoints) {
+      const codePointValue = cp.codePointAt(0);
+
+      if (codePointValue === undefined) {
+        // Should not happen...
+        continue;
+      }
+
+      segmentWidth = Math.max(eastAsianWidth(codePointValue), segmentWidth);
+    }
+
+    return segmentWidth;
+  }
+
   /**
    * Calculates the weighted length of the string.
    * A character's weight is determined by its East Asian Width property:
@@ -20,25 +39,37 @@ export default class PostUtil {
     const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
     for (const { segment } of segmenter.segment(string)) {
-      const codePoints = Array.from(segment);
-      let segmentWidth = 0;
-
-      // Take the maximum width in the grapheme cluster
-      for (const cp of codePoints) {
-        const codePointValue = cp.codePointAt(0);
-
-        if (codePointValue === undefined) {
-          // Should not happen...
-          continue;
-        }
-
-        segmentWidth = Math.max(eastAsianWidth(codePointValue), segmentWidth);
-      }
-
-      length += segmentWidth;
+      length += this.getSegmentWidth(segment);
     }
 
     return length;
+  }
+
+  /**
+   * Returns a substring of the input string that does not exceed the specified weighted length.
+   */
+  static weightedSubstring(string: string, start: number = 0, end: number = Infinity): string {
+    let currentWeight = 0;
+    let result = '';
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
+    for (const { segment } of segmenter.segment(string)) {
+      const segmentWidth = this.getSegmentWidth(segment);
+
+      const segmentEndWeight = currentWeight + segmentWidth;
+
+      if (currentWeight >= start && segmentEndWeight <= end) {
+        result += segment;
+      }
+
+      currentWeight = segmentEndWeight;
+
+      if (currentWeight >= end) {
+        break;
+      }
+    }
+
+    return result;
   }
 
   /**

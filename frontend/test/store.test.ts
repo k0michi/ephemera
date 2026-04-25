@@ -21,7 +21,7 @@ describe('EphemeraStore', () => {
       };
     });
 
-    store = new EphemeraStore();
+    store = new EphemeraStore('example.com');
   });
 
   afterEach(() => {

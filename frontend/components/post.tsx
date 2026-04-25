@@ -3,7 +3,7 @@ import styles from "./post.module.css";
 import { Card, Dropdown, OverlayTrigger, Tooltip, Modal, Button, Spinner } from "react-bootstrap";
 import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
-import { useReader } from "lib/store";
+import { useReader, useSelector } from "lib/store";
 import { Link } from "react-router";
 import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
@@ -22,6 +22,7 @@ export default function Post({ post, onDelete }: PostProps) {
   const [now, setNow] = React.useState(Date.now());
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const { isLocked, tryLock } = useMutex();
+  const digest = Hex.fromUint8Array(SignalCrypto.digestSync(post[0]));
 
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
@@ -64,6 +65,7 @@ export default function Post({ post, onDelete }: PostProps) {
 
   const attachments = post[0][3].filter((footer) => footer[0] === 'attachment');
   const blank = post[0][2] === "" && attachments.length === 0;
+  const localHost = useSelector(EphemeraStore, s => s.host);
 
   return (
     <>
@@ -96,7 +98,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 >
                   @{post[0][1][1]}
                 </Link>
-                {!isLocal(post[0][1][0]) && (
+                {!isLocal(post, localHost) && (
                   <>
                     {'•'}
                     <span style={{ flexShrink: 0 }}>
@@ -117,7 +119,9 @@ export default function Post({ post, onDelete }: PostProps) {
                   )}
                 >
                   <span style={{ flexShrink: 0 }}>
-                    {formatDate(post[0][1][2], now)}
+                    <Link to={isLocal(post, localHost) ? `/post/${digest}` : `https://${post[0][1][0]}/post/${digest}`} style={{ color: 'inherit' }} className={styles.postDateLink}>
+                      {formatDate(post[0][1][2], now)}
+                    </Link>
                   </span>
                 </OverlayTrigger>
               </div>
@@ -164,7 +168,7 @@ export default function Post({ post, onDelete }: PostProps) {
                         <BsVolumeMute /> Mute @{postPublicKey}
                       </Dropdown.Item>
                     )}
-                    {canMuteServer(post) && (
+                    {canMuteServer(post, localHost) && (
                       <Dropdown.Item
                         onClick={() => store.addMutedServer(postHost)}
                         className="d-flex align-items-center gap-2"
@@ -172,7 +176,7 @@ export default function Post({ post, onDelete }: PostProps) {
                         <BsServer /> Mute server {postHost}
                       </Dropdown.Item>
                     )}
-                    {canDelete(post, publicKeys) ? (
+                    {canDelete(post, localHost, publicKeys) ? (
                       <Dropdown.Item
                         onClick={() => setShowDeleteModal(true)}
                         className="text-danger d-flex align-items-center gap-2"
@@ -235,24 +239,24 @@ export default function Post({ post, onDelete }: PostProps) {
   );
 }
 
-function isLocal(host: string): boolean {
-  return host === window.location.host;
+function isLocal(post: CreatePostSignal, localHost: string): boolean {
+  return post[0][1][0] === localHost;
 }
 
 function isMine(post: CreatePostSignal, myPublicKeys: string[]): boolean {
   return myPublicKeys.includes(post[0][1][1]);
 }
 
-function canDelete(post: CreatePostSignal, myPublicKeys: string[]): boolean {
-  return isMine(post, myPublicKeys) && isLocal(post[0][1][0]);
+function canDelete(post: CreatePostSignal, localHost: string, myPublicKeys: string[]): boolean {
+  return isMine(post, myPublicKeys) && isLocal(post, localHost);
 }
 
 function canMuteIdentity(post: CreatePostSignal, myPublicKeys: string[]): boolean {
   return !isMine(post, myPublicKeys);
 }
 
-function canMuteServer(post: CreatePostSignal): boolean {
-  return !isLocal(post[0][1][0]);
+function canMuteServer(post: CreatePostSignal, localHost: string): boolean {
+  return !isLocal(post, localHost);
 }
 
 function formatDate(timestamp: number, now: number): string {

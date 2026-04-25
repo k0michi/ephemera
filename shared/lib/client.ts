@@ -1,5 +1,5 @@
 import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment, PeerManifest } from "../api/api.js";
-import { apiResponseSchema, getPeerResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
+import { apiResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -87,15 +87,25 @@ export class Fetcher {
   }
 }
 
+export interface ClientOptions {
+  /**
+   * The host of the local server
+   */
+  host: string;
+  baseUrl?: string;
+}
+
 export default class Client {
   /**
    * e.g. "example.com". Does not include scheme (http/https) or path.
    */
   _host: string;
   _version: Version = 0;
+  _baseUrl: string | null;
 
-  constructor(host: string) {
-    this._host = host;
+  constructor(options: ClientOptions) {
+    this._host = options.host;
+    this._baseUrl = options.baseUrl ?? null;
   }
 
   get host(): string {
@@ -141,7 +151,7 @@ export default class Client {
       formData.append("attachments", attachment);
     }
 
-    const response = await Fetcher.postForm(`/api/v1/post`, formData);
+    const response = await Fetcher.postForm(this.buildLocalUrl(`/api/v1/post`), formData);
   }
 
   async fetchPosts(options: {
@@ -149,7 +159,7 @@ export default class Client {
     limit?: number;
     author?: string | undefined;
   }): Promise<GetPostsResponse> {
-    const response = await Fetcher.get(`/api/v1/posts`, {
+    const response = await Fetcher.get(this.buildLocalUrl(`/api/v1/posts`), {
       ...(options.limit !== undefined ? { limit: String(options.limit) } : {}),
       ...(options.cursor !== null ? { cursor: options.cursor } : {}),
       ...(options.author !== undefined ? { author: options.author } : {}),
@@ -177,7 +187,7 @@ export default class Client {
     ];
     const signed: DeletePostSignal = await SignalCrypto.sign(payload, keyPair.privateKey);
 
-    const response = await Fetcher.delete(`/api/v1/post`, {
+    const response = await Fetcher.delete(this.buildLocalUrl(`/api/v1/post`), {
       post: signed
     } satisfies DeletePostRequest);
   }
@@ -187,11 +197,11 @@ export default class Client {
       return `https://${host}/api/v1/attachments/${hash}`;
     }
 
-    return `/api/v1/attachments/${hash}`;
+    return this.buildLocalUrl(`/api/v1/attachments/${hash}`);
   }
 
   async getLocalServer(): Promise<PeerManifest> {
-    const response = await Fetcher.get(`/api/v1/peer`);
+    const response = await Fetcher.get(this.buildLocalUrl(`/api/v1/peer`));
 
     let parsed;
 
@@ -205,7 +215,7 @@ export default class Client {
   }
 
   async getRemoteServers(): Promise<PeerManifest[]> {
-    const response = await Fetcher.get(`/api/v1/remote-servers`);
+    const response = await Fetcher.get(this.buildLocalUrl(`/api/v1/remote-servers`));
     let parsed;
 
     try {
@@ -215,5 +225,26 @@ export default class Client {
     }
 
     return parsed.servers;
+  }
+
+  async getPost(postId: string): Promise<CreatePostSignal> {
+    const response = await Fetcher.get(this.buildLocalUrl(`/api/v1/posts/${postId}`));
+    let parsed;
+
+    try {
+      parsed = getPostResponseSchema.parse(response);
+    } catch (e) {
+      throw new Error("Invalid response");
+    }
+
+    return parsed.post;
+  }
+
+  buildLocalUrl(path: string): string {
+    if (this._baseUrl !== null) {
+      return `${this._baseUrl}${path}`;
+    }
+
+    return path;
   }
 }

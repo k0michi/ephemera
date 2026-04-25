@@ -61,12 +61,12 @@ export default function Settings({ }: SettingsProps) {
     );
   };
 
-  const handleUnmuteIdentity = (id: string) => {
-    store.removeMutedIdentity(id);
+  const handleUnmuteIdentity = async (id: string) => {
+    await store.removeMutedIdentity(id);
   };
 
-  const handleUnmuteServer = (server: string) => {
-    store.removeMutedServer(server);
+  const handleUnmuteServer = async (server: string) => {
+    await store.removeMutedServer(server);
   };
 
   return (
@@ -208,7 +208,7 @@ export default function Settings({ }: SettingsProps) {
             mutedServers.map(server => (
               <tr key={server}>
                 <td className="text-center text-muted">
-                  <ServerIdenticon data={new TextEncoder().encode(store.getHost() ?? '')} style={{ width: 32, height: 32 }} />
+                  <ServerIdenticon data={new TextEncoder().encode(server)} style={{ width: 32, height: 32 }} />
                 </td>
                 <td className="font-monospace">
                   {server}

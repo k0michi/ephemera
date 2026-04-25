@@ -10,6 +10,12 @@ export default class SignalCrypto {
     return await Crypto.digest(payloadUint8);
   }
 
+  static digestSync<S extends SignalPayload>(signal: S): Uint8Array {
+    const payloadString = JSON.stringify(signal);
+    const payloadUint8 = new TextEncoder().encode(payloadString);
+    return Crypto.digestSync(payloadUint8);
+  }
+
   static async digestServer<S extends ServerSignalPayload>(signal: S): Promise<Uint8Array> {
     const payloadString = JSON.stringify(signal);
     const payloadUint8 = new TextEncoder().encode(payloadString);

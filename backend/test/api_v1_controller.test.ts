@@ -53,6 +53,10 @@ class MockPostService extends PostServiceBase {
   async delete(signal: DeletePostSignal): Promise<void> {
     return;
   }
+
+  async get(postId: string): Promise<CreatePostSignal | null> {
+    return null;
+  }
 }
 
 class MockAttachmentService implements IAttachmentService {

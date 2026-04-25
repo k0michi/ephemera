@@ -7,7 +7,7 @@ describe("Client", () => {
   describe("sendPost", () => {
     it("should send a POST request to /api/v1/post", async () => {
       const keyPair = Crypto.generateKeyPair();
-      const client = new Client("example.com");
+      const client = new Client({ host: "example.com" });
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({} satisfies PostResponse)
@@ -27,7 +27,7 @@ describe("Client", () => {
   describe("fetchPosts", () => {
     it("should send a GET request to /api/v1/posts", async () => {
       const keyPair = Crypto.generateKeyPair();
-      const client = new Client("example.com");
+      const client = new Client({ host: "example.com" });
       const mockResponse: GetPostsResponse = {
         posts: [],
         nextCursor: null,
@@ -51,7 +51,7 @@ describe("Client", () => {
 
     it("should send a GET request with cursor parameter", async () => {
       const keyPair = Crypto.generateKeyPair();
-      const client = new Client("example.com");
+      const client = new Client({ host: "example.com" });
       const mockResponse: GetPostsResponse = {
         posts: [],
         nextCursor: null,
@@ -75,7 +75,7 @@ describe("Client", () => {
 
     it("should send a GET request with limit parameter", async () => {
       const keyPair = Crypto.generateKeyPair();
-      const client = new Client("example.com");
+      const client = new Client({ host: "example.com" });
       const mockResponse: GetPostsResponse = {
         posts: [],
         nextCursor: null,

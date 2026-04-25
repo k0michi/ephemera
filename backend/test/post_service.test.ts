@@ -13,6 +13,7 @@ import TestHelper from './test_helper.js';
 import { type IPeerService } from '../app/peer_service.js';
 import type { PooledDatabase } from '../app/database.js';
 import { createPool, type Pool } from 'mysql2/promise';
+import Hex from '@ephemera/shared/lib/hex.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -143,6 +144,29 @@ describe('PostService', () => {
 
     it('should throw error for invalid limit', async () => {
       await expect(postService.find({ limit: 0, cursor: null, author: null })).rejects.toThrowError();
+    });
+  });
+
+  describe('get', () => {
+    it('should retrieve a post by ID', async () => {
+      const keyPair = Crypto.generateKeyPair();
+      const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+      const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+      const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+      await postService.create(signal, []);
+
+      const digest = await SignalCrypto.digest(signalPayload);
+      const digestHex = Hex.fromUint8Array(digest);
+
+      const post = await postService.get(digestHex);
+      expect(post).not.toBeNull();
+      expect(post?.[0][2]).toBe('Hello, world!');
+    });
+
+    it('should return null for non-existent post', async () => {
+      const post = await postService.get('nonexistentdigest');
+      expect(post).toBeNull();
     });
   });
 });
