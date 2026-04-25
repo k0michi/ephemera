@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { KeyedRWLock } from "../app/keyed_rw_lock.js";
 import SymbolHelper from "@ephemera/shared/lib/symbol_helper.js";
+import { describe, expect, it } from "vitest";
+
+import { KeyedRWLock } from "../app/keyed_rw_lock.js";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

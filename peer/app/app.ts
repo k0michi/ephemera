@@ -1,24 +1,26 @@
-import { createLibp2p, type Libp2p } from 'libp2p';
-import { webSockets } from '@libp2p/websockets';
-import { noise } from '@libp2p/noise';
-import { yamux } from '@libp2p/yamux';
-import { KadDHT, kadDHT } from '@libp2p/kad-dht';
-import { Ping, ping } from '@libp2p/ping';
-import { Identify, identify } from '@libp2p/identify';
-import { bootstrap } from '@libp2p/bootstrap'
-import { multiaddr, type Multiaddr } from '@multiformats/multiaddr';
+import { Transform, Writable } from 'node:stream';
+import { pipeline } from "node:stream/promises";
+
+import Base37 from '@ephemera/shared/lib/base37.js';
 import HostUtil, { Host } from '@ephemera/shared/lib/host_util.js';
-import Config from './config.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { Message, PubSubServiceServer, PubSubServiceService } from '@ephemera/shared/peer/bridge.js';
 import grpc from '@grpc/grpc-js';
-import { GossipSub, gossipsub, Message as libp2pMessage } from '@libp2p/gossipsub';
-import { EventTargetReadable } from './event_target_readable.js';
-import { pipeline } from "node:stream/promises";
-import { Transform, Writable } from 'node:stream';
-import Base37 from '@ephemera/shared/lib/base37.js';
+import { bootstrap } from '@libp2p/bootstrap'
 import { keys } from '@libp2p/crypto';
-import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import { GossipSub, gossipsub, Message as libp2pMessage } from '@libp2p/gossipsub';
+import { Identify, identify } from '@libp2p/identify';
 import { KEEP_ALIVE } from '@libp2p/interface'
+import { KadDHT, kadDHT } from '@libp2p/kad-dht';
+import { noise } from '@libp2p/noise';
+import { Ping, ping } from '@libp2p/ping';
+import { webSockets } from '@libp2p/websockets';
+import { yamux } from '@libp2p/yamux';
+import { type Multiaddr } from '@multiformats/multiaddr';
+import { createLibp2p, type Libp2p } from 'libp2p';
+
+import Config from './config.js';
+import { EventTargetReadable } from './event_target_readable.js';
 import MultiaddrHelper from './multiaddr_helper.js';
 
 interface Peer {

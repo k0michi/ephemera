@@ -1,15 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AttachmentService } from "../app/attachment_service.js";
-import { drizzle } from "drizzle-orm/mysql2";
 import type { StartedMariaDbContainer } from "@testcontainers/mariadb";
-import TestHelper from "./test_helper.js";
+import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from "drizzle-orm/mysql2/migrator";
-import FSHelper from "../app/fs_helper.js";
 import fsPromises from "fs/promises";
-import type { PooledDatabase } from "../app/database.js";
 import type { Pool } from "mysql2/promise";
 import { createPool } from "mysql2/promise";
 import path from "path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { AttachmentService } from "../app/attachment_service.js";
+import type { PooledDatabase } from "../app/database.js";
+import FSHelper from "../app/fs_helper.js";
+import TestHelper from "./test_helper.js";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;

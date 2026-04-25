@@ -1,4 +1,5 @@
 import express from "express";
+
 import type { IController } from "./controller.js";
 
 export abstract class Application {

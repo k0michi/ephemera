@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import Config from '../app/config.js';
 
 describe('Config', () => {

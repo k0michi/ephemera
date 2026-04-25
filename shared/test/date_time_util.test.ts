@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
-import DateTimeUtil from "../lib/date_time_util.js";
 import { Temporal } from "@js-temporal/polyfill";
+import { describe, expect, it } from "vitest";
+
+import DateTimeUtil from "../lib/date_time_util.js";
 
 describe('DateTimeUtil', () => {
   describe('fromMySQLString', () => {

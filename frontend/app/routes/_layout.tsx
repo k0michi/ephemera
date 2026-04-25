@@ -1,10 +1,10 @@
-import Notifier from "components/notifier";
-import { Col, Container, Row } from "react-bootstrap";
-import { Link, Outlet, useNavigate } from "react-router";
-
-import { useReader, useSelector } from "lib/store";
-import { useEffect } from "react";
 import Nav from "components/nav";
+import Notifier from "components/notifier";
+import { useReader } from "lib/store";
+import { useEffect } from "react";
+import { Col, Container, Row } from "react-bootstrap";
+import { Link, Outlet } from "react-router";
+
 import { EphemeraStore } from "~/store";
 
 export default function Layout() {

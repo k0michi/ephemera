@@ -1,4 +1,5 @@
-import { expect, it, describe } from "vitest";
+import { describe,expect, it } from "vitest";
+
 import Base37 from "../lib/base37.js";
 
 function* xorShift32(seed: number): Generator<number> {

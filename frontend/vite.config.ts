@@ -1,7 +1,7 @@
 import { reactRouter } from "@react-router/dev/vite";
+import { execSync } from 'child_process';
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { execSync } from 'child_process';
 
 let commitHash = 'unknown';
 

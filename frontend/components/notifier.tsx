@@ -1,6 +1,8 @@
-import { Toast, ToastContainer } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 import { useReader, useSelector } from 'lib/store';
+import { Toast, ToastContainer } from 'react-bootstrap';
+
 import { EphemeraStore } from '~/store';
 
 export default function Notifier() {

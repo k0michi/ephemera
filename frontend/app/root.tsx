@@ -1,3 +1,8 @@
+import 'bootstrap/dist/css/bootstrap.css';
+import "./app.css";
+
+import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import { StoreProvider } from "lib/store";
 import {
   isRouteErrorResponse,
   Links,
@@ -9,11 +14,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import 'bootstrap/dist/css/bootstrap.css';
-import "./app.css";
-import { StoreProvider } from "lib/store";
 import { EphemeraStore } from "./store";
-import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 
 export function loader() {
   return {

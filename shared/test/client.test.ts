@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
-import Client from "../lib/client.js";
+import { describe, expect, it, vi } from "vitest";
+
 import type { GetPostsResponse, PostResponse } from "../api/api.js";
+import Client from "../lib/client.js";
 import Crypto from "../lib/crypto.js";
 
 describe("Client", () => {

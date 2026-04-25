@@ -1,4 +1,4 @@
-import type { ApiRequest, ApiResponse, CreatePostSignalPayload, GetPostsRequest, GetPostsResponse, PostRequest, CreatePostSignal, Version, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, Attachment, PeerManifest } from "../api/api.js";
+import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetPostsRequest, GetPostsResponse, PeerManifest, Version } from "../api/api.js";
 import { apiResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";

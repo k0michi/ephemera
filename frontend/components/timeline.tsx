@@ -1,11 +1,13 @@
 
-import type { GetPostsRequest, CreatePostSignal } from "@ephemera/shared/api/api";
+import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import { useReader, useSelector } from "lib/store";
 import React from "react";
+import { Card } from "react-bootstrap";
+
+import { EphemeraStore } from "~/store";
+
 import Post from "./post";
 import postStyles from "./post.module.css";
-import { Card } from "react-bootstrap";
-import { EphemeraStore } from "~/store";
 
 export interface TimelineProps {
   author?: string | undefined;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { PostCursorUtil } from "../lib/post_cursor_util.js";
 import TestHelper from "./test_helper.js";
 
