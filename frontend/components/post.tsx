@@ -9,12 +9,12 @@ import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner, Tooltip } from 
 import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
 import { Link } from "react-router";
 
+import { useIsClient } from "~/hooks/is_client";
 import { EphemeraStore } from "~/store";
 
 import { useMutex } from "../app/hooks/mutex";
 import { RoundedIdenticon } from "./identicon";
 import styles from "./post.module.css";
-import { useIsClient } from "~/hooks/is_client";
 
 export interface PostProps {
   post: CreatePostSignal;
