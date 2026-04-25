@@ -34,6 +34,12 @@ export default function Post({ post, onDelete }: PostProps) {
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
 
+    if (now === initialDate) {
+      // Mounted on client
+      setNow(Date.now());
+      return;
+    }
+
     const timer = setTimeout(() => {
       setNow(Date.now());
     }, timeout);
@@ -41,7 +47,7 @@ export default function Post({ post, onDelete }: PostProps) {
     return () => {
       clearTimeout(timer);
     };
-  }, [post, now]);
+  }, [post, now, initialDate]);
 
   const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
