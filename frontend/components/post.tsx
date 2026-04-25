@@ -302,7 +302,7 @@ function formatDate(timestamp: number, now: number, isClient: boolean): string {
   }
 
   const date = new Date(timestamp);
-  const nowDate = new Date();
+  const nowDate = new Date(now);
   const isSameYear = getFullYear(date, isClient) === getFullYear(nowDate, isClient);
 
   if (isSameYear) {
