@@ -12,7 +12,7 @@ import type { AttachmentType, IAttachmentService } from '../app/attachment_servi
 import Config from '../app/config.js';
 import type { Transaction } from '../app/database.js';
 import type { IPeerService } from '../app/peer_service.js';
-import { type PostFindOptions, type PostFindResult,PostServiceBase } from '../app/post_service.js';
+import { type PostFindOptions, type PostFindResult, PostServiceBase } from '../app/post_service.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -28,6 +28,8 @@ function testConfig() {
     dbConnectionLimit: 5,
     dbQueueLimit: 500,
     dbConnectTimeout: 10000,
+    redisHost: 'localhost',
+    redisPort: 6379,
     peerHost: 'peer:50051',
     privateKey: Base37.fromUint8Array(keyPair.privateKey),
     publicKey: Base37.fromUint8Array(keyPair.publicKey),
