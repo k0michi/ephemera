@@ -83,6 +83,7 @@ describe('AttachmentService', () => {
     { type: 'video/webm', codec: 'vp8' },
     { type: 'video/webm', codec: 'vp9' },
     { type: 'video/webm', codec: 'av1' },
+    { type: 'video/quicktime', codec: 'h264' },
   ] as const)('should accept $type with $codec', async ({ type, codec }) => {
     await database.transaction(async (tx) => {
       const testVideo = await TestHelper.newDummyVideo({
@@ -98,6 +99,7 @@ describe('AttachmentService', () => {
 
   it.each([
     { type: 'video/mp4', codec: 'h265' },
+    { type: 'video/quicktime', codec: 'h265' },
   ] as const)('should reject $type with unsupported codec $codec', async ({ type, codec }) => {
     await database.transaction(async (tx) => {
       const testVideo = await TestHelper.newDummyVideo({

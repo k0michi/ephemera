@@ -56,6 +56,7 @@ export class AttachmentService implements IAttachmentService {
     'image/webp',
     'video/mp4',
     'video/webm',
+    'video/quicktime'
   ]);
   private static _kAllowedVideoCodecs: Set<string> = new Set([
     'h264',

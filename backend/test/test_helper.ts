@@ -11,7 +11,7 @@ import Base37 from "@ephemera/shared/lib/base37.js";
 
 export type ImageType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif';
 export type VideoCodec = 'h264' | 'vp8' | 'vp9' | 'av1' | 'h265';
-export type VideoType = 'video/mp4' | 'video/webm';
+export type VideoType = 'video/mp4' | 'video/webm' | 'video/quicktime';
 
 export default class TestHelper {
   static startDbContainer() {
@@ -100,6 +100,20 @@ export default class TestHelper {
     expect(buffer1).toEqual(buffer2);
   }
 
+  static getExtension(type: ImageType | VideoType): string {
+    const mimeMap: Record<ImageType | VideoType, string> = {
+      'image/png': 'png',
+      'image/jpeg': 'jpg',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'video/mp4': 'mp4',
+      'video/webm': 'webm',
+      'video/quicktime': 'mov'
+    };
+
+    return mimeMap[type];
+  }
+
   static async newDummyVideo({
     width,
     height,
@@ -115,7 +129,7 @@ export default class TestHelper {
     codec: VideoCodec;
     fps: number;
   }): Promise<string> {
-    const extension = type === 'video/webm' ? 'webm' : 'mp4';
+    const extension = this.getExtension(type);
 
     let outputPath = await this.newTempFile();
     outputPath += `.${extension}`;
@@ -150,7 +164,7 @@ export default class TestHelper {
         outputOptions.push('-pix_fmt yuv420p');
       }
 
-      if (codec === 'h265' && type === 'video/mp4') {
+      if (codec === 'h265' && (type === 'video/mp4' || type === 'video/quicktime')) {
         outputOptions.push('-tag:v hvc1');
       }
 

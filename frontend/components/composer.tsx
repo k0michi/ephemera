@@ -24,6 +24,7 @@ const allowedFileTypes = new Set([
   "image/webp",
   "video/mp4",
   "video/webm",
+  "video/quicktime",
 ]);
 
 const maxAttachmentCount = 4;
