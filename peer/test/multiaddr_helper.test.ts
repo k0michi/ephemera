@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
-import MultiaddrHelper from "../app/multiaddr_helper.js";
-import { multiaddr } from "@multiformats/multiaddr";
 import HostUtil from "@ephemera/shared/lib/host_util.js";
+import { multiaddr } from "@multiformats/multiaddr";
+import { describe, expect, it } from "vitest";
+
+import MultiaddrHelper from "../app/multiaddr_helper.js";
 
 describe("MultiaddrHelper", () => {
   it("should extract host and port from a valid multiaddr", () => {

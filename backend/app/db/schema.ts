@@ -1,18 +1,17 @@
-import {
-  mysqlTable,
-  char,
-  tinyint,
-  varchar,
-  text,
-  json,
-  timestamp,
-  bigint,
-  int,
-  index,
-  uniqueIndex,
-  primaryKey
-} from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
+import {
+  bigint,
+  char,
+  index,
+  int,
+  json,
+  mysqlTable,
+  primaryKey,
+  text,
+  timestamp,
+  tinyint,
+  uniqueIndex,
+  varchar} from 'drizzle-orm/mysql-core';
 
 export const posts = mysqlTable('posts', {
   /**

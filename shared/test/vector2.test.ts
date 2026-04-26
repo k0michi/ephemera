@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import Vector2 from "../lib/vector2.js";
 
 describe("Vector2", () => {

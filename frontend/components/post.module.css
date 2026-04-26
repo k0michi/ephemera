@@ -16,6 +16,15 @@
   text-decoration: underline;
 }
 
+.postDateLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.postDateLink:hover {
+  text-decoration: underline;
+}
+
 .post {
   border-radius: 0;
 }

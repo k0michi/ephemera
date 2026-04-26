@@ -1,4 +1,5 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 export interface KeyPair {
   publicKey: Uint8Array;
@@ -46,6 +47,10 @@ export default class Crypto {
   static async digest(data: Uint8Array): Promise<Uint8Array> {
     // crypto.subtle.digest takes TypedArray, so this is safe
     return new Uint8Array(await crypto.subtle.digest('SHA-256', data as BufferSource));
+  }
+
+  static digestSync(data: Uint8Array): Uint8Array {
+    return sha256(data);
   }
 
   /**

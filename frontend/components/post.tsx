@@ -1,17 +1,20 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
-import styles from "./post.module.css";
-import { Card, Dropdown, OverlayTrigger, Tooltip, Modal, Button, Spinner } from "react-bootstrap";
-import { RoundedIdenticon } from "./identicon";
 import Base37 from "@ephemera/shared/lib/base37";
-import { useReader } from "lib/store";
-import { Link } from "react-router";
-import { BsThreeDots, BsTrash } from "react-icons/bs";
-import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import Hex from "@ephemera/shared/lib/hex";
-import React from "react";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
+import { useReader, useSelector } from "lib/store";
+import React from "react";
+import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
+import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
+import { Link } from "react-router";
+
+import { useIsClient } from "~/hooks/is_client";
 import { EphemeraStore } from "~/store";
+
 import { useMutex } from "../app/hooks/mutex";
+import { RoundedIdenticon } from "./identicon";
+import styles from "./post.module.css";
 
 export interface PostProps {
   post: CreatePostSignal;
@@ -19,12 +22,23 @@ export interface PostProps {
 }
 
 export default function Post({ post, onDelete }: PostProps) {
-  const [now, setNow] = React.useState(Date.now());
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const { isLocked, tryLock } = useMutex();
+  const digest = Hex.fromUint8Array(SignalCrypto.digestSync(post[0]));
+  const isClient = useIsClient();
+  const initialDate = useSelector(EphemeraStore, s => s.initialDate);
+  const [now, setNow] = React.useState(
+    isClient ? Date.now() : initialDate
+  );
 
   React.useEffect(() => {
     const timeout = getRenderTimeout(post[0][1][2], now);
+
+    if (now === initialDate) {
+      // Mounted on client
+      setNow(Date.now());
+      return;
+    }
 
     const timer = setTimeout(() => {
       setNow(Date.now());
@@ -33,11 +47,12 @@ export default function Post({ post, onDelete }: PostProps) {
     return () => {
       clearTimeout(timer);
     };
-  }, [post, now]);
+  }, [post, now, initialDate]);
 
   const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
   const postPublicKey = post[0][1][1];
+  const postHost = post[0][1][0];
 
   const handleDeletePost = async () => {
     using lock = tryLock();
@@ -63,6 +78,7 @@ export default function Post({ post, onDelete }: PostProps) {
 
   const attachments = post[0][3].filter((footer) => footer[0] === 'attachment');
   const blank = post[0][2] === "" && attachments.length === 0;
+  const localHost = useSelector(EphemeraStore, s => s.host);
 
   return (
     <>
@@ -95,7 +111,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 >
                   @{post[0][1][1]}
                 </Link>
-                {!isLocal(post[0][1][0]) && (
+                {!isLocal(post, localHost) && (
                   <>
                     {'•'}
                     <span style={{ flexShrink: 0 }}>
@@ -116,7 +132,9 @@ export default function Post({ post, onDelete }: PostProps) {
                   )}
                 >
                   <span style={{ flexShrink: 0 }}>
-                    {formatDate(post[0][1][2], now)}
+                    <Link to={isLocal(post, localHost) ? `/post/${digest}` : `https://${post[0][1][0]}/post/${digest}`} style={{ color: 'inherit' }} className={styles.postDateLink}>
+                      {formatDate(post[0][1][2], now, isClient)}
+                    </Link>
                   </span>
                 </OverlayTrigger>
               </div>
@@ -155,7 +173,23 @@ export default function Post({ post, onDelete }: PostProps) {
                     <BsThreeDots className="text-secondary" />
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', }}>
-                    {canDelete(post, publicKeys) ? (
+                    {canMuteIdentity(post, publicKeys) && (
+                      <Dropdown.Item
+                        onClick={() => store.addMutedIdentity(postPublicKey)}
+                        className="d-flex align-items-center gap-2"
+                      >
+                        <BsVolumeMute /> Mute @{postPublicKey}
+                      </Dropdown.Item>
+                    )}
+                    {canMuteServer(post, localHost) && (
+                      <Dropdown.Item
+                        onClick={() => store.addMutedServer(postHost)}
+                        className="d-flex align-items-center gap-2"
+                      >
+                        <BsServer /> Mute server {postHost}
+                      </Dropdown.Item>
+                    )}
+                    {canDelete(post, localHost, publicKeys) ? (
                       <Dropdown.Item
                         onClick={() => setShowDeleteModal(true)}
                         className="text-danger d-flex align-items-center gap-2"
@@ -218,15 +252,31 @@ export default function Post({ post, onDelete }: PostProps) {
   );
 }
 
-function isLocal(host: string): boolean {
-  return host === window.location.host;
+function isLocal(post: CreatePostSignal, localHost: string): boolean {
+  return post[0][1][0] === localHost;
 }
 
-function canDelete(post: CreatePostSignal, myPublicKeys: string[]): boolean {
-  return myPublicKeys.includes(post[0][1][1]) && isLocal(post[0][1][0]);
+function isMine(post: CreatePostSignal, myPublicKeys: string[]): boolean {
+  return myPublicKeys.includes(post[0][1][1]);
 }
 
-function formatDate(timestamp: number, now: number): string {
+function canDelete(post: CreatePostSignal, localHost: string, myPublicKeys: string[]): boolean {
+  return isMine(post, myPublicKeys) && isLocal(post, localHost);
+}
+
+function canMuteIdentity(post: CreatePostSignal, myPublicKeys: string[]): boolean {
+  return !isMine(post, myPublicKeys);
+}
+
+function canMuteServer(post: CreatePostSignal, localHost: string): boolean {
+  return !isLocal(post, localHost);
+}
+
+function getFullYear(date: Date, isClient: boolean): number {
+  return isClient ? date.getFullYear() : date.getUTCFullYear();
+}
+
+function formatDate(timestamp: number, now: number, isClient: boolean): string {
   const diff = now - timestamp;
 
   const diffSeconds = Math.floor(diff / 1000);
@@ -252,13 +302,13 @@ function formatDate(timestamp: number, now: number): string {
   }
 
   const date = new Date(timestamp);
-  const nowDate = new Date();
-  const isSameYear = date.getFullYear() === nowDate.getFullYear();
+  const nowDate = new Date(now);
+  const isSameYear = getFullYear(date, isClient) === getFullYear(nowDate, isClient);
 
   if (isSameYear) {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: isClient ? undefined : 'UTC' });
   } else {
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: isClient ? undefined : 'UTC' });
   }
 }
 

@@ -1,6 +1,6 @@
-import { Multiaddr } from '@multiformats/multiaddr';
 import HostUtil, { Host } from '@ephemera/shared/lib/host_util.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
+import { Multiaddr } from '@multiformats/multiaddr';
 
 export default class MultiaddrHelper {
   /**

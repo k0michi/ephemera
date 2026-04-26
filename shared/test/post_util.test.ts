@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import PostUtil from "../lib/post_util.js";
 
 describe("PostUtil.weightedLength", () => {
@@ -9,6 +10,23 @@ describe("PostUtil.weightedLength", () => {
     expect(PostUtil.weightedLength("𠮷野家")).toBe(6);
     expect(PostUtil.weightedLength("😃")).toBe(2);
     expect(PostUtil.weightedLength("🧑‍🧑‍🧒")).toBe(2);
+  });
+});
+
+describe("PostUtil.weightedSubstring", () => {
+  it("returns substring based on weighted length", () => {
+    expect(PostUtil.weightedSubstring("abc", 0, 2)).toBe("ab");
+    expect(PostUtil.weightedSubstring("abc", 1, 3)).toBe("bc");
+    expect(PostUtil.weightedSubstring("あいう", 0, 4)).toBe("あい");
+    expect(PostUtil.weightedSubstring("あいう", 2, 6)).toBe("いう");
+    expect(PostUtil.weightedSubstring("あいう", 3, 6)).toBe("う");
+    expect(PostUtil.weightedSubstring("あいう", 3, 5)).toBe("");
+    expect(PostUtil.weightedSubstring("aあb", 0, 3)).toBe("aあ");
+    expect(PostUtil.weightedSubstring("𠮷野家", 0, 4)).toBe("𠮷野");
+    expect(PostUtil.weightedSubstring("😃", 0, 1)).toBe("");
+    expect(PostUtil.weightedSubstring("😃", 0, 2)).toBe("😃");
+    expect(PostUtil.weightedSubstring("🧑‍🧑‍🧒", 0, 1)).toBe("");
+    expect(PostUtil.weightedSubstring("🧑‍🧑‍🧒", 0, 2)).toBe("🧑‍🧑‍🧒");
   });
 });
 

@@ -2,13 +2,16 @@ import { exportedKeyPairSchema } from '@ephemera/shared/api/api_schema';
 import Base37 from '@ephemera/shared/lib/base37';
 import type { KeyPair } from '@ephemera/shared/lib/crypto';
 import { RoundedIdenticon } from 'components/identicon';
+import ServerIdenticon from 'components/server_identicon';
 import { useReader, useSelector } from 'lib/store';
 import { useState } from 'react';
-import { Table, Button, Modal } from 'react-bootstrap';
-import { BsTrash, BsDownload, BsPlusLg, BsUpload } from 'react-icons/bs';
+import { Button, Modal,Table } from 'react-bootstrap';
+import { BsDownload, BsPlusLg, BsTrash, BsUpload, BsVolumeUp } from 'react-icons/bs';
+
 import FileHelper from '~/file_helper';
-import type { Route } from './+types/_layout.settings';
 import { EphemeraStore } from '~/store';
+
+import type { Route } from './+types/_layout.settings';
 
 export function loader() {
   return {
@@ -26,6 +29,8 @@ export interface SettingsProps { }
 
 export default function Settings({ }: SettingsProps) {
   const keyPairs = useSelector(EphemeraStore, (store) => store.keyPairs);
+  const mutedIdentities = useSelector(EphemeraStore, s => s.mutedIdentities);
+  const mutedServers = useSelector(EphemeraStore, s => s.mutedServers);
   const store = useReader(EphemeraStore);
 
   const [targetKeyPair, setTargetKeyPair] = useState<KeyPair | null>(null);
@@ -58,10 +63,19 @@ export default function Settings({ }: SettingsProps) {
     );
   };
 
+  const handleUnmuteIdentity = async (id: string) => {
+    await store.removeMutedIdentity(id);
+  };
+
+  const handleUnmuteServer = async (server: string) => {
+    await store.removeMutedServer(server);
+  };
+
   return (
     <>
+      {/* Identities */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Manage Identities</h5>
+        <h5 className="mb-0">Identities</h5>
         <div className="d-flex gap-2">
           <Button variant="outline-primary" size="sm" onClick={async () => {
             try {
@@ -99,7 +113,7 @@ export default function Settings({ }: SettingsProps) {
                 <td>
                   <RoundedIdenticon data={kp.publicKey} size={32} />
                 </td>
-                <td className="font-monospace fw-bold text-break">
+                <td className="font-monospace">
                   @{id}
                 </td>
                 <td>
@@ -122,6 +136,94 @@ export default function Settings({ }: SettingsProps) {
                       <BsTrash />
                     </Button>
                   </div>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </Table>
+
+      {/* Muted Identities */}
+      <div className="mb-3">
+        <h5 className="mb-0">Muted Identities</h5>
+      </div>
+      <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
+        <thead className="table-light">
+          <tr>
+            <th style={{ width: '50px' }}></th>
+            <th>Identity</th>
+            <th className="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mutedIdentities.length === 0 ? (
+            <tr>
+              <td colSpan={3} className="text-center text-muted py-3">
+                No muted identities.
+              </td>
+            </tr>
+          ) : (
+            mutedIdentities.map(id => (
+              <tr key={id}>
+                <td>
+                  <RoundedIdenticon data={Base37.toUint8Array(id)} size={32} />
+                </td>
+                <td className="font-monospace">
+                  @{id}
+                </td>
+                <td className="text-end">
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => handleUnmuteIdentity(id)}
+                    title="Unmute"
+                  >
+                    <BsVolumeUp className="me-1" /> Unmute
+                  </Button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </Table>
+
+      {/* Muted Servers */}
+      <div className="mb-3">
+        <h5 className="mb-0">Muted Servers</h5>
+      </div>
+      <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
+        <thead className="table-light">
+          <tr>
+            <th style={{ width: '50px' }}></th>
+            <th>Server</th>
+            <th className="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mutedServers.length === 0 ? (
+            <tr>
+              <td colSpan={3} className="text-center text-muted py-3">
+                No muted servers.
+              </td>
+            </tr>
+          ) : (
+            mutedServers.map(server => (
+              <tr key={server}>
+                <td className="text-center text-muted">
+                  <ServerIdenticon data={new TextEncoder().encode(server)} style={{ width: 32, height: 32 }} />
+                </td>
+                <td className="font-monospace">
+                  {server}
+                </td>
+                <td className="text-end">
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => handleUnmuteServer(server)}
+                    title="Unmute"
+                  >
+                    <BsVolumeUp className="me-1" /> Unmute
+                  </Button>
                 </td>
               </tr>
             ))

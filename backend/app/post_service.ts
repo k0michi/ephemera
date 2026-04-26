@@ -1,23 +1,24 @@
-import type { CreatePostSignalFooter, CreatePostSignal, Version, DeletePostSignal, Signal } from "@ephemera/shared/api/api.js";
-import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
-import Hex from "@ephemera/shared/lib/hex.js";
-import type Config from "./config.js";
-import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
-import { ApiError } from "./api_error.js";
+import type { CreatePostSignal, DeletePostSignal, Signal,Version } from "@ephemera/shared/api/api.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
-import { posts, remotePosts } from "./db/schema.js";
-import { and, desc, eq, lt, sql } from "drizzle-orm";
+import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
 import Crypto from "@ephemera/shared/lib/crypto.js";
+import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
+import Hex from "@ephemera/shared/lib/hex.js";
+import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
+import { type PostCursor,PostCursorUtil } from "@ephemera/shared/lib/post_cursor_util.js";
+import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
+import { Temporal } from "@js-temporal/polyfill";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { unionAll } from "drizzle-orm/mysql-core";
+
+import { ApiError } from "./api_error.js";
 import type { IAttachmentService } from "./attachment_service.js";
-import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
+import type Config from "./config.js";
+import type { PooledDatabase } from "./database.js";
+import { posts, remotePosts } from "./db/schema.js";
 import FSHelper from "./fs_helper.js";
 import type { IPeerService } from "./peer_service.js";
-import { PostCursorUtil, type PostCursor } from "@ephemera/shared/lib/post_cursor_util.js";
-import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
-import { Temporal } from "@js-temporal/polyfill";
-import { unionAll } from "drizzle-orm/mysql-core";
-import type { PooledDatabase } from "./database.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -27,6 +28,8 @@ export interface IPostService {
   find(options: PostFindOptions): Promise<PostFindResult>;
 
   delete(signal: DeletePostSignal): Promise<void>;
+
+  get(postId: string): Promise<CreatePostSignal | null>;
 }
 
 export type PostSource = 'local' | 'remote' | 'all';
@@ -86,6 +89,8 @@ export abstract class PostServiceBase implements IPostService {
   abstract find(options: PostFindOptions): Promise<PostFindResult>;
 
   abstract delete(signal: DeletePostSignal): Promise<void>;
+
+  abstract get(postId: string): Promise<CreatePostSignal | null>;
 }
 
 export default class PostService extends PostServiceBase {
@@ -319,22 +324,7 @@ export default class PostService extends PostServiceBase {
       dbSignals = [];
     }
 
-    const signals = dbSignals.map((post) => {
-      return [
-        [
-          PostService.unwrapVersion(NullableHelper.unwrap(post.version)),
-          [
-            NullableHelper.unwrap(post.host),
-            NullableHelper.unwrap(post.author),
-            NullableHelper.unwrap(Number(post.createdAt)),
-            "create_post",
-          ],
-          NullableHelper.unwrap(post.content),
-          NullableHelper.unwrap(createPostSignalFooterSchema.parse(JSON.parse(post.footer as string))),
-        ],
-        NullableHelper.unwrap(post.signature),
-      ] satisfies CreatePostSignal;
-    });
+    const signals = dbSignals.map((post) => this.fromDbSignal(post));
 
     let nextCursor: string | null = null;
 
@@ -358,6 +348,57 @@ export default class PostService extends PostServiceBase {
 
     return result;
   }
+
+  async get(postId: string) {
+    const result = await this.database
+      .select({
+        version: posts.version,
+        host: posts.host,
+        author: posts.author,
+        content: posts.content,
+        footer: posts.footer,
+        signature: posts.signature,
+        createdAt: posts.createdAt,
+        insertedAt: posts.insertedAt,
+      })
+      .from(posts)
+      .where(eq(posts.id, postId))
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    const post = ArrayHelper.strictGet(result, 0);
+    return this.fromDbSignal(post);
+  }
+
+  fromDbSignal(dbSignal: {
+    version: number | null;
+    host: string | null;
+    author: string | null;
+    content: string | null;
+    footer: unknown;
+    signature: string | null;
+    createdAt: number | null;
+    insertedAt: string | null;
+  }): CreatePostSignal {
+    return [
+      [
+        PostService.unwrapVersion(NullableHelper.unwrap(dbSignal.version)),
+        [
+          NullableHelper.unwrap(dbSignal.host),
+          NullableHelper.unwrap(dbSignal.author),
+          NullableHelper.unwrap(Number(dbSignal.createdAt)),
+          "create_post",
+        ],
+        NullableHelper.unwrap(dbSignal.content),
+        NullableHelper.unwrap(createPostSignalFooterSchema.parse(JSON.parse(dbSignal.footer as string))),
+      ],
+      NullableHelper.unwrap(dbSignal.signature),
+    ] satisfies CreatePostSignal;
+  }
+
 
   async delete(signal: DeletePostSignal): Promise<void> {
     const validation = await this.validate(signal);

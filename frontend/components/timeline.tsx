@@ -1,11 +1,13 @@
 
-import type { GetPostsRequest, CreatePostSignal } from "@ephemera/shared/api/api";
-import { useReader } from "lib/store";
+import type { CreatePostSignal } from "@ephemera/shared/api/api";
+import { useReader, useSelector } from "lib/store";
 import React from "react";
+import { Card } from "react-bootstrap";
+
+import { EphemeraStore } from "~/store";
+
 import Post from "./post";
 import postStyles from "./post.module.css";
-import { Card } from "react-bootstrap";
-import { EphemeraStore } from "~/store";
 
 export interface TimelineProps {
   author?: string | undefined;
@@ -18,6 +20,15 @@ export default function Timeline({ author }: TimelineProps) {
   const store = useReader(EphemeraStore);
   const [cursor, setCursor] = React.useState<string | null>(null);
   const bottomRef = React.useRef<HTMLDivElement | null>(null);
+  const mutedIdentities = useSelector(EphemeraStore, s => s.mutedIdentities);
+  const mutedIdentitySet = new Set(mutedIdentities);
+  const mutedServers = useSelector(EphemeraStore, s => s.mutedServers);
+  const mutedServerSet = new Set(mutedServers);
+  const filteredPosts = posts.filter(post => {
+    const postHost = post[0][1][0];
+    const postAuthor = post[0][1][1];
+    return !(mutedIdentitySet.has(postAuthor) || mutedServerSet.has(postHost));
+  });
 
   const fetchPosts = React.useCallback(async () => {
     if (loading || !hasMore) {
@@ -65,7 +76,7 @@ export default function Timeline({ author }: TimelineProps) {
 
   return (
     <div>
-      {posts.map((post) => {
+      {filteredPosts.map((post) => {
         return (
           <Post post={post} key={post[1]} onDelete={(deletedPost) => {
             setPosts((prevPosts) => prevPosts.filter((p) => p !== deletedPost));

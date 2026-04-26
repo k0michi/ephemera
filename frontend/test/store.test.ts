@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import 'fake-indexeddb/auto';
-import { EphemeraStore } from '../app/store.js';
+
 import Base37 from "@ephemera/shared/lib/base37";
-import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
+import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { EphemeraStore } from '../app/store.js';
 
 describe('EphemeraStore', () => {
   let store: EphemeraStore;
@@ -21,7 +23,7 @@ describe('EphemeraStore', () => {
       };
     });
 
-    store = new EphemeraStore();
+    store = new EphemeraStore('example.com', Date.now());
   });
 
   afterEach(() => {

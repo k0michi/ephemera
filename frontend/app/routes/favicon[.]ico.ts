@@ -1,8 +1,8 @@
-import { render } from "components/server_identicon";
-import sharp from "sharp";
-import pngToIco from "png-to-ico";
-import Crypto from "@ephemera/shared/lib/crypto";
 import { Cache } from "@ephemera/shared/lib/cache";
+import Crypto from "@ephemera/shared/lib/crypto";
+import { render } from "components/server_identicon";
+import pngToIco from "png-to-ico";
+import sharp from "sharp";
 
 const kSizes = [16, 32, 48, 64, 128, 256];
 

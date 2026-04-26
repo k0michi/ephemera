@@ -1,13 +1,15 @@
-import { useReader, useSelector } from "lib/store";
-import { Container, Dropdown, Row, Col } from "react-bootstrap";
-import { Link, useNavigate } from "react-router";
-import ServerIdenticon from "./server_identicon";
-import { NavLink } from "./nav_link";
+import { useSelector } from "lib/store";
+import { Col,Container, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork } from "react-icons/bs";
+import { Link } from "react-router";
+
 import { EphemeraStore } from "~/store";
 
+import { NavLink } from "./nav_link";
+import ServerIdenticon from "./server_identicon";
+
 export default function Nav() {
-  const store = useReader(EphemeraStore);
+  const host = useSelector(EphemeraStore, s => s.host);
 
   return (
     <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
@@ -21,7 +23,7 @@ export default function Nav() {
                     style={{
                       width: 24
                     }}
-                    data={new TextEncoder().encode(store.getHost() || '')}
+                    data={new TextEncoder().encode(host)}
                   />
                 </Link>
                 <Link to="/" style={{ textDecoration: "none" }}>

@@ -1,6 +1,7 @@
-import type { Route } from "./+types/_layout._index";
 import Composer from "components/composer";
 import Timeline from "components/timeline";
+
+import type { Route } from "./+types/_layout._index";
 
 export function loader() {
   return {
