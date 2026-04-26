@@ -9,10 +9,8 @@ import sharp from "sharp";
 import { expect } from "vitest";
 
 import Config from "../app/config.js";
-
-export type ImageType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif';
-export type VideoCodec = 'h264' | 'vp8' | 'vp9' | 'av1' | 'h265';
-export type VideoType = 'video/mp4' | 'video/webm' | 'video/quicktime';
+import type { ImageType, VideoCodec, VideoType } from "@ephemera/shared/lib/attachment_util.js";
+import AttachmentUtil from "@ephemera/shared/lib/attachment_util.js";
 
 export default class TestHelper {
   static startDbContainer() {
@@ -101,20 +99,6 @@ export default class TestHelper {
     expect(buffer1).toEqual(buffer2);
   }
 
-  static getExtension(type: ImageType | VideoType): string {
-    const mimeMap: Record<ImageType | VideoType, string> = {
-      'image/png': 'png',
-      'image/jpeg': 'jpg',
-      'image/webp': 'webp',
-      'image/gif': 'gif',
-      'video/mp4': 'mp4',
-      'video/webm': 'webm',
-      'video/quicktime': 'mov'
-    };
-
-    return mimeMap[type];
-  }
-
   static async newDummyVideo({
     width,
     height,
@@ -130,7 +114,7 @@ export default class TestHelper {
     codec: VideoCodec;
     fps: number;
   }): Promise<string> {
-    const extension = this.getExtension(type);
+    const extension = AttachmentUtil.getExtension(type);
 
     let outputPath = await this.newTempFile();
     outputPath += `.${extension}`;
