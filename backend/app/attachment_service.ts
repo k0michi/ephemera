@@ -46,7 +46,7 @@ export class AttachmentService implements IAttachmentService {
   private config: Config;
   private database: PooledDatabase;
   private rwLock = new KeyedRWLock();
-  private static _kMaxAttachmentSize: number = 16 * 1024 * 1024; // 16 MB
+  private static _kMaxAttachmentSize: number = 64 * 1024 * 1024; // 64 MB
   private static _kMaxAttachmentWidth: number = 4096; // 4096 pixels
   private static _kAllowedAttachmentTypes: Set<string> = new Set([
     'image/png',
