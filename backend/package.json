@@ -1,6 +1,7 @@
 {
 	"devDependencies": {
 		"@testcontainers/mariadb": "^11.11.0",
+		"@testcontainers/redis": "^11.14.0",
 		"@types/express": "^5.0.6",
 		"@types/fluent-ffmpeg": "^2.1.28",
 		"@types/mime-types": "^3.0.1",

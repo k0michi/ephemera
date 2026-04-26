@@ -7,16 +7,18 @@ import { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { createPool, type Pool } from 'mysql2/promise';
-import { afterEach,beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AttachmentService } from '../app/attachment_service.js';
 import type { PooledDatabase } from '../app/database.js';
 import { type IPeerService } from '../app/peer_service.js';
 import PostService from '../app/post_service.js';
 import TestHelper from './test_helper.js';
+import type { StartedRedisContainer } from '@testcontainers/redis';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
+  let redisContainer: StartedRedisContainer;
   let database: PooledDatabase;
   let pool: Pool;
   let peerService: IPeerService;
@@ -25,13 +27,14 @@ describe('PostService', () => {
 
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
+    redisContainer = await TestHelper.startRedisContainer();
 
     const db = drizzle(createPool(container.getConnectionUri()));
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
 
-    const config = TestHelper.getConfig(container);
+    const config = TestHelper.getConfig(container, redisContainer);
     peerService = {
       async publish(signal) {
         return;

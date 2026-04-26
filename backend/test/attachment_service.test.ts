@@ -11,22 +11,25 @@ import { AttachmentService } from "../app/attachment_service.js";
 import type { PooledDatabase } from "../app/database.js";
 import FSHelper from "../app/fs_helper.js";
 import TestHelper from "./test_helper.js";
+import type { StartedRedisContainer } from "@testcontainers/redis";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;
+  let redisContainer: StartedRedisContainer;
   let database: PooledDatabase;
   let pool: Pool;
   let attachmentService: AttachmentService;
 
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
+    redisContainer = await TestHelper.startRedisContainer();
 
     const db = drizzle(createPool(container.getConnectionUri()));
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
 
-    const config = TestHelper.getConfig(container);
+    const config = TestHelper.getConfig(container, redisContainer);
     attachmentService = new AttachmentService(config, database);
   }, 60_000);
 
