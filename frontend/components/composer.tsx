@@ -6,9 +6,10 @@ import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { DisposableURL } from "lib/disposable_url";
 import { useReader, useSelector } from "lib/store";
-import { useEffect,useRef, useState } from "react";
-import { Button, Card, Dropdown,Form, Spinner } from "react-bootstrap";
-import { BsCheckLg, BsImage, BsPaperclip,BsXLg } from "react-icons/bs";
+import { useEffect, useRef, useState } from "react";
+import { Button, Card, Dropdown, Form, Spinner } from "react-bootstrap";
+import { BsCheckLg, BsImage, BsPaperclip, BsXLg } from "react-icons/bs";
+import { sha256 } from '@noble/hashes/sha2.js';
 
 import { useDisposableState } from "~/hooks/disposable_state";
 import { useMutex } from "~/hooks/mutex";
@@ -17,6 +18,27 @@ import { EphemeraStore } from "~/store";
 import { RoundedIdenticon } from "./identicon";
 
 export interface ComposerProps {
+}
+
+async function fileDigest(file: File) {
+  const hasher = sha256.create();
+
+  const stream = file.stream();
+  const reader = stream.getReader();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      hasher.update(value);
+    }
+
+    return hasher.digest();
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 const allowedFileTypes = new Set([
@@ -107,8 +129,7 @@ export default function Composer({ }: ComposerProps) {
       }
 
       candidates = await Promise.all(attachableFiles.map(async (file) => {
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        const digest = await Crypto.digest(bytes);
+        const digest = await fileDigest(file);
         return { file, digest };
       }));
     }
