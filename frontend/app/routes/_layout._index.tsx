@@ -1,11 +1,12 @@
+import type { Permission } from "@ephemera/shared/api/api";
 import Composer from "components/composer";
 import Timeline from "components/timeline";
+import { useReader } from "lib/store";
+import { useEffect, useState } from "react";
+
+import { EphemeraStore } from "~/store";
 
 import type { Route } from "./+types/_layout._index";
-import { useReader } from "lib/store";
-import { EphemeraStore } from "~/store";
-import { useEffect, useState } from "react";
-import type { Permission } from "@ephemera/shared/api/api";
 
 export function loader() {
   return {
