@@ -38,6 +38,7 @@ export default class ApiV1Controller implements IController {
     this.router.get('/peer', this.handleGetPeer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
     this.router.get('/posts/:id', this.handleGetPost.bind(this));
+    this.router.get('/identity/:id/permissions', this.handleGetIdentityPermissions.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
