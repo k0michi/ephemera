@@ -1,9 +1,8 @@
-import type { Permission } from "@ephemera/shared/api/api";
 import Composer from "components/composer";
 import Timeline from "components/timeline";
 import { useReader } from "lib/store";
-import { useEffect, useState } from "react";
 
+import usePermissions from "~/hooks/permissions";
 import { EphemeraStore } from "~/store";
 
 import type { Route } from "./+types/_layout._index";
@@ -21,22 +20,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
   ];
 }
 
-function usePermissions() {
-  const store = useReader(EphemeraStore);
-  const [permissions, setPermissions] = useState<Set<Permission>>(new Set());
-
-  useEffect(() => {
-    const keys = Object.keys(store.keyPairs);
-
-    Promise.all(keys.map(k => store.getClient().getIdentityPermissions(k)))
-      .then(results => setPermissions(results.reduce((perms, p) => perms.union(p), new Set())));
-  }, [store.keyPairs]);
-
-  return permissions;
-}
-
 export default function Home() {
-  const permissions = usePermissions();
+  const store = useReader(EphemeraStore);
+  const permissions = usePermissions(store);
 
   return (
     <div style={{
