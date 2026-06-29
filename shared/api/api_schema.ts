@@ -129,3 +129,13 @@ export const getPostRequestSchema = apiRequestSchema.extend({
 export const getPostResponseSchema = apiResponseSchema.extend({
     post: createPostSignalSchema
 });
+
+export const getIdentityPermissionsRequestSchema = apiRequestSchema.extend({
+    id: z.string()
+});
+
+export const permissionSchema = z.literal("write");
+
+export const getIdentityPermissionsResponseSchema = apiResponseSchema.extend({
+    permissions: z.array(permissionSchema)
+});

@@ -56,4 +56,14 @@ export default class EnvParser {
 
     return num;
   }
+
+  public getStringArrayOptional(key: string): string[] | undefined {
+    const value = this._env[key];
+
+    if (value === undefined) {
+      return undefined;
+    }
+
+    return value.split(',');
+  }
 }

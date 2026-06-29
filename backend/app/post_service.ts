@@ -1,4 +1,4 @@
-import type { CreatePostSignal, DeletePostSignal, Signal,Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignal, DeletePostSignal, Permission, Signal, Version } from "@ephemera/shared/api/api.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
@@ -6,7 +6,7 @@ import Crypto from "@ephemera/shared/lib/crypto.js";
 import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
-import { type PostCursor,PostCursorUtil } from "@ephemera/shared/lib/post_cursor_util.js";
+import { type PostCursor, PostCursorUtil } from "@ephemera/shared/lib/post_cursor_util.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { and, desc, eq, sql } from "drizzle-orm";
@@ -30,6 +30,8 @@ export interface IPostService {
   delete(signal: DeletePostSignal): Promise<void>;
 
   get(postId: string): Promise<CreatePostSignal | null>;
+
+  getPermissions(author: string): Permission[];
 }
 
 export type PostSource = 'local' | 'remote' | 'all';
@@ -53,12 +55,37 @@ export abstract class PostServiceBase implements IPostService {
     this.config = config;
   }
 
+  protected getPermissionsAsSet(author: string): Set<Permission> {
+    const permissions = new Set<Permission>();
+    const { allowedIdentities, deniedIdentities } = this.config;
+
+    if (!deniedIdentities.includes(author)) {
+      if (allowedIdentities.length === 0 || allowedIdentities.includes(author)) {
+        permissions.add('write');
+      }
+    }
+
+    return permissions;
+  }
+
+  public getPermissions(author: string): Permission[] {
+    return Array.from(this.getPermissionsAsSet(author));
+  }
+
+  protected validatePermission(author: string, permission: Permission): void {
+    if (!this.getPermissionsAsSet(author).has(permission)) {
+      throw new ApiError(`Permission denied: ${permission}`, 403);
+    }
+  }
+
   async create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
     const validation = await this.validate(signal);
 
     if (!validation[0]) {
       throw new ApiError(validation[1] || 'Invalid post signal', 400);
     }
+
+    this.validatePermission(signal[0][1][1], 'write');
 
     await this.createImpl(signal, attachmentPaths);
   }
@@ -406,6 +433,8 @@ export default class PostService extends PostServiceBase {
     if (!validation[0]) {
       throw new ApiError(validation[1] || 'Invalid delete signal', 400);
     }
+
+    this.validatePermission(signal[0][1][1], 'write');
 
     const postId = signal[0][2][0];
 

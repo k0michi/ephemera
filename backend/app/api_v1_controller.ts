@@ -1,7 +1,7 @@
 import { pipeline } from 'node:stream/promises';
 
-import type { GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
-import { deletePostRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import type { GetIdentityPermissionsResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
+import { deletePostRequestSchema, getIdentityPermissionsRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import express from 'express';
 import fsPromises from 'fs/promises';
@@ -188,6 +188,21 @@ export default class ApiV1Controller implements IController {
     }
 
     const response = { post } satisfies GetPostResponse;
+    res.status(200).json(response);
+  }
+
+  async handleGetIdentityPermissions(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getIdentityPermissionsRequestSchema.parse(req.params);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const permissions = this.postService.getPermissions(parsed.id);
+
+    const response = { permissions } satisfies GetIdentityPermissionsResponse;
     res.status(200).json(response);
   }
 }

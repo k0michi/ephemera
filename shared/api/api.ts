@@ -230,3 +230,16 @@ export interface GetPostRequest extends ApiRequest {
 export interface GetPostResponse extends ApiResponse {
   post: CreatePostSignal;
 }
+
+// GET /api/v1/identity/:id/permissions
+export interface GetIdentityPermissionsRequest extends ApiRequest {
+  id: string;
+}
+
+export interface GetIdentityPermissionsResponse extends ApiResponse {
+  permissions: Permission[];
+}
+
+export type Permission =
+  | 'write'
+  ;
