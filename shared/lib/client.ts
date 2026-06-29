@@ -1,5 +1,5 @@
-import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetPostsRequest, GetPostsResponse, PeerManifest, Version } from "../api/api.js";
-import { apiResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
+import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetPostsRequest, GetPostsResponse, PeerManifest, Permission, Version } from "../api/api.js";
+import { apiResponseSchema, getIdentityPermissionsResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -238,6 +238,19 @@ export default class Client {
     }
 
     return parsed.post;
+  }
+
+  async getIdentityPermissions(identity: string): Promise<Set<Permission>> {
+    const response = await Fetcher.get(this.buildLocalUrl(`/api/v1/identity/${identity}/permissions`));
+    let parsed;
+
+    try {
+      parsed = getIdentityPermissionsResponseSchema.parse(response);
+    } catch (e) {
+      throw new Error("Invalid response");
+    }
+
+    return new Set(parsed.permissions);
   }
 
   buildLocalUrl(path: string): string {
