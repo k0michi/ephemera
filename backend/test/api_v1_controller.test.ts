@@ -1,4 +1,4 @@
-import type { CreatePostSignal, CreatePostSignalPayload, DeletePostSignal, PeerManifest, ServerSignal } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignal, CreatePostSignalPayload, DeletePostSignal, PeerManifest, Permission, ServerSignal } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
@@ -12,7 +12,8 @@ import type { AttachmentType, IAttachmentService } from '../app/attachment_servi
 import Config from '../app/config.js';
 import type { Transaction } from '../app/database.js';
 import type { IPeerService } from '../app/peer_service.js';
-import { type PostFindOptions, type PostFindResult,PostServiceBase } from '../app/post_service.js';
+import { type PostFindOptions, type PostFindResult, PostServiceBase } from '../app/post_service.js';
+import type { IIdentityService } from '../app/identity_service.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -33,6 +34,16 @@ function testConfig() {
     publicKey: Base37.fromUint8Array(keyPair.publicKey),
     allowedTimeSkewMillis: 5 * 60 * 1000,
   });
+}
+
+class MockIdentityService implements IIdentityService {
+  async getPermissions(identity: string): Promise<Set<Permission>> {
+    return new Set(['write']);
+  }
+
+  async throwIfNotPermitted(identity: string, permission: Permission): Promise<void> {
+    return;
+  }
 }
 
 class MockPostService extends PostServiceBase {
@@ -148,7 +159,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -165,7 +176,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
     });
 
@@ -189,7 +200,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).resolves.not.toThrow();
     });
 
@@ -213,7 +224,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
     });
 
@@ -237,7 +248,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
     });
   });
@@ -253,7 +264,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -268,7 +279,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
       await controller.handleGetPosts(req, res);
       expect(res.statusCode).toBe(200);
       const data = res._getJSONData();
