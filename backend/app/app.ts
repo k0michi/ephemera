@@ -111,7 +111,7 @@ class Ephemera extends Application {
     this.schedulerService.register(new AttachmentCleanerJob(this.attachmentService), createFixedRateWithSkipTicker(24 * 60 * 60 * 1000, this.schedulerService.signal));
 
     this.app.use(express.json());
-    this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService, this.peerService));
+    this.useController(new ApiV1Controller(this.config, this.identityService, this.postService, this.attachmentService, this.peerService));
 
     this.app.use((req: express.Request, res: express.Response) => {
       res.status(404).json({ error: 'Not Found' } satisfies ApiResponse);
