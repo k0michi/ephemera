@@ -13,6 +13,7 @@ import type { IAttachmentService } from './attachment_service.js';
 import type Config from './config.js';
 import type { IPeerService } from './peer_service.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
+import type { IIdentityService } from './identity_service.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
@@ -21,12 +22,14 @@ export default class ApiV1Controller implements IController {
   private postService: IPostService;
   private attachmentService: IAttachmentService;
   private peerService: IPeerService;
+  private identityService: IIdentityService;
   private upload = multer({
     dest: './uploads/'
   });
 
-  constructor(config: Config, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
+  constructor(config: Config, identityService: IIdentityService, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
     this.config = config;
+    this.identityService = identityService;
     this.postService = postService;
     this.attachmentService = attachmentService;
     this.peerService = peerService;
@@ -201,9 +204,9 @@ export default class ApiV1Controller implements IController {
       throw new ApiError('Invalid request', 400);
     }
 
-    const permissions = this.postService.getPermissions(parsed.id);
+    const permissions = await this.identityService.getPermissions(parsed.id);
 
-    const response = { permissions } satisfies GetIdentityPermissionsResponse;
+    const response = { permissions: Array.from(permissions) } satisfies GetIdentityPermissionsResponse;
     res.status(200).json(response);
   }
 }
