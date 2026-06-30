@@ -19,6 +19,7 @@ import type { PooledDatabase } from "./database.js";
 import { posts, remotePosts } from "./db/schema.js";
 import FSHelper from "./fs_helper.js";
 import type { IPeerService } from "./peer_service.js";
+import type { IIdentityService } from "./identity_service.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
@@ -30,8 +31,6 @@ export interface IPostService {
   delete(signal: DeletePostSignal): Promise<void>;
 
   get(postId: string): Promise<CreatePostSignal | null>;
-
-  getPermissions(author: string): Permission[];
 }
 
 export type PostSource = 'local' | 'remote' | 'all';
@@ -55,37 +54,12 @@ export abstract class PostServiceBase implements IPostService {
     this.config = config;
   }
 
-  protected getPermissionsAsSet(author: string): Set<Permission> {
-    const permissions = new Set<Permission>();
-    const { allowedIdentities, deniedIdentities } = this.config;
-
-    if (!deniedIdentities.includes(author)) {
-      if (allowedIdentities.length === 0 || allowedIdentities.includes(author)) {
-        permissions.add('write');
-      }
-    }
-
-    return permissions;
-  }
-
-  public getPermissions(author: string): Permission[] {
-    return Array.from(this.getPermissionsAsSet(author));
-  }
-
-  protected validatePermission(author: string, permission: Permission): void {
-    if (!this.getPermissionsAsSet(author).has(permission)) {
-      throw new ApiError(`Permission denied: ${permission}`, 403);
-    }
-  }
-
   async create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
     const validation = await this.validate(signal);
 
     if (!validation[0]) {
       throw new ApiError(validation[1] || 'Invalid post signal', 400);
     }
-
-    this.validatePermission(signal[0][1][1], 'write');
 
     await this.createImpl(signal, attachmentPaths);
   }
@@ -124,13 +98,15 @@ export default class PostService extends PostServiceBase {
   private database: PooledDatabase;
   private attachmentService: IAttachmentService;
   private peerService: IPeerService;
+  private identityService: IIdentityService;
   private static _kMaxAttachmentsPerPost: number = 4;
 
-  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService) {
+  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService, identityService: IIdentityService) {
     super(config);
     this.database = database;
     this.attachmentService = attachmentService;
     this.peerService = peerService;
+    this.identityService = identityService;
   }
 
   async validateAttachmentCount(attachmentPaths: string[]): Promise<void> {
@@ -156,6 +132,8 @@ export default class PostService extends PostServiceBase {
   }
 
   async createImpl(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
+    await this.identityService.throwIfNotPermitted(signal[0][1][1], 'write');
+
     await this.validateAttachmentCount(attachmentPaths);
     await this.validateAttachmentDigests(signal, attachmentPaths);
 
@@ -434,7 +412,7 @@ export default class PostService extends PostServiceBase {
       throw new ApiError(validation[1] || 'Invalid delete signal', 400);
     }
 
-    this.validatePermission(signal[0][1][1], 'write');
+    await this.identityService.throwIfNotPermitted(signal[0][1][1], 'write');
 
     const postId = signal[0][2][0];
 

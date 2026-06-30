@@ -7,13 +7,14 @@ import { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { createPool, type Pool } from 'mysql2/promise';
-import { afterEach,beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AttachmentService } from '../app/attachment_service.js';
 import type { PooledDatabase } from '../app/database.js';
 import { type IPeerService } from '../app/peer_service.js';
 import PostService from '../app/post_service.js';
 import TestHelper from './test_helper.js';
+import IdentityService from '../app/identity_service.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -22,6 +23,7 @@ describe('PostService', () => {
   let peerService: IPeerService;
   let attachmentService: AttachmentService;
   let postService: PostService;
+  let identityService: IdentityService;
 
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
@@ -57,10 +59,12 @@ describe('PostService', () => {
       }
     };
     attachmentService = new AttachmentService(config, database);
+    identityService = new IdentityService(config);
     postService = new PostService(config,
       database,
       attachmentService,
-      peerService
+      peerService,
+      identityService
     );
   }, 60_000);
 

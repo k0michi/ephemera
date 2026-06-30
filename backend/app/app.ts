@@ -17,9 +17,11 @@ import { PeerService } from './peer_service.js';
 import PostService from "./post_service.js";
 import { SchedulerService } from './scheduler_service.js';
 import { createFixedRateWithSkipTicker } from './ticker.js';
+import IdentityService from "./identity_service.js";
 
 class Ephemera extends Application {
   config?: Config;
+  identityService?: IdentityService;
   postService?: PostService;
   attachmentService?: AttachmentService;
   peerService?: PeerService;
@@ -102,8 +104,9 @@ class Ephemera extends Application {
     console.log('Database connection established');
 
     this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db));
+    this.identityService = new IdentityService(this.config);
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
-    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService);
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService, this.identityService);
     this.schedulerService = new SchedulerService();
     this.schedulerService.register(new AttachmentCleanerJob(this.attachmentService), createFixedRateWithSkipTicker(24 * 60 * 60 * 1000, this.schedulerService.signal));
 
