@@ -13,11 +13,11 @@ import AttachmentCleanerJob from './attachment_cleaner_job.js';
 import { AttachmentService } from './attachment_service.js';
 import Config from './config.js';
 import type { PooledDatabase } from './database.js';
+import IdentityService from "./identity_service.js";
 import { PeerService } from './peer_service.js';
 import PostService from "./post_service.js";
 import { SchedulerService } from './scheduler_service.js';
 import { createFixedRateWithSkipTicker } from './ticker.js';
-import IdentityService from "./identity_service.js";
 
 class Ephemera extends Application {
   config?: Config;

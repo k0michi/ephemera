@@ -1,4 +1,4 @@
-import type { CreatePostSignal, DeletePostSignal, Permission, Signal, Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignal, DeletePostSignal, Signal, Version } from "@ephemera/shared/api/api.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
@@ -18,8 +18,8 @@ import type Config from "./config.js";
 import type { PooledDatabase } from "./database.js";
 import { posts, remotePosts } from "./db/schema.js";
 import FSHelper from "./fs_helper.js";
-import type { IPeerService } from "./peer_service.js";
 import type { IIdentityService } from "./identity_service.js";
+import type { IPeerService } from "./peer_service.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;

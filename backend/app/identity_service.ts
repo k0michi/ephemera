@@ -1,6 +1,7 @@
 import type { Permission } from "@ephemera/shared/api/api.js";
-import type Config from "./config.js";
+
 import { ApiError } from "./api_error.js";
+import type Config from "./config.js";
 
 export interface IIdentityService {
   getPermissions(identity: string): Promise<Set<Permission>>;
