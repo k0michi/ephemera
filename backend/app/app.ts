@@ -17,8 +17,8 @@ import IdentityService from "./identity_service.js";
 import { PeerService } from './peer_service.js';
 import PostService from "./post_service.js";
 import { SchedulerService } from './scheduler_service.js';
+import { type ISignalService,SignalService } from "./signal_service.js";
 import { createFixedRateWithSkipTicker } from './ticker.js';
-import { SignalService, type ISignalService } from "./signal_service.js";
 
 class Ephemera extends Application {
   config?: Config;

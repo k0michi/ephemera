@@ -1,7 +1,8 @@
 import type { Signal } from "@ephemera/shared/api/api.js";
-import type Config from "./config.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
+
 import { ApiError } from "./api_error.js";
+import type Config from "./config.js";
 
 export interface ISignalService {
   validate<T extends Signal>(signal: T): Promise<[boolean, string?]>;

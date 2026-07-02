@@ -9,8 +9,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { PooledDatabase } from '../app/database.js';
 import IdentityService from '../app/identity_service.js';
-import TestHelper from './test_helper.js';
 import { SignalService } from '../app/signal_service.js';
+import TestHelper from './test_helper.js';
 
 describe('IdentityService', () => {
   let container: StartedMariaDbContainer;

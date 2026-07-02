@@ -1,7 +1,7 @@
 import { pipeline } from 'node:stream/promises';
 
 import type { GetIdentityResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
-import { deletePostRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema, getIdentityRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, getIdentityRequestSchema,getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import express from 'express';
 import fsPromises from 'fs/promises';
@@ -11,9 +11,9 @@ import { type IController } from '../lib/controller.js';
 import { ApiError } from './api_error.js';
 import type { IAttachmentService } from './attachment_service.js';
 import type Config from './config.js';
+import type { IIdentityService } from './identity_service.js';
 import type { IPeerService } from './peer_service.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
-import type { IIdentityService } from './identity_service.js';
 
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';

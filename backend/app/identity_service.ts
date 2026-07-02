@@ -1,5 +1,4 @@
 import type { GetIdentitySignal, Permission } from "@ephemera/shared/api/api.js";
-import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 
 import { ApiError } from "./api_error.js";
 import type Config from "./config.js";

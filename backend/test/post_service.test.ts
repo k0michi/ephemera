@@ -14,8 +14,8 @@ import type { PooledDatabase } from '../app/database.js';
 import IdentityService from '../app/identity_service.js';
 import { type IPeerService } from '../app/peer_service.js';
 import PostService from '../app/post_service.js';
-import TestHelper from './test_helper.js';
 import { SignalService } from '../app/signal_service.js';
+import TestHelper from './test_helper.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;

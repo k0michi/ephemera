@@ -1,4 +1,4 @@
-import type { CreatePostSignal, DeletePostSignal, Signal, Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignal, DeletePostSignal, Version } from "@ephemera/shared/api/api.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import Base37 from "@ephemera/shared/lib/base37.js";

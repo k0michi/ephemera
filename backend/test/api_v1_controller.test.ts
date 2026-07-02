@@ -11,10 +11,10 @@ import ApiV1Controller from '../app/api_v1_controller.js';
 import type { AttachmentType, IAttachmentService } from '../app/attachment_service.js';
 import Config from '../app/config.js';
 import type { Transaction } from '../app/database.js';
+import { IllegalArgumentError } from '../app/errors.js';
+import type { IdentityDescriptor, IIdentityService } from '../app/identity_service.js';
 import type { IPeerService } from '../app/peer_service.js';
 import { type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
-import type { IdentityDescriptor, IIdentityService } from '../app/identity_service.js';
-import { IllegalArgumentError } from '../app/errors.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
