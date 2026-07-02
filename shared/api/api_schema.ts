@@ -59,6 +59,16 @@ export const deletePostSignalPayloadSchema = z.tuple([versionSchema, deletePostS
 
 export const deletePostSignalSchema = z.tuple([deletePostSignalPayloadSchema, z.string()]);
 
+export const getIdentitySignalHeaderSchema = z.tuple([hostSchema, authorSchema, timestampSchema, z.literal("get_identity")]);
+
+export const getIdentitySignalBodySchema = z.tuple([]);
+
+export const getIdentitySignalFooterSchema = z.tuple([]);
+
+export const getIdentitySignalPayloadSchema = z.tuple([versionSchema, getIdentitySignalHeaderSchema, getIdentitySignalBodySchema, getIdentitySignalFooterSchema]);
+
+export const getIdentitySignalSchema = z.tuple([getIdentitySignalPayloadSchema, z.string()]);
+
 export const relaySignalHeaderSchema = z.tuple([hostSchema, serverPublicKeySchema, timestampSchema, z.literal("relay")]);
 
 export const relaySignalBodySchema = signalSchema;
@@ -130,12 +140,13 @@ export const getPostResponseSchema = apiResponseSchema.extend({
     post: createPostSignalSchema
 });
 
-export const getIdentityPermissionsRequestSchema = apiRequestSchema.extend({
-    id: z.string()
+export const getIdentityRequestSchema = apiRequestSchema.extend({
+    signal: getIdentitySignalSchema
 });
 
 export const permissionSchema = z.literal("write");
 
-export const getIdentityPermissionsResponseSchema = apiResponseSchema.extend({
+export const getIdentityResponseSchema = apiResponseSchema.extend({
+    identity: authorSchema,
     permissions: z.array(permissionSchema)
 });

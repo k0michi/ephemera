@@ -1,5 +1,5 @@
-import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetPostsRequest, GetPostsResponse, PeerManifest, Permission, Version } from "../api/api.js";
-import { apiResponseSchema, getIdentityPermissionsResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
+import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetIdentityRequest, GetPostsRequest, GetPostsResponse, PeerManifest, Permission, Version } from "../api/api.js";
+import { apiResponseSchema, getIdentityResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -240,12 +240,14 @@ export default class Client {
     return parsed.post;
   }
 
-  async getIdentityPermissions(identity: string): Promise<Set<Permission>> {
-    const response = await Fetcher.get(this.buildLocalUrl(`/api/v1/identity/${identity}/permissions`));
+  async getIdentityPermissions(keyPair: KeyPair): Promise<Set<Permission>> {
+    const response = await Fetcher.post(this.buildLocalUrl(`/api/v1/identity`), {
+      signal: await SignalCrypto.sign([this._version, [this._host, Base37.fromUint8Array(keyPair.publicKey), Date.now(), "get_identity"], [], []], keyPair.privateKey)
+    } satisfies GetIdentityRequest);
     let parsed;
 
     try {
-      parsed = getIdentityPermissionsResponseSchema.parse(response);
+      parsed = getIdentityResponseSchema.parse(response);
     } catch (e) {
       throw new Error("Invalid response");
     }

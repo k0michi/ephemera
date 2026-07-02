@@ -15,6 +15,7 @@ import IdentityService from '../app/identity_service.js';
 import { type IPeerService } from '../app/peer_service.js';
 import PostService from '../app/post_service.js';
 import TestHelper from './test_helper.js';
+import { SignalService } from '../app/signal_service.js';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;
@@ -23,6 +24,7 @@ describe('PostService', () => {
   let peerService: IPeerService;
   let attachmentService: AttachmentService;
   let postService: PostService;
+  let signalService: SignalService;
   let identityService: IdentityService;
 
   beforeEach(async () => {
@@ -59,12 +61,14 @@ describe('PostService', () => {
       }
     };
     attachmentService = new AttachmentService(config, database);
-    identityService = new IdentityService(config);
+    signalService = new SignalService(config);
+    identityService = new IdentityService(config, signalService);
     postService = new PostService(config,
       database,
       attachmentService,
       peerService,
-      identityService
+      identityService,
+      signalService
     );
   }, 60_000);
 

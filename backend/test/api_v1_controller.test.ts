@@ -12,8 +12,9 @@ import type { AttachmentType, IAttachmentService } from '../app/attachment_servi
 import Config from '../app/config.js';
 import type { Transaction } from '../app/database.js';
 import type { IPeerService } from '../app/peer_service.js';
-import { type PostFindOptions, type PostFindResult, PostServiceBase } from '../app/post_service.js';
-import type { IIdentityService } from '../app/identity_service.js';
+import { type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
+import type { IdentityDescriptor, IIdentityService } from '../app/identity_service.js';
+import { IllegalArgumentError } from '../app/errors.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -37,6 +38,16 @@ function testConfig() {
 }
 
 class MockIdentityService implements IIdentityService {
+  async getIdentityDescriptor(...args: [string] | [any]): Promise<IdentityDescriptor> {
+    if (args.length === 1 && typeof args[0] === 'string') {
+      return { identity: args[0], permissions: new Set(['write']) };
+    } else if (args.length === 1 && Array.isArray(args[0])) {
+      return { identity: args[0][0][1][1], permissions: new Set(['write']) };
+    } else {
+      throw new IllegalArgumentError(`Invalid arguments for getIdentityDescriptor`);
+    }
+  }
+
   async getPermissions(identity: string): Promise<Set<Permission>> {
     return new Set(['write']);
   }
@@ -46,12 +57,8 @@ class MockIdentityService implements IIdentityService {
   }
 }
 
-class MockPostService extends PostServiceBase {
-  constructor(config: Config) {
-    super(config);
-  }
-
-  async createImpl(signal: CreatePostSignal): Promise<void> {
+class MockPostService implements IPostService {
+  async create(signal: CreatePostSignal): Promise<void> {
     return;
   }
 
@@ -159,7 +166,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -176,7 +183,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
     });
 
@@ -200,7 +207,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).resolves.not.toThrow();
     });
 
@@ -224,7 +231,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
     });
 
@@ -248,7 +255,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
     });
   });
@@ -264,7 +271,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -279,7 +286,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await controller.handleGetPosts(req, res);
       expect(res.statusCode).toBe(200);
       const data = res._getJSONData();

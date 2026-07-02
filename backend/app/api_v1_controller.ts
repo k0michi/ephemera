@@ -1,7 +1,7 @@
 import { pipeline } from 'node:stream/promises';
 
-import type { GetIdentityPermissionsResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
-import { deletePostRequestSchema, getIdentityPermissionsRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import type { GetIdentityResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
+import { deletePostRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema, getIdentityRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import express from 'express';
 import fsPromises from 'fs/promises';
@@ -41,7 +41,7 @@ export default class ApiV1Controller implements IController {
     this.router.get('/peer', this.handleGetPeer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
     this.router.get('/posts/:id', this.handleGetPost.bind(this));
-    this.router.get('/identity/:id/permissions', this.handleGetIdentityPermissions.bind(this));
+    this.router.post('/identity', this.handleGetIdentity.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -195,18 +195,18 @@ export default class ApiV1Controller implements IController {
     res.status(200).json(response);
   }
 
-  async handleGetIdentityPermissions(req: express.Request, res: express.Response) {
+  async handleGetIdentity(req: express.Request, res: express.Response) {
     let parsed;
 
     try {
-      parsed = getIdentityPermissionsRequestSchema.parse(req.params);
+      parsed = getIdentityRequestSchema.parse(req.body);
     } catch (e) {
       throw new ApiError('Invalid request', 400);
     }
 
-    const permissions = await this.identityService.getPermissions(parsed.id);
+    const identityDescriptor = await this.identityService.getIdentityDescriptor(parsed.signal);
 
-    const response = { permissions: Array.from(permissions) } satisfies GetIdentityPermissionsResponse;
+    const response = { identity: identityDescriptor.identity, permissions: Array.from(identityDescriptor.permissions) } satisfies GetIdentityResponse;
     res.status(200).json(response);
   }
 }

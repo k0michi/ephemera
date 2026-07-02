@@ -10,11 +10,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { PooledDatabase } from '../app/database.js';
 import IdentityService from '../app/identity_service.js';
 import TestHelper from './test_helper.js';
+import { SignalService } from '../app/signal_service.js';
 
 describe('IdentityService', () => {
   let container: StartedMariaDbContainer;
   let database: PooledDatabase;
   let pool: Pool;
+  let signalService: SignalService;
   let identityService: IdentityService;
   let allowedIdentities: string[];
   let deniedIdentities: string[];
@@ -45,7 +47,8 @@ describe('IdentityService', () => {
     config.allowedIdentities = allowedIdentities;
     config.deniedIdentities = deniedIdentities;
 
-    identityService = new IdentityService(config);
+    signalService = new SignalService(config);
+    identityService = new IdentityService(config, signalService);
   }, 60_000);
 
   afterEach(async () => {
