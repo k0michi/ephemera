@@ -53,7 +53,7 @@ const entries: EnvEntry[] = [
   {
     names: ['EPHEMERA_BOOTSTRAP_PEERS'],
     description: 'Comma-separated list of multiaddrs of bootstrap peers',
-    defaultValue: '/dns/koyomi.co/tcp/443/wss/p2p/16Uiu2HAm4iUPqJ7Dh9ATUrDo6vjmoDUQVurWdEXxgocSgfNmVd9s',
+    defaultValue: '/dns/ephemr.org/tcp/443/wss/p2p/16Uiu2HAmNJjo4iKe46aFU99apafnnLnkD3YHn6sT6dEERiFQYEqw',
   }
 ];
 
