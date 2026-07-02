@@ -18,7 +18,13 @@ export class SignalService implements ISignalService {
   }
 
   async validate<T extends Signal>(signal: T): Promise<[boolean, string?]> {
-    const verified = await SignalCrypto.verify(signal);
+    let verified = false;
+
+    try {
+      verified = await SignalCrypto.verify(signal);
+    } catch {
+      return [false, 'Invalid signature'];
+    }
 
     if (!verified) {
       return [false, 'Invalid signature'];
