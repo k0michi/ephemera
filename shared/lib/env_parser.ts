@@ -5,11 +5,15 @@ export default class EnvParser {
     this._env = env;
   }
 
+  private _isEmpty(value: string | undefined): value is undefined | '' {
+    return value === undefined || value.trim() === '';
+  }
+
   public getStringRequired(key: string): string {
     const value = this._env[key];
 
-    if (value === undefined) {
-      throw new Error(`Environment variable ${key} is not set`);
+    if (this._isEmpty(value)) {
+      throw new Error(`Environment variable ${key} is not set or empty`);
     }
 
     return value;
@@ -18,8 +22,8 @@ export default class EnvParser {
   public getNumberRequired(key: string): number {
     const value = this._env[key];
 
-    if (value === undefined) {
-      throw new Error(`Environment variable ${key} is not set`);
+    if (this._isEmpty(value)) {
+      throw new Error(`Environment variable ${key} is not set or empty`);
     }
 
     const num = Number(value);
@@ -34,7 +38,7 @@ export default class EnvParser {
   public getStringOptional(key: string, defaultValue: string): string {
     const value = this._env[key];
 
-    if (value === undefined) {
+    if (this._isEmpty(value)) {
       return defaultValue;
     }
 
@@ -44,7 +48,7 @@ export default class EnvParser {
   public getNumberOptional(key: string, defaultValue: number): number {
     const value = this._env[key];
 
-    if (value === undefined) {
+    if (this._isEmpty(value)) {
       return defaultValue;
     }
 
@@ -60,10 +64,13 @@ export default class EnvParser {
   public getStringArrayOptional(key: string): string[] | undefined {
     const value = this._env[key];
 
-    if (value === undefined) {
+    if (this._isEmpty(value)) {
       return undefined;
     }
 
-    return value.split(',');
+    return value
+      .split(',')
+      .map(str => str.trim())
+      .filter(str => str !== '');
   }
 }
