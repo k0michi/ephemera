@@ -15,6 +15,8 @@ describe('Config', () => {
     vi.stubEnv('EPHEMERA_DB_USER', 'dbuser');
     vi.stubEnv('EPHEMERA_DB_PASSWORD', 'dbpassword');
     vi.stubEnv('EPHEMERA_DB_NAME', 'dbname');
+    vi.stubEnv('EPHEMERA_REDIS_HOST', 'redis');
+    vi.stubEnv('EPHEMERA_REDIS_PORT', '6379');
     vi.stubEnv('EPHEMERA_PEER_HOST', 'peer:50051');
     vi.stubEnv('EPHEMERA_ALLOWED_TIME_SKEW_MILLIS', '600000');
     vi.stubEnv('EPHEMERA_PRIVATE_KEY', Base37.fromUint8Array(keyPair.privateKey));
