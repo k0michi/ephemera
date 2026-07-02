@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY .git ./.git
 COPY package.json package-lock.json ./
@@ -11,7 +11,7 @@ COPY frontend ./frontend
 RUN apk add --no-cache git
 RUN npm run build -w frontend
 
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 ENV NODE_ENV=production
 
 WORKDIR /app

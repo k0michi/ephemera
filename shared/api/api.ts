@@ -125,6 +125,34 @@ export type DeletePostSignal = [
 ];
 
 //
+// get_identity signal
+//
+
+export type GetIdentitySignalHeader = [
+  Host, // host
+  Author, // author
+  Timestamp, // created_at
+  'get_identity' // type
+];
+
+export type GetIdentitySignalBody = [
+];
+
+export type GetIdentitySignalFooter = [];
+
+export type GetIdentitySignalPayload = [
+  Version, // version
+  GetIdentitySignalHeader, // header
+  GetIdentitySignalBody, // body
+  GetIdentitySignalFooter // footer
+];
+
+export type GetIdentitySignal = [
+  GetIdentitySignalPayload, // payload
+  string // signature
+];
+
+//
 // relay signal
 //
 
@@ -230,3 +258,17 @@ export interface GetPostRequest extends ApiRequest {
 export interface GetPostResponse extends ApiResponse {
   post: CreatePostSignal;
 }
+
+// POST /api/v1/identity
+export interface GetIdentityRequest extends ApiRequest {
+  signal: GetIdentitySignal;
+}
+
+export interface GetIdentityResponse extends ApiResponse {
+  identity: Author;
+  permissions: Permission[];
+}
+
+export type Permission =
+  | 'write'
+  ;

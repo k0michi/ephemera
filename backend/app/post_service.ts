@@ -1,4 +1,4 @@
-import type { CreatePostSignal, DeletePostSignal, Signal,Version } from "@ephemera/shared/api/api.js";
+import type { CreatePostSignal, DeletePostSignal, Version } from "@ephemera/shared/api/api.js";
 import { createPostSignalFooterSchema } from "@ephemera/shared/api/api_schema.js";
 import ArrayHelper from "@ephemera/shared/lib/array_helper.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
@@ -6,7 +6,7 @@ import Crypto from "@ephemera/shared/lib/crypto.js";
 import DateTimeUtil from "@ephemera/shared/lib/date_time_util.js";
 import Hex from "@ephemera/shared/lib/hex.js";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
-import { type PostCursor,PostCursorUtil } from "@ephemera/shared/lib/post_cursor_util.js";
+import { type PostCursor, PostCursorUtil } from "@ephemera/shared/lib/post_cursor_util.js";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto.js";
 import { Temporal } from "@js-temporal/polyfill";
 import { and, desc, eq, sql } from "drizzle-orm";
@@ -18,12 +18,12 @@ import type Config from "./config.js";
 import type { PooledDatabase } from "./database.js";
 import { posts, remotePosts } from "./db/schema.js";
 import FSHelper from "./fs_helper.js";
+import type { IIdentityService } from "./identity_service.js";
 import type { IPeerService } from "./peer_service.js";
+import type { ISignalService } from "./signal_service.js";
 
 export interface IPostService {
   create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
-
-  validate<T extends Signal>(signal: T): Promise<[boolean, string?]>;
 
   find(options: PostFindOptions): Promise<PostFindResult>;
 
@@ -46,64 +46,22 @@ export interface PostFindResult {
   nextCursor: string | null;
 }
 
-export abstract class PostServiceBase implements IPostService {
-  protected config: Config;
-
-  constructor(config: Config) {
-    this.config = config;
-  }
-
-  async create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
-    const validation = await this.validate(signal);
-
-    if (!validation[0]) {
-      throw new ApiError(validation[1] || 'Invalid post signal', 400);
-    }
-
-    await this.createImpl(signal, attachmentPaths);
-  }
-
-  abstract createImpl(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void>;
-
-  async validate<T extends Signal>(signal: T): Promise<[boolean, string?]> {
-    const verified = await SignalCrypto.verify(signal);
-
-    if (!verified) {
-      return [false, 'Invalid signature'];
-    }
-
-    if (signal[0][1][0] !== this.config.host) {
-      return [false, 'Host mismatch'];
-    }
-
-    const now = Date.now();
-    const timestamp = signal[0][1][2];
-
-    if (Math.abs(now - timestamp) > this.config.allowedTimeSkewMillis) {
-      return [false, 'Timestamp out of range'];
-    }
-
-    return [true];
-  }
-
-  abstract find(options: PostFindOptions): Promise<PostFindResult>;
-
-  abstract delete(signal: DeletePostSignal): Promise<void>;
-
-  abstract get(postId: string): Promise<CreatePostSignal | null>;
-}
-
-export default class PostService extends PostServiceBase {
+export default class PostService implements IPostService {
+  private config: Config;
   private database: PooledDatabase;
   private attachmentService: IAttachmentService;
   private peerService: IPeerService;
+  private identityService: IIdentityService;
+  private signalService: ISignalService;
   private static _kMaxAttachmentsPerPost: number = 4;
 
-  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService) {
-    super(config);
+  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService, identityService: IIdentityService, signalService: ISignalService) {
+    this.config = config;
     this.database = database;
     this.attachmentService = attachmentService;
     this.peerService = peerService;
+    this.identityService = identityService;
+    this.signalService = signalService;
   }
 
   async validateAttachmentCount(attachmentPaths: string[]): Promise<void> {
@@ -128,7 +86,10 @@ export default class PostService extends PostServiceBase {
     }
   }
 
-  async createImpl(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
+  async create(signal: CreatePostSignal, attachmentPaths: string[]): Promise<void> {
+    await this.signalService.throwIfInvalid(signal);
+    await this.identityService.throwIfNotPermitted(signal[0][1][1], 'write');
+
     await this.validateAttachmentCount(attachmentPaths);
     await this.validateAttachmentDigests(signal, attachmentPaths);
 
@@ -401,11 +362,8 @@ export default class PostService extends PostServiceBase {
 
 
   async delete(signal: DeletePostSignal): Promise<void> {
-    const validation = await this.validate(signal);
-
-    if (!validation[0]) {
-      throw new ApiError(validation[1] || 'Invalid delete signal', 400);
-    }
+    await this.signalService.throwIfInvalid(signal);
+    await this.identityService.throwIfNotPermitted(signal[0][1][1], 'write');
 
     const postId = signal[0][2][0];
 

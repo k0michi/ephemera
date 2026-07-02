@@ -24,6 +24,8 @@ export default class Config {
   publicKey: string;
   dataDir: string;
   allowedTimeSkewMillis: number;
+  allowedIdentities: string[];
+  deniedIdentities: string[];
 
   static _kDefaultDBConnectionLimit = 5;
   static _kDefaultDBQueueLimit = 500;
@@ -49,6 +51,8 @@ export default class Config {
     publicKey,
     dataDir,
     allowedTimeSkewMillis,
+    allowedIdentities,
+    deniedIdentities
   }: {
     host: string;
     port: number;
@@ -67,6 +71,8 @@ export default class Config {
     publicKey: string;
     dataDir?: string | undefined;
     allowedTimeSkewMillis: number;
+    allowedIdentities?: string[] | undefined;
+    deniedIdentities?: string[] | undefined;
   }) {
     this.host = host;
     this.port = port;
@@ -85,6 +91,8 @@ export default class Config {
     this.publicKey = publicKey;
     this.dataDir = dataDir ?? Config._kDefaultDataDir;
     this.allowedTimeSkewMillis = allowedTimeSkewMillis;
+    this.allowedIdentities = allowedIdentities ?? [];
+    this.deniedIdentities = deniedIdentities ?? [];
   }
 
   static fromEnv(): Config {
@@ -107,6 +115,8 @@ export default class Config {
       publicKey: envParser.getStringRequired('EPHEMERA_PUBLIC_KEY'),
       dataDir: envParser.getStringOptional('EPHEMERA_DATA_DIR', Config._kDefaultDataDir),
       allowedTimeSkewMillis: envParser.getNumberOptional('EPHEMERA_ALLOWED_TIME_SKEW_MILLIS', Config._kDefaultAllowedTimeSkewMillis),
+      allowedIdentities: envParser.getStringArrayOptional('EPHEMERA_ALLOWED_IDENTITIES'),
+      deniedIdentities: envParser.getStringArrayOptional('EPHEMERA_DENIED_IDENTITIES'),
     });
   }
 }
