@@ -4,6 +4,7 @@ import Crypto from '@ephemera/shared/lib/crypto.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import SignalCrypto from '@ephemera/shared/lib/signal_crypto.js';
 import { StartedMariaDbContainer } from "@testcontainers/mariadb";
+import type { StartedRedisContainer } from '@testcontainers/redis';
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { createPool, type Pool } from 'mysql2/promise';
@@ -16,7 +17,6 @@ import { type IPeerService } from '../app/peer_service.js';
 import PostService from '../app/post_service.js';
 import { SignalService } from '../app/signal_service.js';
 import TestHelper from './test_helper.js';
-import type { StartedRedisContainer } from '@testcontainers/redis';
 
 describe('PostService', () => {
   let container: StartedMariaDbContainer;

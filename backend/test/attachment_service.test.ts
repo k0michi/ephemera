@@ -1,4 +1,5 @@
 import type { StartedMariaDbContainer } from "@testcontainers/mariadb";
+import type { StartedRedisContainer } from "@testcontainers/redis";
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import fsPromises from "fs/promises";
@@ -11,7 +12,6 @@ import { AttachmentService } from "../app/attachment_service.js";
 import type { PooledDatabase } from "../app/database.js";
 import FSHelper from "../app/fs_helper.js";
 import TestHelper from "./test_helper.js";
-import type { StartedRedisContainer } from "@testcontainers/redis";
 
 describe('AttachmentService', () => {
   let container: StartedMariaDbContainer;

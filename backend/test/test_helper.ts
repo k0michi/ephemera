@@ -1,3 +1,5 @@
+import type { ImageType, VideoCodec, VideoType } from "@ephemera/shared/lib/attachment_util.js";
+import AttachmentUtil from "@ephemera/shared/lib/attachment_util.js";
 import Base37 from "@ephemera/shared/lib/base37.js";
 import Crypto from "@ephemera/shared/lib/crypto.js";
 import { MariaDbContainer, type StartedMariaDbContainer } from "@testcontainers/mariadb";
@@ -10,8 +12,6 @@ import sharp from "sharp";
 import { expect } from "vitest";
 
 import Config from "../app/config.js";
-import type { ImageType, VideoCodec, VideoType } from "@ephemera/shared/lib/attachment_util.js";
-import AttachmentUtil from "@ephemera/shared/lib/attachment_util.js";
 
 export default class TestHelper {
   static startDbContainer() {

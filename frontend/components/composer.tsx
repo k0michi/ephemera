@@ -1,15 +1,14 @@
 import ArrayHelper from "@ephemera/shared/lib/array_helper";
 import Base37 from "@ephemera/shared/lib/base37";
-import Crypto from "@ephemera/shared/lib/crypto";
 import Hex from "@ephemera/shared/lib/hex";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
+import { sha256 } from '@noble/hashes/sha2.js';
 import { DisposableURL } from "lib/disposable_url";
 import { useReader, useSelector } from "lib/store";
 import { useEffect, useRef, useState } from "react";
 import { Button, Card, Dropdown, Form, Spinner } from "react-bootstrap";
 import { BsCheckLg, BsImage, BsPaperclip, BsXLg } from "react-icons/bs";
-import { sha256 } from '@noble/hashes/sha2.js';
 
 import { useDisposableState } from "~/hooks/disposable_state";
 import { useMutex } from "~/hooks/mutex";
