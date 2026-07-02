@@ -2,6 +2,7 @@ import Base37 from '@ephemera/shared/lib/base37.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import { StartedMariaDbContainer } from "@testcontainers/mariadb";
+import type { StartedRedisContainer } from '@testcontainers/redis';
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { createPool, type Pool } from 'mysql2/promise';
@@ -14,6 +15,7 @@ import TestHelper from './test_helper.js';
 
 describe('IdentityService', () => {
   let container: StartedMariaDbContainer;
+  let redisContainer: StartedRedisContainer;
   let database: PooledDatabase;
   let pool: Pool;
   let signalService: SignalService;
@@ -23,13 +25,14 @@ describe('IdentityService', () => {
 
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
+    redisContainer = await TestHelper.startRedisContainer();
 
     const db = drizzle(createPool(container.getConnectionUri()));
     pool = db.$client;
     database = db;
     await migrate(db, { migrationsFolder: './drizzle' });
 
-    const config = TestHelper.getConfig(container);
+    const config = TestHelper.getConfig(container, redisContainer);
 
     allowedIdentities = [];
     deniedIdentities = [];
