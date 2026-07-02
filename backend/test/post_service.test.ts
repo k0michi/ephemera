@@ -7,12 +7,14 @@ import { StartedMariaDbContainer } from "@testcontainers/mariadb";
 import { drizzle } from "drizzle-orm/mysql2";
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { createPool, type Pool } from 'mysql2/promise';
-import { afterEach,beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AttachmentService } from '../app/attachment_service.js';
 import type { PooledDatabase } from '../app/database.js';
+import IdentityService from '../app/identity_service.js';
 import { type IPeerService } from '../app/peer_service.js';
 import PostService from '../app/post_service.js';
+import { SignalService } from '../app/signal_service.js';
 import TestHelper from './test_helper.js';
 
 describe('PostService', () => {
@@ -22,6 +24,8 @@ describe('PostService', () => {
   let peerService: IPeerService;
   let attachmentService: AttachmentService;
   let postService: PostService;
+  let signalService: SignalService;
+  let identityService: IdentityService;
 
   beforeEach(async () => {
     container = await TestHelper.startDbContainer();
@@ -57,10 +61,14 @@ describe('PostService', () => {
       }
     };
     attachmentService = new AttachmentService(config, database);
+    signalService = new SignalService(config);
+    identityService = new IdentityService(config, signalService);
     postService = new PostService(config,
       database,
       attachmentService,
-      peerService
+      peerService,
+      identityService,
+      signalService
     );
   }, 60_000);
 
@@ -88,6 +96,38 @@ describe('PostService', () => {
 
     await expect(postService.create(signal, [])).resolves.toBeUndefined();
     await expect(postService.create(signal, [])).rejects.toThrowError('Post already exists');
+  });
+
+  it('should reject a post with invalid host', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+    const signalPayload = [0, ['wrong.example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+    const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+
+    await expect(postService.create(signal, [])).rejects.toThrowError('Host mismatch');
+  });
+
+  it('should reject a post with timestamp out of range', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+    const signalPayload = [0, ['example.com', publicKey, Date.now() - 10 * 60 * 1000, 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+    const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+
+    await expect(postService.create(signal, [])).rejects.toThrowError('Timestamp out of range');
+  });
+
+  it('should reject a post with invalid signature', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+    const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+    const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+
+    signal[1] = '0'.repeat(128);
+
+    await expect(postService.create(signal, [])).rejects.toThrowError('Invalid signature');
   });
 
   describe('find', () => {

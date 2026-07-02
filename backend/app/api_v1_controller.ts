@@ -1,7 +1,7 @@
 import { pipeline } from 'node:stream/promises';
 
-import type { GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
-import { deletePostRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import type { GetIdentityResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
+import { deletePostRequestSchema, getIdentityRequestSchema,getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import express from 'express';
 import fsPromises from 'fs/promises';
@@ -11,6 +11,7 @@ import { type IController } from '../lib/controller.js';
 import { ApiError } from './api_error.js';
 import type { IAttachmentService } from './attachment_service.js';
 import type Config from './config.js';
+import type { IIdentityService } from './identity_service.js';
 import type { IPeerService } from './peer_service.js';
 import type { IPostService, PostFindOptions } from './post_service.js';
 
@@ -21,12 +22,14 @@ export default class ApiV1Controller implements IController {
   private postService: IPostService;
   private attachmentService: IAttachmentService;
   private peerService: IPeerService;
+  private identityService: IIdentityService;
   private upload = multer({
     dest: './uploads/'
   });
 
-  constructor(config: Config, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
+  constructor(config: Config, identityService: IIdentityService, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
     this.config = config;
+    this.identityService = identityService;
     this.postService = postService;
     this.attachmentService = attachmentService;
     this.peerService = peerService;
@@ -38,6 +41,7 @@ export default class ApiV1Controller implements IController {
     this.router.get('/peer', this.handleGetPeer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
     this.router.get('/posts/:id', this.handleGetPost.bind(this));
+    this.router.post('/identity', this.handleGetIdentity.bind(this));
   }
 
   async handlePost(req: express.Request, res: express.Response) {
@@ -188,6 +192,21 @@ export default class ApiV1Controller implements IController {
     }
 
     const response = { post } satisfies GetPostResponse;
+    res.status(200).json(response);
+  }
+
+  async handleGetIdentity(req: express.Request, res: express.Response) {
+    let parsed;
+
+    try {
+      parsed = getIdentityRequestSchema.parse(req.body);
+    } catch (e) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    const identityDescriptor = await this.identityService.getIdentityDescriptor(parsed.signal);
+
+    const response = { identity: identityDescriptor.identity, permissions: Array.from(identityDescriptor.permissions) } satisfies GetIdentityResponse;
     res.status(200).json(response);
   }
 }

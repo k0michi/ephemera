@@ -1,4 +1,4 @@
-import type { CreatePostSignal, CreatePostSignalPayload, DeletePostSignal, PeerManifest, ServerSignal } from '@ephemera/shared/api/api.js';
+import type { CreatePostSignal, CreatePostSignalPayload, DeletePostSignal, PeerManifest, Permission, ServerSignal } from '@ephemera/shared/api/api.js';
 import Base37 from '@ephemera/shared/lib/base37.js';
 import Crypto from '@ephemera/shared/lib/crypto.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
@@ -11,8 +11,10 @@ import ApiV1Controller from '../app/api_v1_controller.js';
 import type { AttachmentType, IAttachmentService } from '../app/attachment_service.js';
 import Config from '../app/config.js';
 import type { Transaction } from '../app/database.js';
+import { IllegalArgumentError } from '../app/errors.js';
+import type { IdentityDescriptor, IIdentityService } from '../app/identity_service.js';
 import type { IPeerService } from '../app/peer_service.js';
-import { type PostFindOptions, type PostFindResult,PostServiceBase } from '../app/post_service.js';
+import { type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -35,12 +37,28 @@ function testConfig() {
   });
 }
 
-class MockPostService extends PostServiceBase {
-  constructor(config: Config) {
-    super(config);
+class MockIdentityService implements IIdentityService {
+  async getIdentityDescriptor(...args: [string] | [any]): Promise<IdentityDescriptor> {
+    if (args.length === 1 && typeof args[0] === 'string') {
+      return { identity: args[0], permissions: new Set(['write']) };
+    } else if (args.length === 1 && Array.isArray(args[0])) {
+      return { identity: args[0][0][1][1], permissions: new Set(['write']) };
+    } else {
+      throw new IllegalArgumentError(`Invalid arguments for getIdentityDescriptor`);
+    }
   }
 
-  async createImpl(signal: CreatePostSignal): Promise<void> {
+  async getPermissions(identity: string): Promise<Set<Permission>> {
+    return new Set(['write']);
+  }
+
+  async throwIfNotPermitted(identity: string, permission: Permission): Promise<void> {
+    return;
+  }
+}
+
+class MockPostService implements IPostService {
+  async create(signal: CreatePostSignal): Promise<void> {
     return;
   }
 
@@ -148,25 +166,8 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
-    });
-
-    it('should respond with 400 for invalid post signature', async () => {
-      const req = createRequest({
-        method: 'POST',
-        url: '/api/v1/post',
-        body: {
-          post: JSON.stringify([[0, ['example.com', Base37.fromUint8Array(new Uint8Array(32).fill(1)), Date.now(), 'create_post'], 'body text', []], '0'.repeat(128)] satisfies CreatePostSignal),
-        },
-        files: [] as any,
-      });
-      const res = createResponse();
-
-      const config = testConfig();
-
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
-      await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
     });
 
     it('should respond with 200 for valid post', async () => {
@@ -189,56 +190,8 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).resolves.not.toThrow();
-    });
-
-    it('should respond with 400 for host mismatch', async () => {
-      const keyPair = Crypto.generateKeyPair();
-      const now = Date.now();
-      const signedSignal = await SignalCrypto.sign(
-        [0, ['wronghost.com', Base37.fromUint8Array(keyPair.publicKey), now, 'create_post'], 'body text', []] satisfies CreatePostSignalPayload,
-        keyPair.privateKey
-      );
-
-      const req = createRequest({
-        method: 'POST',
-        url: '/api/v1/post',
-        body: {
-          post: JSON.stringify(signedSignal),
-        },
-        files: [] as any,
-      });
-      const res = createResponse();
-
-      const config = testConfig();
-
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
-      await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
-    });
-
-    it('should respond with 400 for timestamp out of range', async () => {
-      const keyPair = Crypto.generateKeyPair();
-      const now = Date.now();
-      const signedSignal = await SignalCrypto.sign(
-        [0, ['example.com', Base37.fromUint8Array(keyPair.publicKey), now - 10 * 60 * 1000, 'create_post'], 'body text', []] satisfies CreatePostSignalPayload,
-        keyPair.privateKey
-      );
-
-      const req = createRequest({
-        method: 'POST',
-        url: '/api/v1/post',
-        body: {
-          post: JSON.stringify(signedSignal),
-        },
-        files: [] as any,
-      });
-      const res = createResponse();
-
-      const config = testConfig();
-
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
-      await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
     });
   });
 
@@ -253,7 +206,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -268,7 +221,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockPostService(config), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await controller.handleGetPosts(req, res);
       expect(res.statusCode).toBe(200);
       const data = res._getJSONData();
