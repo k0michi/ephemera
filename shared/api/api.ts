@@ -259,7 +259,7 @@ export interface GetPostResponse extends ApiResponse {
   post: CreatePostSignal;
 }
 
-// GET /api/v1/identity
+// POST /api/v1/identity
 export interface GetIdentityRequest extends ApiRequest {
   signal: GetIdentitySignal;
 }
