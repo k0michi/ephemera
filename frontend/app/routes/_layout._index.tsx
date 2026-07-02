@@ -1,9 +1,7 @@
 import Composer from "components/composer";
 import Timeline from "components/timeline";
-import { useReader } from "lib/store";
 
 import usePermissions from "~/hooks/permissions";
-import { EphemeraStore } from "~/store";
 
 import type { Route } from "./+types/_layout._index";
 
