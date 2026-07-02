@@ -98,6 +98,38 @@ describe('PostService', () => {
     await expect(postService.create(signal, [])).rejects.toThrowError('Post already exists');
   });
 
+  it('should reject a post with invalid host', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+    const signalPayload = [0, ['wrong.example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+    const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+
+    await expect(postService.create(signal, [])).rejects.toThrowError('Host mismatch');
+  });
+
+  it('should reject a post with timestamp out of range', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+    const signalPayload = [0, ['example.com', publicKey, Date.now() - 10 * 60 * 1000, 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+    const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+
+    await expect(postService.create(signal, [])).rejects.toThrowError('Timestamp out of range');
+  });
+
+  it('should reject a post with invalid signature', async () => {
+    const keyPair = Crypto.generateKeyPair();
+    const publicKey = Base37.fromUint8Array(keyPair.publicKey);
+
+    const signalPayload = [0, ['example.com', publicKey, Date.now(), 'create_post'], 'Hello, world!', []] satisfies CreatePostSignalPayload;
+    const signal = await SignalCrypto.sign(signalPayload, keyPair.privateKey);
+
+    signal[1] = '0'.repeat(128);
+
+    await expect(postService.create(signal, [])).rejects.toThrowError('Invalid signature');
+  });
+
   describe('find', () => {
     it('should retrieve posts with pagination', async () => {
       const keyPair = Crypto.generateKeyPair();

@@ -170,23 +170,6 @@ describe('ApiV1Controller', () => {
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
-    it('should respond with 400 for invalid post signature', async () => {
-      const req = createRequest({
-        method: 'POST',
-        url: '/api/v1/post',
-        body: {
-          post: JSON.stringify([[0, ['example.com', Base37.fromUint8Array(new Uint8Array(32).fill(1)), Date.now(), 'create_post'], 'body text', []], '0'.repeat(128)] satisfies CreatePostSignal),
-        },
-        files: [] as any,
-      });
-      const res = createResponse();
-
-      const config = testConfig();
-
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
-      await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid signature');
-    });
-
     it('should respond with 200 for valid post', async () => {
       const keyPair = Crypto.generateKeyPair();
       const now = Date.now();
@@ -209,54 +192,6 @@ describe('ApiV1Controller', () => {
 
       const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
       await expect(controller.handlePost(req, res)).resolves.not.toThrow();
-    });
-
-    it('should respond with 400 for host mismatch', async () => {
-      const keyPair = Crypto.generateKeyPair();
-      const now = Date.now();
-      const signedSignal = await SignalCrypto.sign(
-        [0, ['wronghost.com', Base37.fromUint8Array(keyPair.publicKey), now, 'create_post'], 'body text', []] satisfies CreatePostSignalPayload,
-        keyPair.privateKey
-      );
-
-      const req = createRequest({
-        method: 'POST',
-        url: '/api/v1/post',
-        body: {
-          post: JSON.stringify(signedSignal),
-        },
-        files: [] as any,
-      });
-      const res = createResponse();
-
-      const config = testConfig();
-
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
-      await expect(controller.handlePost(req, res)).rejects.toThrow('Host mismatch');
-    });
-
-    it('should respond with 400 for timestamp out of range', async () => {
-      const keyPair = Crypto.generateKeyPair();
-      const now = Date.now();
-      const signedSignal = await SignalCrypto.sign(
-        [0, ['example.com', Base37.fromUint8Array(keyPair.publicKey), now - 10 * 60 * 1000, 'create_post'], 'body text', []] satisfies CreatePostSignalPayload,
-        keyPair.privateKey
-      );
-
-      const req = createRequest({
-        method: 'POST',
-        url: '/api/v1/post',
-        body: {
-          post: JSON.stringify(signedSignal),
-        },
-        files: [] as any,
-      });
-      const res = createResponse();
-
-      const config = testConfig();
-
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
-      await expect(controller.handlePost(req, res)).rejects.toThrow('Timestamp out of range');
     });
   });
 
