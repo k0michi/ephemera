@@ -21,8 +21,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const store = useReader(EphemeraStore);
-  const permissions = usePermissions(store);
+  const permissions = usePermissions();
 
   return (
     <div style={{
