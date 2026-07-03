@@ -6,9 +6,9 @@ import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { DisposableURL } from "lib/disposable_url";
 import { useReader, useSelector } from "lib/store";
-import { useEffect,useRef, useState } from "react";
-import { Button, Card, Dropdown,Form, Spinner } from "react-bootstrap";
-import { BsCheckLg, BsImage, BsPaperclip,BsXLg } from "react-icons/bs";
+import { useEffect, useRef, useState } from "react";
+import { Button, Card, Dropdown, Form, Spinner } from "react-bootstrap";
+import { BsCheckLg, BsImage, BsPaperclip, BsXLg } from "react-icons/bs";
 
 import { useDisposableState } from "~/hooks/disposable_state";
 import { useMutex } from "~/hooks/mutex";
@@ -220,7 +220,7 @@ export default function Composer({ }: ComposerProps) {
   const isOver = count > maxLength;
 
   return (
-    <Card>
+    <Card style={{ borderColor: 'var(--server-border-color)' }}>
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <div style={{

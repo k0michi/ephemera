@@ -41,7 +41,7 @@ export default function Layout() {
             <div
               style={{
                 textAlign: "center",
-                color: "#bbb",
+                color: "var(--server-user-name-color)",
                 fontSize: "0.8rem",
               }}
             >

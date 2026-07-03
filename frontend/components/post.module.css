@@ -27,6 +27,14 @@
 
 .post {
   border-radius: 0;
+  border-color: var(--server-border-color) !important;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.post:hover {
+  background-color: var(--server-background-color);
 }
 
 .post+.post {

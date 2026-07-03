@@ -12,7 +12,7 @@ export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);
 
   return (
-    <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
+    <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", boxShadow: "0 0 2px #00000080" }}>
       <Container>
         <Row className="align-items-center" style={{ height: "48px" }}>
           <Col style={{ display: "flex", blockSize: "100%" }}>
@@ -25,9 +25,6 @@ export default function Nav() {
                     }}
                     data={new TextEncoder().encode(host)}
                   />
-                </Link>
-                <Link to="/" style={{ textDecoration: "none" }}>
-                  <div style={{ fontSize: "1.5rem", color: "black" }}>Ephemera</div>
                 </Link>
               </div>
 

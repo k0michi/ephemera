@@ -15,18 +15,29 @@ import {
 
 import type { Route } from "./+types/root";
 import { EphemeraStore } from "./store";
+import Crypto from '@ephemera/shared/lib/crypto';
+import { deriveColor, deriveColorRgb, getServerBackground, getServerBorder, getServerFontColor, getServerUserNameColor, rgbToString } from 'components/server_identicon';
+import Hex from '@ephemera/shared/lib/hex';
 
-export function loader() {
+export async function loader() {
   const now = Date.now();
+  const host = NullableHelper.unwrap(process.env.EPHEMERA_HOST);
+  const hostDigest = Hex.fromUint8Array(await Crypto.digest(new TextEncoder().encode(host)));
 
   return {
-    host: NullableHelper.unwrap(process.env.EPHEMERA_HOST),
+    host,
+    hostDigest,
     date: now
   };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const loaderData = useLoaderData<typeof loader>();
+  const derivedColor = deriveColorRgb(Hex.toUint8Array(loaderData.hostDigest));
+  const backgroundColor = getServerBackground(derivedColor);
+  const borderColor = getServerBorder(derivedColor);
+  const fontColor = getServerFontColor(derivedColor);
+  const userNameColor = getServerUserNameColor(derivedColor);
 
   return (
     <html lang="en">
@@ -36,7 +47,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body style={{
+        '--server-color': rgbToString(derivedColor),
+        '--server-background-color': rgbToString(backgroundColor),
+        '--server-border-color': rgbToString(borderColor),
+        '--server-font-color': rgbToString(fontColor),
+        '--server-user-name-color': rgbToString(userNameColor),
+        backgroundColor: 'var(--server-background-color)',
+        color: 'var(--server-font-color)',
+      } as React.CSSProperties}>
         <StoreProvider create={() => new EphemeraStore(loaderData.host, loaderData.date)}>
           {children}
         </StoreProvider>
