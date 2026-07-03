@@ -170,9 +170,9 @@ export default function Post({ post, onDelete }: PostProps) {
                   const url = store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0]);
 
                   return type.startsWith('image/') ? (
-                    <img key={attachmentHash} src={url} alt="post attachment" style={{ maxWidth: '100%', marginTop: 4 }} />
+                    <img key={attachmentHash} src={url} alt="post attachment" style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />
                   ) : type.startsWith('video/') ? (
-                    <video key={attachmentHash} src={url} controls style={{ maxWidth: '100%', marginTop: 4 }} />
+                    <video key={attachmentHash} src={url} controls style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />
                   ) : null;
                 })}
               </div>
