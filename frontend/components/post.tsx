@@ -155,7 +155,7 @@ export default function Post({ post, onDelete }: PostProps) {
                 <Card.Text
                   style={{
                     whiteSpace: 'pre-wrap',
-                    ...(blank && { color: 'var(--server-user-text)', fontStyle: 'italic' })
+                    ...(blank && { color: 'var(--server-user-name-color)', fontStyle: 'italic' })
                   }}
                 >
                   {blank ? "(intentionally left blank)" : post[0][2]}
