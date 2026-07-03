@@ -1,5 +1,5 @@
 import { useSelector } from "lib/store";
-import { Col,Container, Row } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork } from "react-icons/bs";
 import { Link } from "react-router";
 
@@ -14,7 +14,7 @@ export default function Nav() {
   return (
     <nav style={{ position: "sticky", top: 0, left: 0, width: "100%", zIndex: 1000, background: "#fff", borderBottom: "1px solid #e8ecef" }}>
       <Container>
-        <Row className="align-items-center" style={{ height: "56px" }}>
+        <Row className="align-items-center" style={{ height: "48px" }}>
           <Col style={{ display: "flex", blockSize: "100%" }}>
             <div style={{ display: "flex", alignItems: "stretch", gap: "12px", blockSize: "100%" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
