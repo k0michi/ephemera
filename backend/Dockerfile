@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY .git ./.git
 COPY package.json package-lock.json ./
@@ -11,7 +11,7 @@ COPY backend/. ./backend/
 RUN apk add --no-cache git
 RUN npm run build -w backend
 
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 RUN apk add --no-cache ffmpeg
 COPY package.json package-lock.json ./

@@ -1,6 +1,8 @@
 import Composer from "components/composer";
 import Timeline from "components/timeline";
 
+import usePermissions from "~/hooks/permissions";
+
 import type { Route } from "./+types/_layout._index";
 
 export function loader() {
@@ -17,13 +19,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function Home() {
+  const permissions = usePermissions();
+
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }}>
-      <Composer />
+      {permissions.has('write') && <Composer />}
       <Timeline />
     </div>
   );

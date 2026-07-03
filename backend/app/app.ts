@@ -13,13 +13,17 @@ import AttachmentCleanerJob from './attachment_cleaner_job.js';
 import { AttachmentService } from './attachment_service.js';
 import Config from './config.js';
 import type { PooledDatabase } from './database.js';
+import IdentityService from "./identity_service.js";
 import { PeerService } from './peer_service.js';
 import PostService from "./post_service.js";
 import { SchedulerService } from './scheduler_service.js';
+import { type ISignalService,SignalService } from "./signal_service.js";
 import { createFixedRateWithSkipTicker } from './ticker.js';
 
 class Ephemera extends Application {
   config?: Config;
+  signalService?: ISignalService;
+  identityService?: IdentityService;
   postService?: PostService;
   attachmentService?: AttachmentService;
   peerService?: PeerService;
@@ -102,13 +106,15 @@ class Ephemera extends Application {
     console.log('Database connection established');
 
     this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db));
+    this.signalService = new SignalService(this.config);
+    this.identityService = new IdentityService(this.config, this.signalService);
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
-    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService);
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService, this.identityService, this.signalService);
     this.schedulerService = new SchedulerService();
     this.schedulerService.register(new AttachmentCleanerJob(this.attachmentService), createFixedRateWithSkipTicker(24 * 60 * 60 * 1000, this.schedulerService.signal));
 
     this.app.use(express.json());
-    this.useController(new ApiV1Controller(this.config, this.postService, this.attachmentService, this.peerService));
+    this.useController(new ApiV1Controller(this.config, this.identityService, this.postService, this.attachmentService, this.peerService));
 
     this.app.use((req: express.Request, res: express.Response) => {
       res.status(404).json({ error: 'Not Found' } satisfies ApiResponse);
