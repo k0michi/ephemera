@@ -76,15 +76,22 @@ export default function Post({ post, onDelete }: PostProps) {
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      return;
+    }
+
+    navigate(getPostUrl(post, store.host));
+  };
+
   const attachments = post[0][3].filter((footer) => footer[0] === 'attachment');
   const blank = post[0][2] === "" && attachments.length === 0;
   const localHost = useSelector(EphemeraStore, s => s.host);
 
   return (
     <>
-      <Card className={styles.post} onClick={() => {
-        navigate(getPostUrl(post, localHost));
-      }}>
+      <Card className={styles.post} onClick={handleCardClick}>
         <Card.Body style={{ padding: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
             {/* Icon */}
