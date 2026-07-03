@@ -205,7 +205,7 @@ export default function Post({ post, onDelete }: PostProps) {
                         onClick={() => setShowDeleteModal(true)}
                         className="text-danger d-flex align-items-center gap-2"
                       >
-                        <BsTrash /> Delete post
+                        <BsTrash /> Delete Fleet
                       </Dropdown.Item>
                     ) : null}
                   </Dropdown.Menu>
@@ -222,10 +222,10 @@ export default function Post({ post, onDelete }: PostProps) {
         centered
       >
         <Modal.Header closeButton={!isLocked}>
-          <Modal.Title>Delete Post</Modal.Title>
+          <Modal.Title>Delete Fleet</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Are you sure you want to delete this post?</p>
+          <p>Are you sure you want to delete this Fleet?</p>
           <p className="text-danger fw-bold">This action cannot be undone.</p>
         </Modal.Body>
         <Modal.Footer>

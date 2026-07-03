@@ -45,7 +45,7 @@ export default function Nav() {
                   gap: "6px",
                 }}>
                 <BsPencilSquare size={16} />
-                Post
+                Fleet
               </PrimaryButton>
             </Col>
           </Row>

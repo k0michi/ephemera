@@ -514,8 +514,7 @@ export default function Composer(props: ComposerProps) {
                     aria-hidden="true"
                   />
                 )}
-                <BsPencilSquare size={16} />
-                {isSubmitting ? "Posting..." : "Post"}
+                {isSubmitting ? "Submitting..." : <><BsPencilSquare size={16} />Fleet</>}
               </PrimaryButton>
             </div>
           </div>
