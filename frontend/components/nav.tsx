@@ -7,6 +7,7 @@ import { EphemeraStore } from "~/store";
 import { NavLink } from "./nav_link";
 import ServerIdenticon from "./server_identicon";
 import Composer from "./composer";
+import PrimaryButton from "./button";
 
 export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);
@@ -34,16 +35,18 @@ export default function Nav() {
               </div>
             </Col>
             <Col xs="auto" style={{ display: "flex", alignItems: "center" }}>
-              <Button
+              <PrimaryButton
                 onClick={() => setShowComposer(true)}
+                baseColor="var(--server-color)"
                 style={{
+                  color: "white",
                   display: "flex",
                   alignItems: "center",
                   gap: "6px",
                 }}>
                 <BsPencilSquare size={16} />
                 Post
-              </Button>
+              </PrimaryButton>
             </Col>
           </Row>
         </Container>

@@ -8,13 +8,14 @@ import { DisposableURL } from "lib/disposable_url";
 import { useReader, useSelector } from "lib/store";
 import { useEffect, useRef, useState } from "react";
 import { Button, Card, Dropdown, Form, Spinner } from "react-bootstrap";
-import { BsCheckLg, BsImage, BsPaperclip, BsXLg } from "react-icons/bs";
+import { BsCheckLg, BsImage, BsPaperclip, BsPencilSquare, BsXLg } from "react-icons/bs";
 
 import { useDisposableState } from "~/hooks/disposable_state";
 import { useMutex } from "~/hooks/mutex";
 import { EphemeraStore } from "~/store";
 
 import { RoundedIdenticon } from "./identicon";
+import PrimaryButton from "./button";
 
 export interface ComposerProps {
   onSubmit?: () => void;
@@ -493,14 +494,15 @@ export default function Composer(props: ComposerProps) {
               {count} / {maxLength}
             </div>
             <div className="text-end">
-              <Button
+              <PrimaryButton
                 type="submit"
-                variant="primary"
+                baseColor="var(--server-color)"
                 disabled={isUnder || isOver || isSubmitting || isReading}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.5rem",
+                  gap: "6px",
+                  color: "white",
                 }}
               >
                 {isSubmitting && (
@@ -512,8 +514,9 @@ export default function Composer(props: ComposerProps) {
                     aria-hidden="true"
                   />
                 )}
+                <BsPencilSquare size={16} />
                 {isSubmitting ? "Posting..." : "Post"}
-              </Button>
+              </PrimaryButton>
             </div>
           </div>
         </Form>

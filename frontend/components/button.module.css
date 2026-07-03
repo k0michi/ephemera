@@ -1,0 +1,35 @@
+.btn {
+  display: inline-block;
+  position: relative;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: var(--base-color);
+  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.05));
+
+  border: 1px solid color-mix(in srgb, var(--base-color), black 15%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+.btn:hover:not(:disabled) {
+  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.15));
+  border-color: color-mix(in srgb, var(--base-color), black 20%);
+}
+
+.btn:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--base-color), black 15%);
+  background-image: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15));
+  border-color: color-mix(in srgb, var(--base-color), black 15%);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.normal {
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
