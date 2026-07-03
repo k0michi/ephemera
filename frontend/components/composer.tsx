@@ -17,6 +17,7 @@ import { EphemeraStore } from "~/store";
 import { RoundedIdenticon } from "./identicon";
 
 export interface ComposerProps {
+  onSubmit?: () => void;
 }
 
 const allowedFileTypes = new Set([
@@ -70,7 +71,7 @@ function containsAttachable(files: FileList): boolean {
   return false;
 }
 
-export default function Composer({ }: ComposerProps) {
+export default function Composer(props: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachments, setAttachments] = useState<AttachmentEntry[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -211,6 +212,7 @@ export default function Composer({ }: ComposerProps) {
       store.addLog("success", "Post submitted successfully!");
       setValue("");
       handleRemoveAttachment();
+      props.onSubmit?.();
     } catch (error) {
       store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
     }
