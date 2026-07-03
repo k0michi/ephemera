@@ -1,6 +1,7 @@
-@theme {
-  --font-sans: ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+:root {
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
+  --bs-body-font-family: var(--font-sans) !important;
 }
 
 html,

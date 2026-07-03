@@ -4,7 +4,7 @@ import Hex from '@ephemera/shared/lib/hex';
 import MathHelper from '@ephemera/shared/lib/math_helper';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper';
 import Vector2 from '@ephemera/shared/lib/vector2';
-import { clampGamut, converter, oklch } from "culori";
+import { clampGamut, converter, oklch, parseRgb } from "culori";
 import DrunkenBishop from 'lib/drunken_bishop';
 import React, { useEffect, useState } from 'react';
 
@@ -52,7 +52,7 @@ function addRgb(c1: RGB, c2: RGB): RGB {
   };
 }
 
-function rgbToString(rgb: RGB): string {
+export function rgbToString(rgb: RGB): string {
   return `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
 }
 
@@ -137,18 +137,13 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
 </svg>`;
 }
 
-export function deriveColor(bytes: Uint8Array): string {
+export function deriveColorRgb(bytes: Uint8Array): RGB {
   const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 2 * Math.PI;
   const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
   const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 2 * Math.PI;
   const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
 
-  let result = {
-    r: 0,
-    g: 0,
-    b: 0
-  };
-
+  let result = { r: 0, g: 0, b: 0 };
   const maxOffset = Math.floor(bytes.length * 8 / 7);
 
   for (let i = 0; i < maxOffset; i++) {
@@ -160,7 +155,119 @@ export function deriveColor(bytes: Uint8Array): string {
     result = addRgb(result, rgb);
   }
 
-  return rgbToString(result);
+  return result;
+}
+
+export function deriveColor(bytes: Uint8Array): string {
+  return rgbToString(deriveColorRgb(bytes));
+}
+
+export function getServerBackground(derivedRgb: RGB): RGB {
+  const toOklch = converter("oklch");
+  const derivedOklch = toOklch({
+    mode: "rgb",
+    r: derivedRgb.r,
+    g: derivedRgb.g,
+    b: derivedRgb.b,
+  });
+
+  const adjustedOklch = oklch({
+    mode: "oklch",
+    l: 0.97,
+    c: 0.004,
+    h: derivedOklch?.h ?? 0,
+  });
+
+  const toRgb = converter("rgb");
+  const clampToSRGB = clampGamut("rgb");
+  const finalRgb = toRgb(clampToSRGB(adjustedOklch));
+
+  return {
+    r: finalRgb?.r ?? 0,
+    g: finalRgb?.g ?? 0,
+    b: finalRgb?.b ?? 0,
+  };
+}
+
+export function getServerBorder(derivedRgb: RGB): RGB {
+  const toOklch = converter("oklch");
+  const derivedOklch = toOklch({
+    mode: "rgb",
+    r: derivedRgb.r,
+    g: derivedRgb.g,
+    b: derivedRgb.b,
+  });
+
+  const adjustedOklch = oklch({
+    mode: "oklch",
+    l: 0.92,
+    c: 0.01,
+    h: derivedOklch?.h ?? 0,
+  });
+
+  const toRgb = converter("rgb");
+  const clampToSRGB = clampGamut("rgb");
+  const finalRgb = toRgb(clampToSRGB(adjustedOklch));
+
+  return {
+    r: finalRgb?.r ?? 0,
+    g: finalRgb?.g ?? 0,
+    b: finalRgb?.b ?? 0,
+  };
+}
+
+export function getServerFontColor(derivedRgb: RGB): RGB {
+  const toOklch = converter("oklch");
+  const derivedOklch = toOklch({
+    mode: "rgb",
+    r: derivedRgb.r,
+    g: derivedRgb.g,
+    b: derivedRgb.b,
+  });
+
+  const adjustedOklch = oklch({
+    mode: "oklch",
+    l: 0.3,
+    c: 0.01,
+    h: derivedOklch?.h ?? 0,
+  });
+
+  const toRgb = converter("rgb");
+  const clampToSRGB = clampGamut("rgb");
+  const finalRgb = toRgb(clampToSRGB(adjustedOklch));
+
+  return {
+    r: finalRgb?.r ?? 0,
+    g: finalRgb?.g ?? 0,
+    b: finalRgb?.b ?? 0,
+  };
+}
+
+export function getServerUserNameColor(derivedRgb: RGB): RGB {
+  const toOklch = converter("oklch");
+  const derivedOklch = toOklch({
+    mode: "rgb",
+    r: derivedRgb.r,
+    g: derivedRgb.g,
+    b: derivedRgb.b,
+  });
+
+  const adjustedOklch = oklch({
+    mode: "oklch",
+    l: 0.67,
+    c: 0.027,
+    h: derivedOklch?.h ?? 0,
+  });
+
+  const toRgb = converter("rgb");
+  const clampToSRGB = clampGamut("rgb");
+  const finalRgb = toRgb(clampToSRGB(adjustedOklch));
+
+  return {
+    r: finalRgb?.r ?? 0,
+    g: finalRgb?.g ?? 0,
+    b: finalRgb?.b ?? 0,
+  };
 }
 
 export default function ServerIdenticon(props: ServerIdenticonProps) {

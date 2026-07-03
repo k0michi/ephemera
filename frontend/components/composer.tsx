@@ -241,7 +241,7 @@ export default function Composer({ }: ComposerProps) {
   const isOver = count > maxLength;
 
   return (
-    <Card>
+    <Card style={{ borderColor: 'var(--server-border-color)' }}>
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <div style={{

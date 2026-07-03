@@ -75,7 +75,7 @@ interface ServerCardProps {
 
 function ServerCard({ title, servers, emptyMessage }: ServerCardProps) {
   return (
-    <Card className="mb-3">
+    <Card className="mb-3" style={{ borderColor: 'var(--server-border-color)' }}>
       <Card.Header>{title}</Card.Header>
       {servers == null ? null : servers.length === 0 ? (
         <Card.Body className="text-muted">{emptyMessage}</Card.Body>
