@@ -1,7 +1,10 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import "./app.css";
 
+import Crypto from '@ephemera/shared/lib/crypto';
+import Hex from '@ephemera/shared/lib/hex';
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import { deriveColorRgb, getServerBackground, getServerBorder, getServerFontColor, getServerUserNameColor, rgbToString } from 'components/server_identicon';
 import { StoreProvider } from "lib/store";
 import {
   isRouteErrorResponse,
@@ -15,9 +18,6 @@ import {
 
 import type { Route } from "./+types/root";
 import { EphemeraStore } from "./store";
-import Crypto from '@ephemera/shared/lib/crypto';
-import { deriveColor, deriveColorRgb, getServerBackground, getServerBorder, getServerFontColor, getServerUserNameColor, rgbToString } from 'components/server_identicon';
-import Hex from '@ephemera/shared/lib/hex';
 
 export async function loader() {
   const now = Date.now();

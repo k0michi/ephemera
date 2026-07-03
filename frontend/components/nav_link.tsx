@@ -1,12 +1,6 @@
-import Crypto from "@ephemera/shared/lib/crypto";
-import { useSelector } from "lib/store";
-import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 
-import { EphemeraStore } from "~/store";
-
 import styles from "./nav_link.module.css";
-import { deriveColor } from "./server_identicon";
 
 export interface NavLinkProps {
   to: string;
