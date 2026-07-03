@@ -1,4 +1,5 @@
 import React from "react";
+
 import PrimaryButton from "./button";
 
 export const Table = () => {

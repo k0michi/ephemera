@@ -1,13 +1,15 @@
-import { useState } from "react";
 import { useSelector } from "lib/store";
-import { Col, Container, Modal, Row, Button } from "react-bootstrap";
+import { useState } from "react";
+import {Col, Container, Modal, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork, BsPencilSquare } from "react-icons/bs";
 import { Link } from "react-router";
+
 import { EphemeraStore } from "~/store";
+
+import PrimaryButton from "./button";
+import Composer from "./composer";
 import { NavLink } from "./nav_link";
 import ServerIdenticon from "./server_identicon";
-import Composer from "./composer";
-import PrimaryButton from "./button";
 
 export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);

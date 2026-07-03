@@ -14,8 +14,8 @@ import { useDisposableState } from "~/hooks/disposable_state";
 import { useMutex } from "~/hooks/mutex";
 import { EphemeraStore } from "~/store";
 
-import { RoundedIdenticon } from "./identicon";
 import PrimaryButton from "./button";
+import { RoundedIdenticon } from "./identicon";
 
 export interface ComposerProps {
   onSubmit?: () => void;
