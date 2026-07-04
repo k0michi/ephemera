@@ -53,6 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         '--server-border-color': rgbToString(borderColor),
         '--server-font-color': rgbToString(fontColor),
         '--server-user-name-color': rgbToString(userNameColor),
+        '--server-white-background-color': 'white',
         backgroundColor: 'var(--server-background-color)',
         color: 'var(--server-font-color)',
       } as React.CSSProperties}>

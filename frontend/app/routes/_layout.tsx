@@ -33,7 +33,7 @@ export default function Layout() {
             }}
           >
             <Row className="justify-content-md-center">
-              <Col md={8} lg={6}>
+              <Col>
                 <Outlet />
               </Col>
             </Row>
