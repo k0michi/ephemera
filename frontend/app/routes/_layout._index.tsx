@@ -5,12 +5,12 @@ import Timeline from 'components/timeline';
 import { useSelector } from 'lib/store';
 import { Col, Row } from 'react-bootstrap';
 
+import FormatUtil from '~/format_util';
 import { useIdentityInfo } from '~/hooks/identity';
 import usePermissions from '~/hooks/permissions';
 import { EphemeraStore } from '~/store';
 
 import styles from './_layout._index.module.css';
-import FormatUtil from '~/format_util';
 
 export default function Home() {
   const permissions = usePermissions();
