@@ -30,6 +30,8 @@ export interface IPostService {
   delete(signal: DeletePostSignal): Promise<void>;
 
   get(postId: string): Promise<CreatePostSignal | null>;
+
+  getPostCountForIdentity(identity: string): Promise<number>;
 }
 
 export type PostSource = 'local' | 'remote' | 'all';
@@ -386,5 +388,35 @@ export default class PostService implements IPostService {
       signal,
       [],
     ], Base37.toUint8Array(this.config.privateKey)));
+  }
+
+  async getPostCountForIdentity(identity: string): Promise<number> {
+    if (!Base37.isValid(identity)) {
+      throw new ApiError('Invalid author format', 400);
+    }
+
+    const bytes = Base37.toUint8Array(identity);
+
+    if (!Crypto.isValidPublicKey(bytes)) {
+      throw new ApiError('Invalid author public key', 400);
+    }
+
+    const normalizedIdentity = Base37.normalize(identity);
+
+    const [localResult, remoteResult] = await Promise.all([
+      this.database
+        .select({ count: sql<number>`count(*)` })
+        .from(posts)
+        .where(eq(posts.author, normalizedIdentity)),
+      this.database
+        .select({ count: sql<number>`count(*)` })
+        .from(remotePosts)
+        .where(eq(remotePosts.author, normalizedIdentity)),
+    ]);
+
+    const localCount = localResult[0]?.count ?? 0;
+    const remoteCount = remoteResult[0]?.count ?? 0;
+
+    return localCount + remoteCount;
   }
 }
