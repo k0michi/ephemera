@@ -17,6 +17,29 @@ jobs:
         run: npm ci
       - name: Run lint
         run: npm run lint
+  
+  check-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Run gen-all
+        run: npm run gen-all
+
+      - name: Fail if generated files are not up to date
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated files are not up to date. Please run 'npm run gen-all' and commit the changes."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
 
   test_backend:
     runs-on: ubuntu-latest
