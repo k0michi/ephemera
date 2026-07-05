@@ -148,5 +148,6 @@ export const permissionSchema = z.literal("write");
 
 export const getIdentityResponseSchema = apiResponseSchema.extend({
     identity: authorSchema,
-    permissions: z.array(permissionSchema)
+    permissions: z.array(permissionSchema),
+    postCount: z.number()
 });
