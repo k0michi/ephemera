@@ -10,6 +10,7 @@ import usePermissions from '~/hooks/permissions';
 import { EphemeraStore } from '~/store';
 
 import styles from './_layout._index.module.css';
+import FormatUtil from '~/format_util';
 
 export default function Home() {
   const permissions = usePermissions();
@@ -18,9 +19,6 @@ export default function Home() {
   const identityId = Object.keys(keyPairs)[0] ?? null;
   const identity = identityId ? keyPairs[identityId] : null;
   const identityInfo = useIdentityInfo(identity ?? null);
-
-  // TODO: actual post count
-  const postCount = 0;
 
   return (
     <Row className={`g-3 ${styles.layout}`}>
@@ -48,7 +46,7 @@ export default function Home() {
           <div className={styles.profileBody}>
             <div className={styles.stat}>
               <div className={styles.statLabel}>FLEETS</div>
-              <div className={styles.statValue}>{identityInfo?.postCount ?? 0}</div>
+              <div className={styles.statValue}>{FormatUtil.formatNumber(identityInfo?.postCount ?? 0)}</div>
             </div>
           </div>
         </div>
