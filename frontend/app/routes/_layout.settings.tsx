@@ -11,8 +11,8 @@ import { BsChevronRight, BsDownload, BsPlusLg, BsTrash, BsUpload, BsVolumeUp } f
 import FileHelper from '~/file_helper';
 import { EphemeraStore } from '~/store';
 
-import type { Route } from './+types/_layout.settings';
 import styles from './_layout.settings.module.css';
+import type { Route } from './+types/_layout.settings';
 
 export function loader() {
   return {

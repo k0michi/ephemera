@@ -1,7 +1,6 @@
-import Base37 from "@ephemera/shared/lib/base37";
 import type { IdentityInfo } from "@ephemera/shared/lib/client";
 import type { KeyPair } from "@ephemera/shared/lib/crypto";
-import { useReader, useSelector } from "lib/store";
+import { useReader } from "lib/store";
 import { useEffect, useState } from "react";
 
 import { EphemeraStore } from "~/store";

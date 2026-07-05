@@ -1,13 +1,15 @@
-import { RoundedIdenticon } from 'components/identicon';
-import { useSelector } from 'lib/store';
-import usePermissions from '~/hooks/permissions';
-import { Col, Row } from 'react-bootstrap';
-import Composer from 'components/composer';
-import { EphemeraStore } from '~/store';
-import Timeline from 'components/timeline';
 import Base37 from '@ephemera/shared/lib/base37';
-import styles from './_layout._index.module.css';
+import Composer from 'components/composer';
+import { RoundedIdenticon } from 'components/identicon';
+import Timeline from 'components/timeline';
+import { useSelector } from 'lib/store';
+import { Col, Row } from 'react-bootstrap';
+
 import { useIdentityInfo } from '~/hooks/identity';
+import usePermissions from '~/hooks/permissions';
+import { EphemeraStore } from '~/store';
+
+import styles from './_layout._index.module.css';
 
 export default function Home() {
   const permissions = usePermissions();
