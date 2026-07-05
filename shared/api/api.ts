@@ -267,6 +267,7 @@ export interface GetIdentityRequest extends ApiRequest {
 export interface GetIdentityResponse extends ApiResponse {
   identity: Author;
   permissions: Permission[];
+  postCount: number;
 }
 
 export type Permission =
