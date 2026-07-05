@@ -1,0 +1,76 @@
+.layout {
+  align-items: flex-start;
+}
+
+.profileCard {
+  border: 1px solid var(--server-border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--server-white-background-color);
+}
+
+.profileHeader {
+  height: 96px;
+  /* TODO: actual header image */
+  background-color: var(--server-color);
+  border-bottom: 1px solid var(--server-border-color);
+}
+
+.profileAvatarWrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  padding: 0 1rem;
+}
+
+.avatarOverlap {
+  margin-top: -24px;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.username {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--server-font-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.publicKey {
+  font-size: 0.85rem;
+  color: var(--server-user-name-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.profileBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.stat {
+  margin-top: 0;
+  line-height: 1.15;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--server-user-name-color);
+}
+
+.statValue {
+  font-size: 1.25rem;
+  color: var(--server-color);
+}
