@@ -1,6 +1,6 @@
 # Ephemera
 
-**Ephemera** is a PKI-oriented distributed bulletin board system.
+**Ephemera** is a PKI-oriented decentralized bulletin board system.
 
 ## Features
 
@@ -24,7 +24,7 @@ docker compose run --build --rm manager -e /app/.env
 
 This command creates and saves your configuration in `.env`.
 
-### Start the server
+### Start the Server
 
 ```sh
 docker compose up -d --build
