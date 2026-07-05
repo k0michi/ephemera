@@ -240,7 +240,7 @@ export default class Client {
     return parsed.post;
   }
 
-  async getIdentityPermissions(keyPair: KeyPair): Promise<Set<Permission>> {
+  async getIdentityInfo(keyPair: KeyPair): Promise<IdentityInfo> {
     const response = await Fetcher.post(this.buildLocalUrl(`/api/v1/identity`), {
       signal: await SignalCrypto.sign([this._version, [this._host, Base37.fromUint8Array(keyPair.publicKey), Date.now(), "get_identity"], [], []], keyPair.privateKey)
     } satisfies GetIdentityRequest);
@@ -252,7 +252,11 @@ export default class Client {
       throw new Error("Invalid response");
     }
 
-    return new Set(parsed.permissions);
+    return {
+      identity: parsed.identity,
+      permissions: new Set(parsed.permissions),
+      postCount: parsed.postCount
+    };
   }
 
   buildLocalUrl(path: string): string {
@@ -262,4 +266,10 @@ export default class Client {
 
     return path;
   }
+}
+
+export interface IdentityInfo {
+  identity: string;
+  permissions: Set<Permission>;
+  postCount: number;
 }

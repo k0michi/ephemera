@@ -7,6 +7,7 @@ import { EphemeraStore } from '~/store';
 import Timeline from 'components/timeline';
 import Base37 from '@ephemera/shared/lib/base37';
 import styles from './_layout._index.module.css';
+import { useIdentityInfo } from '~/hooks/identity';
 
 export default function Home() {
   const permissions = usePermissions();
@@ -14,6 +15,7 @@ export default function Home() {
   const keyPairs = useSelector(EphemeraStore, s => s.keyPairs);
   const identityId = Object.keys(keyPairs)[0] ?? null;
   const identity = identityId ? keyPairs[identityId] : null;
+  const identityInfo = useIdentityInfo(identity ?? null);
 
   // TODO: actual post count
   const postCount = 0;
@@ -44,7 +46,7 @@ export default function Home() {
           <div className={styles.profileBody}>
             <div className={styles.stat}>
               <div className={styles.statLabel}>FLEETS</div>
-              <div className={styles.statValue}>{postCount}</div>
+              <div className={styles.statValue}>{identityInfo?.postCount ?? 0}</div>
             </div>
           </div>
         </div>
