@@ -78,6 +78,10 @@ class MockPostService implements IPostService {
   async get(postId: string): Promise<CreatePostSignal | null> {
     return null;
   }
+
+  async getPostCountForIdentity(identity: string): Promise<number> {
+    return 0;
+  }
 }
 
 class MockAttachmentService implements IAttachmentService {

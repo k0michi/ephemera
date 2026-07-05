@@ -1,6 +1,6 @@
 import { useSelector } from "lib/store";
 import { useState } from "react";
-import {Col, Container, Modal, Row } from "react-bootstrap";
+import { Col, Container, Modal, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork, BsPencilSquare } from "react-icons/bs";
 import { Link } from "react-router";
 
@@ -56,7 +56,7 @@ export default function Nav() {
 
       <Modal show={showComposer} onHide={() => setShowComposer(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>New Post</Modal.Title>
+          <Modal.Title>New Fleet</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Composer onSubmit={() => setShowComposer(false)} />

@@ -1,7 +1,7 @@
 import { pipeline } from 'node:stream/promises';
 
 import type { GetIdentityResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
-import { deletePostRequestSchema, getIdentityRequestSchema,getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import { deletePostRequestSchema, getIdentityRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import express from 'express';
 import fsPromises from 'fs/promises';
@@ -205,8 +205,13 @@ export default class ApiV1Controller implements IController {
     }
 
     const identityDescriptor = await this.identityService.getIdentityDescriptor(parsed.signal);
+    const postCount = await this.postService.getPostCountForIdentity(identityDescriptor.identity);
 
-    const response = { identity: identityDescriptor.identity, permissions: Array.from(identityDescriptor.permissions) } satisfies GetIdentityResponse;
+    const response = {
+      identity: identityDescriptor.identity,
+      permissions: Array.from(identityDescriptor.permissions),
+      postCount: postCount
+    } satisfies GetIdentityResponse;
     res.status(200).json(response);
   }
 }

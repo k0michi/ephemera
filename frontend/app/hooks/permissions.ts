@@ -10,9 +10,14 @@ export default function usePermissions(): Set<Permission> {
   const [permissions, setPermissions] = useState<Set<Permission>>(() => new Set());
 
   useEffect(() => {
-    Promise.all(Object.values(keyPairs).map(kp => store.getClient().getIdentityPermissions(kp)))
-      .then(results => setPermissions(results.reduce((perms, p) => perms.union(p), new Set())));
+    Promise.all(Object.values(keyPairs).map(kp => store.getIdentityInfoCached(kp)))
+      .then(results => {
+        const allPermissions = results.reduce((perms, info) => {
+          return perms.union(info.permissions);
+        }, new Set<Permission>());
+        setPermissions(allPermissions);
+      });
   }, [keyPairs]);
 
   return permissions;
-}   
+}
