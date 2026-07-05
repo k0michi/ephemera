@@ -10,7 +10,22 @@ import { useIdentityInfo } from '~/hooks/identity';
 import usePermissions from '~/hooks/permissions';
 import { EphemeraStore } from '~/store';
 
+import type { Route } from "./+types/_layout._index";
+
 import styles from './_layout._index.module.css';
+
+export function loader() {
+  return {
+    host: process.env.EPHEMERA_HOST
+  };
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: `Ephemera@${loaderData.host}` },
+    { name: "description", content: "A decentralized bulletin board." },
+  ];
+}
 
 export default function Home() {
   const permissions = usePermissions();
