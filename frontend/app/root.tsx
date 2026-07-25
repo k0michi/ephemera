@@ -4,7 +4,7 @@ import "./app.css";
 import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
-import { deriveColorRgb, getServerBackground, getServerBorder, getServerFontColor, getServerUserNameColor, rgbToString } from 'components/server_identicon';
+import { deriveColorRgb, getServerBackground, getServerBorder, getServerFontColor, getServerPostButtonColor, getServerUserNameColor, rgbToString } from 'components/server_identicon';
 import { StoreProvider } from "lib/store";
 import {
   isRouteErrorResponse,
@@ -38,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const borderColor = getServerBorder(derivedColor);
   const fontColor = getServerFontColor(derivedColor);
   const userNameColor = getServerUserNameColor(derivedColor);
+  const postButtonColor = getServerPostButtonColor(derivedColor);
 
   return (
     <html lang="en">
@@ -53,6 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         '--server-border-color': rgbToString(borderColor),
         '--server-font-color': rgbToString(fontColor),
         '--server-user-name-color': rgbToString(userNameColor),
+        '--server-post-button-color': rgbToString(postButtonColor),
         '--server-white-background-color': 'white',
         backgroundColor: 'var(--server-background-color)',
         color: 'var(--server-font-color)',
