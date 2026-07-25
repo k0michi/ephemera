@@ -180,10 +180,21 @@ export default function Post({ post, onDelete }: PostProps) {
               {/* Menu */}
               <div>
                 <Dropdown onClick={(e) => e.stopPropagation()}>
-                  <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
-                    <BsThreeDots className="text-secondary" />
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', }}>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={<Tooltip id={`tooltip-more-${post[1]}`}>More</Tooltip>}
+                  >
+                    <Dropdown.Toggle
+                      variant="link"
+                      bsPrefix="btn p-0 border-0"
+                      className={styles.moreButton}
+                      id={`dropdown-${post[1]}`}
+                      aria-label="More"
+                    >
+                      <BsThreeDots size={20} />
+                    </Dropdown.Toggle>
+                  </OverlayTrigger>
+                  <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                     {canMuteIdentity(post, publicKeys) && (
                       <Dropdown.Item
                         onClick={() => store.addMutedIdentity(postPublicKey)}

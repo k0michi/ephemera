@@ -270,6 +270,33 @@ export function getServerUserNameColor(derivedRgb: RGB): RGB {
   };
 }
 
+export function getServerPostButtonColor(derivedRgb: RGB): RGB {
+  const toOklch = converter("oklch");
+  const derivedOklch = toOklch({
+    mode: "rgb",
+    r: derivedRgb.r,
+    g: derivedRgb.g,
+    b: derivedRgb.b,
+  });
+
+  const adjustedOklch = oklch({
+    mode: "oklch",
+    l: 0.87,
+    c: 0.015,
+    h: derivedOklch?.h ?? 0,
+  });
+
+  const toRgb = converter("rgb");
+  const clampToSRGB = clampGamut("rgb");
+  const finalRgb = toRgb(clampToSRGB(adjustedOklch));
+
+  return {
+    r: finalRgb?.r ?? 0,
+    g: finalRgb?.g ?? 0,
+    b: finalRgb?.b ?? 0,
+  };
+}
+
 export default function ServerIdenticon(props: ServerIdenticonProps) {
   const { data, className, style } = props;
   const [svgString, setSvgString] = useState<string>('');
