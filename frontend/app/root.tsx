@@ -4,7 +4,7 @@ import "./app.css";
 import Crypto from '@ephemera/shared/lib/crypto';
 import Hex from '@ephemera/shared/lib/hex';
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
-import { deriveColorRgb, getServerBackground, getServerBorder, getServerFontColor, getServerPostButtonColor, getServerUserNameColor, rgbToString } from 'components/server_identicon';
+import { getServerTheme, rgbToString } from 'components/server_identicon';
 import { StoreProvider } from "lib/store";
 import {
   isRouteErrorResponse,
@@ -33,12 +33,7 @@ export async function loader() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const loaderData = useLoaderData<typeof loader>();
-  const derivedColor = deriveColorRgb(Hex.toUint8Array(loaderData.hostDigest));
-  const backgroundColor = getServerBackground(derivedColor);
-  const borderColor = getServerBorder(derivedColor);
-  const fontColor = getServerFontColor(derivedColor);
-  const userNameColor = getServerUserNameColor(derivedColor);
-  const postButtonColor = getServerPostButtonColor(derivedColor);
+  const theme = getServerTheme(Hex.toUint8Array(loaderData.hostDigest));
 
   return (
     <html lang="en">
@@ -49,12 +44,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body style={{
-        '--server-color': rgbToString(derivedColor),
-        '--server-background-color': rgbToString(backgroundColor),
-        '--server-border-color': rgbToString(borderColor),
-        '--server-font-color': rgbToString(fontColor),
-        '--server-user-name-color': rgbToString(userNameColor),
-        '--server-post-button-color': rgbToString(postButtonColor),
+        '--server-color': rgbToString(theme.main),
+        '--server-background-color': rgbToString(theme.background),
+        '--server-border-color': rgbToString(theme.border),
+        '--server-font-color': rgbToString(theme.font),
+        '--server-user-name-color': rgbToString(theme.userName),
+        '--server-post-button-color': rgbToString(theme.postButton),
         '--server-white-background-color': 'white',
         backgroundColor: 'var(--server-background-color)',
         color: 'var(--server-font-color)',

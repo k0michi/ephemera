@@ -2,11 +2,12 @@ import type { PeerManifest } from "@ephemera/shared/api/api";
 import ServerIdenticon from "components/server_identicon";
 import { useReader } from "lib/store";
 import { useEffect, useState } from "react";
-import { Card, ListGroup } from "react-bootstrap";
+import { Badge, ListGroup, Spinner } from "react-bootstrap";
 import { Link } from "react-router";
 
 import { EphemeraStore } from "~/store";
 
+import { DetailPanel } from "./_layout.settings";
 import type { Route } from "./+types/_layout.servers";
 
 export function loader() {
@@ -23,25 +24,26 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 interface ServerListItemProps {
   server: PeerManifest;
+  isLocal?: boolean;
 }
 
-function ServerListItem({ server }: ServerListItemProps) {
+function ServerListItem({ server, isLocal }: ServerListItemProps) {
   return (
-    <ListGroup.Item>
-      <div className="d-flex align-items-start gap-2">
+    <ListGroup.Item className="py-3">
+      <div className="d-flex align-items-start gap-3">
         <div style={{ flexShrink: 0 }}>
           <ServerIdenticon
             data={new TextEncoder().encode(server.host)}
-            style={{ width: 32, height: 32 }}
+            style={{ width: 36, height: 36 }}
           />
         </div>
 
         <div style={{ minWidth: 0, flexGrow: 1 }}>
-          <div>
+          <div className="d-flex align-items-center gap-2">
             <Link
               to={`https://${server.host}`}
               style={{
-                fontSize: "1.05rem",
+                fontSize: "1rem",
                 fontWeight: 600,
                 textDecoration: "none",
                 wordBreak: "break-all",
@@ -49,44 +51,19 @@ function ServerListItem({ server }: ServerListItemProps) {
             >
               {server.host}
             </Link>
+            {isLocal && (
+              <Badge style={{ fontSize: "0.75rem" }}>
+                Local
+              </Badge>
+            )}
           </div>
 
-          <div
-            className="text-muted"
-            style={{ fontSize: "0.95rem", minHeight: "1.2em" }}
-          >
-            {/* description */}
-          </div>
-
-          <div className="text-muted" style={{ fontSize: "0.9rem" }}>
+          <div className="text-muted small mt-1">
             {server.implementation.name} {server.implementation.version}
           </div>
         </div>
       </div>
     </ListGroup.Item>
-  );
-}
-
-interface ServerCardProps {
-  title: string;
-  servers: PeerManifest[] | null;
-  emptyMessage?: string | null;
-}
-
-function ServerCard({ title, servers, emptyMessage }: ServerCardProps) {
-  return (
-    <Card className="mb-3" style={{ borderColor: 'var(--server-border-color)' }}>
-      <Card.Header>{title}</Card.Header>
-      {servers == null ? null : servers.length === 0 ? (
-        <Card.Body className="text-muted">{emptyMessage}</Card.Body>
-      ) : (
-        <ListGroup variant="flush">
-          {servers.map((server) => (
-            <ServerListItem key={server.publicKey || server.host} server={server} />
-          ))}
-        </ListGroup>
-      )}
-    </Card>
   );
 }
 
@@ -123,17 +100,37 @@ export default function Servers() {
     })();
   }, [store]);
 
+  const combinedServers = [
+    ...(localServer ? [{ manifest: localServer, isLocal: true }] : []),
+    ...(servers ? servers.map(server => ({ manifest: server, isLocal: false })) : []),
+  ];
+
+  const isLoading = localServer === null && servers === null;
+
   return (
-    <>
-      <ServerCard
-        title="Local Server"
-        servers={[localServer].filter(s => s !== null)}
-      />
-      <ServerCard
-        title="Remote Servers"
-        servers={servers}
-        emptyMessage="No remote servers"
-      />
-    </>
+    <DetailPanel
+      title="Servers"
+    >
+      {isLoading ? (
+        <div className="text-center py-4 text-muted">
+          <Spinner animation="border" size="sm" className="me-2" />
+          Loading servers...
+        </div>
+      ) : combinedServers.length === 0 ? (
+        <div className="text-center py-4 text-muted">
+          No servers available.
+        </div>
+      ) : (
+        <ListGroup variant="flush" className="border rounded">
+          {combinedServers.map(({ manifest, isLocal }) => (
+            <ServerListItem
+              key={manifest.publicKey || manifest.host}
+              server={manifest}
+              isLocal={isLocal}
+            />
+          ))}
+        </ListGroup>
+      )}
+    </DetailPanel>
   );
 }

@@ -4,6 +4,7 @@ import { Col, Container, Modal, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork, BsPencilSquare } from "react-icons/bs";
 import { Link } from "react-router";
 
+import usePermissions from "~/hooks/permissions";
 import { EphemeraStore } from "~/store";
 
 import PrimaryButton from "./button";
@@ -14,6 +15,7 @@ import ServerIdenticon from "./server_identicon";
 export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);
   const [showComposer, setShowComposer] = useState(false);
+  const permissions = usePermissions();
 
   return (
     <>
@@ -37,18 +39,20 @@ export default function Nav() {
               </div>
             </Col>
             <Col xs="auto" style={{ display: "flex", alignItems: "center" }}>
-              <PrimaryButton
-                onClick={() => setShowComposer(true)}
-                baseColor="var(--server-color)"
-                style={{
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}>
-                <BsPencilSquare size={16} />
-                Fleet
-              </PrimaryButton>
+              {permissions.has("write") ? (
+                <PrimaryButton
+                  onClick={() => setShowComposer(true)}
+                  baseColor="var(--server-color)"
+                  style={{
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}>
+                  <BsPencilSquare size={16} />
+                  Fleet
+                </PrimaryButton>
+              ) : null}
             </Col>
           </Row>
         </Container>

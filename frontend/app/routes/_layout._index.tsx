@@ -10,9 +10,8 @@ import { useIdentityInfo } from '~/hooks/identity';
 import usePermissions from '~/hooks/permissions';
 import { EphemeraStore } from '~/store';
 
-import type { Route } from "./+types/_layout._index";
-
 import styles from './_layout._index.module.css';
+import type { Route } from "./+types/_layout._index";
 
 export function loader() {
   return {
