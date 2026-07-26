@@ -10,10 +10,12 @@ import PrimaryButton from "./button";
 import Composer from "./composer";
 import { NavLink } from "./nav_link";
 import ServerIdenticon from "./server_identicon";
+import usePermissions from "~/hooks/permissions";
 
 export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);
   const [showComposer, setShowComposer] = useState(false);
+  const permissions = usePermissions();
 
   return (
     <>
@@ -37,18 +39,20 @@ export default function Nav() {
               </div>
             </Col>
             <Col xs="auto" style={{ display: "flex", alignItems: "center" }}>
-              <PrimaryButton
-                onClick={() => setShowComposer(true)}
-                baseColor="var(--server-color)"
-                style={{
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}>
-                <BsPencilSquare size={16} />
-                Fleet
-              </PrimaryButton>
+              {permissions.has("write") ? (
+                <PrimaryButton
+                  onClick={() => setShowComposer(true)}
+                  baseColor="var(--server-color)"
+                  style={{
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}>
+                  <BsPencilSquare size={16} />
+                  Fleet
+                </PrimaryButton>
+              ) : null}
             </Col>
           </Row>
         </Container>
