@@ -6,7 +6,7 @@ import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader, useSelector } from "lib/store";
 import React from "react";
 import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
-import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
+import { BsHddNetwork, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
 import { Link, useNavigate } from "react-router";
 
 import { useIsClient } from "~/hooks/is_client";
@@ -208,7 +208,7 @@ export default function Post({ post, onDelete }: PostProps) {
                         onClick={() => store.addMutedServer(postHost)}
                         className="d-flex align-items-center gap-2"
                       >
-                        <BsServer /> Mute server {postHost}
+                        <BsVolumeMute /> Mute server {postHost}
                       </Dropdown.Item>
                     )}
                     {canDelete(post, localHost, publicKeys) ? (
