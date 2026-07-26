@@ -4,13 +4,13 @@ import { Col, Container, Modal, Row } from "react-bootstrap";
 import { BsGear, BsHddNetwork, BsPencilSquare } from "react-icons/bs";
 import { Link } from "react-router";
 
+import usePermissions from "~/hooks/permissions";
 import { EphemeraStore } from "~/store";
 
 import PrimaryButton from "./button";
 import Composer from "./composer";
 import { NavLink } from "./nav_link";
 import ServerIdenticon from "./server_identicon";
-import usePermissions from "~/hooks/permissions";
 
 export default function Nav() {
   const host = useSelector(EphemeraStore, s => s.host);

@@ -54,12 +54,12 @@ const SECTIONS: SectionDef[] = [
   },
 ];
 
-interface PanelProps {
+export interface PanelProps {
   children: React.ReactNode;
   className?: string;
 }
 
-function Panel({ children, className = '' }: PanelProps) {
+export function Panel({ children, className = '' }: PanelProps) {
   return (
     <div className={`${styles.panel} ${className}`.trim()}>
       {children}
@@ -73,7 +73,7 @@ interface NavPanelProps {
   onSelectSection: (key: SectionKey) => void;
 }
 
-function NavPanel({ sections, activeSection, onSelectSection }: NavPanelProps) {
+export function NavPanel({ sections, activeSection, onSelectSection }: NavPanelProps) {
   return (
     <Panel>
       {sections.map(section => {
@@ -94,13 +94,13 @@ function NavPanel({ sections, activeSection, onSelectSection }: NavPanelProps) {
   );
 }
 
-interface DetailPanelProps {
+export interface DetailPanelProps {
   title: string;
   description?: string | null | undefined;
   children: React.ReactNode;
 }
 
-function DetailPanel({ title, description, children }: DetailPanelProps) {
+export function DetailPanel({ title, description, children }: DetailPanelProps) {
   return (
     <Panel>
       <div className={styles.detailHeader}>
