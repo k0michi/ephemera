@@ -4,7 +4,7 @@
 //   protoc               v7.34.0
 // source: bridge.proto
 
-/* eslint-disable */
+ 
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import {
   type CallOptions,
