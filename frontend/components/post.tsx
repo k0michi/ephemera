@@ -151,7 +151,7 @@ export default function Post({ post, onDelete }: PostProps) {
               </div>
 
               {/* Body */}
-              <div style={{ marginBottom: 8, fontSize: '16px', lineHeight: 1.375 }}>
+              <div style={{ fontSize: '16px', lineHeight: 1.375 }}>
                 <Card.Text
                   style={{
                     whiteSpace: 'pre-wrap',
