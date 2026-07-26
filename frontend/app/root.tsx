@@ -1,7 +1,10 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import "./app.css";
 
+import Crypto from '@ephemera/shared/lib/crypto';
+import Hex from '@ephemera/shared/lib/hex';
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
+import { getServerTheme, rgbToString } from 'components/server_identicon';
 import { StoreProvider } from "lib/store";
 import {
   isRouteErrorResponse,
@@ -16,17 +19,21 @@ import {
 import type { Route } from "./+types/root";
 import { EphemeraStore } from "./store";
 
-export function loader() {
+export async function loader() {
   const now = Date.now();
+  const host = NullableHelper.unwrap(process.env.EPHEMERA_HOST);
+  const hostDigest = Hex.fromUint8Array(await Crypto.digest(new TextEncoder().encode(host)));
 
   return {
-    host: NullableHelper.unwrap(process.env.EPHEMERA_HOST),
+    host,
+    hostDigest,
     date: now
   };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const loaderData = useLoaderData<typeof loader>();
+  const theme = getServerTheme(Hex.toUint8Array(loaderData.hostDigest));
 
   return (
     <html lang="en">
@@ -36,7 +43,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body style={{
+        '--server-color': rgbToString(theme.main),
+        '--server-background-color': rgbToString(theme.background),
+        '--server-border-color': rgbToString(theme.border),
+        '--server-font-color': rgbToString(theme.font),
+        '--server-user-name-color': rgbToString(theme.userName),
+        '--server-post-button-color': rgbToString(theme.postButton),
+        '--server-white-background-color': 'white',
+        backgroundColor: 'var(--server-background-color)',
+        color: 'var(--server-font-color)',
+      } as React.CSSProperties}>
         <StoreProvider create={() => new EphemeraStore(loaderData.host, loaderData.date)}>
           {children}
         </StoreProvider>

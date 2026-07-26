@@ -4,13 +4,14 @@ import type { KeyPair } from '@ephemera/shared/lib/crypto';
 import { RoundedIdenticon } from 'components/identicon';
 import ServerIdenticon from 'components/server_identicon';
 import { useReader, useSelector } from 'lib/store';
-import { useState } from 'react';
-import { Button, Modal,Table } from 'react-bootstrap';
-import { BsDownload, BsPlusLg, BsTrash, BsUpload, BsVolumeUp } from 'react-icons/bs';
+import React, { useState } from 'react';
+import { Button, Col, Modal, Row, Table } from 'react-bootstrap';
+import { BsChevronRight, BsDownload, BsPlusLg, BsTrash, BsUpload, BsVolumeUp } from 'react-icons/bs';
 
 import FileHelper from '~/file_helper';
 import { EphemeraStore } from '~/store';
 
+import styles from './_layout.settings.module.css';
 import type { Route } from './+types/_layout.settings';
 
 export function loader() {
@@ -27,6 +28,93 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export interface SettingsProps { }
 
+type SectionKey = 'identities' | 'muted-identities' | 'muted-servers';
+
+interface SectionDef {
+  key: SectionKey;
+  title: string;
+  description: string;
+}
+
+const SECTIONS: SectionDef[] = [
+  {
+    key: 'identities',
+    title: 'Identities',
+    description: 'Manage the key pairs you use.',
+  },
+  {
+    key: 'muted-identities',
+    title: 'Muted Identities',
+    description: 'Manage the identities you have chosen to mute.',
+  },
+  {
+    key: 'muted-servers',
+    title: 'Muted Servers',
+    description: 'Manage the servers you have chosen to mute.',
+  },
+];
+
+export interface PanelProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function Panel({ children, className = '' }: PanelProps) {
+  return (
+    <div className={`${styles.panel} ${className}`.trim()}>
+      {children}
+    </div>
+  );
+}
+
+interface NavPanelProps {
+  sections: SectionDef[];
+  activeSection: SectionKey;
+  onSelectSection: (key: SectionKey) => void;
+}
+
+export function NavPanel({ sections, activeSection, onSelectSection }: NavPanelProps) {
+  return (
+    <Panel>
+      {sections.map(section => {
+        const isActive = section.key === activeSection;
+        return (
+          <button
+            key={section.key}
+            type="button"
+            onClick={() => onSelectSection(section.key)}
+            className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+          >
+            <span>{section.title}</span>
+            <BsChevronRight className={`${styles.chevron} ${isActive ? styles.chevronActive : ''}`} />
+          </button>
+        );
+      })}
+    </Panel>
+  );
+}
+
+export interface DetailPanelProps {
+  title: string;
+  description?: string | null | undefined;
+  children: React.ReactNode;
+}
+
+export function DetailPanel({ title, description, children }: DetailPanelProps) {
+  return (
+    <Panel>
+      <div className={styles.detailHeader}>
+        <h2 className={styles.detailTitle}>{title}</h2>
+        {description ? <p className={`mb-0 ${styles.detailDescription}`}>{description}</p> : null}
+      </div>
+      <hr className={styles.detailDivider} />
+      <div className={styles.detailContent}>
+        {children}
+      </div>
+    </Panel>
+  );
+}
+
 export default function Settings({ }: SettingsProps) {
   const keyPairs = useSelector(EphemeraStore, (store) => store.keyPairs);
   const mutedIdentities = useSelector(EphemeraStore, s => s.mutedIdentities);
@@ -34,8 +122,10 @@ export default function Settings({ }: SettingsProps) {
   const store = useReader(EphemeraStore);
 
   const [targetKeyPair, setTargetKeyPair] = useState<KeyPair | null>(null);
+  const [activeSection, setActiveSection] = useState<SectionKey>('identities');
 
   const ids = Object.keys(keyPairs);
+  const activeSectionDef = SECTIONS.find(s => s.key === activeSection)!;
 
   const handleImportKeyPair = async () => {
     try {
@@ -73,163 +163,173 @@ export default function Settings({ }: SettingsProps) {
 
   return (
     <>
-      {/* Identities */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Identities</h5>
-        <div className="d-flex gap-2">
-          <Button variant="outline-primary" size="sm" onClick={async () => {
-            try {
-              await store.generateKeyPair();
-            } catch (error) {
-              store.addLog("danger", error instanceof Error ? error.message : "Failed to generate key pair.");
-            }
-          }}>
-            <BsPlusLg className="me-1" /> Generate
-          </Button>
-          <Button variant="outline-secondary" size="sm" onClick={handleImportKeyPair}>
-            <BsUpload className="me-1" /> Import
-          </Button>
-        </div>
-      </div>
+      <Row className="g-3">
+        <Col md={4} lg={3}>
+          <NavPanel
+            sections={SECTIONS}
+            activeSection={activeSection}
+            onSelectSection={setActiveSection}
+          />
+        </Col>
 
-      <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
-        <thead className="table-light">
-          <tr>
-            <th style={{ width: '50px' }}></th>
-            <th>Identity</th>
-            <th className="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ids.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="text-center text-muted py-4">
-                No key pairs available.
-              </td>
-            </tr>
-          ) : (
-            Object.entries(keyPairs).map(([id, kp]) => (
-              <tr key={id}>
-                <td>
-                  <RoundedIdenticon data={kp.publicKey} size={32} />
-                </td>
-                <td className="font-monospace">
-                  @{id}
-                </td>
-                <td>
-                  <div className="d-flex justify-content-end gap-2">
-                    <Button
-                      variant="light"
-                      size="sm"
-                      title="Export"
-                      onClick={() => handleExport(id, kp)}
-                    >
-                      <BsDownload />
-                    </Button>
-                    <Button
-                      variant="light"
-                      size="sm"
-                      className="text-danger"
-                      title="Revoke"
-                      onClick={() => setTargetKeyPair(kp)}
-                    >
-                      <BsTrash />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
-
-      {/* Muted Identities */}
-      <div className="mb-3">
-        <h5 className="mb-0">Muted Identities</h5>
-      </div>
-      <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
-        <thead className="table-light">
-          <tr>
-            <th style={{ width: '50px' }}></th>
-            <th>Identity</th>
-            <th className="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mutedIdentities.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="text-center text-muted py-3">
-                No muted identities.
-              </td>
-            </tr>
-          ) : (
-            mutedIdentities.map(id => (
-              <tr key={id}>
-                <td>
-                  <RoundedIdenticon data={Base37.toUint8Array(id)} size={32} />
-                </td>
-                <td className="font-monospace">
-                  @{id}
-                </td>
-                <td className="text-end">
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => handleUnmuteIdentity(id)}
-                    title="Unmute"
-                  >
-                    <BsVolumeUp className="me-1" /> Unmute
+        <Col md={8} lg={9}>
+          <DetailPanel title={activeSectionDef.title} description={activeSectionDef.description}>
+            {activeSection === 'identities' && (
+              <>
+                <div className="d-flex justify-content-end gap-2 mb-3">
+                  <Button variant="outline-primary" size="sm" onClick={async () => {
+                    try {
+                      await store.generateKeyPair();
+                    } catch (error) {
+                      store.addLog("danger", error instanceof Error ? error.message : "Failed to generate key pair.");
+                    }
+                  }}>
+                    <BsPlusLg className="me-1" /> Generate
                   </Button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
-
-      {/* Muted Servers */}
-      <div className="mb-3">
-        <h5 className="mb-0">Muted Servers</h5>
-      </div>
-      <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
-        <thead className="table-light">
-          <tr>
-            <th style={{ width: '50px' }}></th>
-            <th>Server</th>
-            <th className="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mutedServers.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="text-center text-muted py-3">
-                No muted servers.
-              </td>
-            </tr>
-          ) : (
-            mutedServers.map(server => (
-              <tr key={server}>
-                <td className="text-center text-muted">
-                  <ServerIdenticon data={new TextEncoder().encode(server)} style={{ width: 32, height: 32 }} />
-                </td>
-                <td className="font-monospace">
-                  {server}
-                </td>
-                <td className="text-end">
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => handleUnmuteServer(server)}
-                    title="Unmute"
-                  >
-                    <BsVolumeUp className="me-1" /> Unmute
+                  <Button variant="outline-secondary" size="sm" onClick={handleImportKeyPair}>
+                    <BsUpload className="me-1" /> Import
                   </Button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+                </div>
+
+                <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ width: '50px' }}></th>
+                      <th>Identity</th>
+                      <th className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ids.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="text-center text-muted py-4">
+                          No key pairs available.
+                        </td>
+                      </tr>
+                    ) : (
+                      Object.entries(keyPairs).map(([id, kp]) => (
+                        <tr key={id}>
+                          <td>
+                            <RoundedIdenticon data={kp.publicKey} size={32} />
+                          </td>
+                          <td className="font-monospace">
+                            @{id}
+                          </td>
+                          <td>
+                            <div className="d-flex justify-content-end gap-2">
+                              <Button
+                                variant="light"
+                                size="sm"
+                                title="Export"
+                                onClick={() => handleExport(id, kp)}
+                              >
+                                <BsDownload />
+                              </Button>
+                              <Button
+                                variant="light"
+                                size="sm"
+                                className="text-danger"
+                                title="Revoke"
+                                onClick={() => setTargetKeyPair(kp)}
+                              >
+                                <BsTrash />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </>
+            )}
+
+            {activeSection === 'muted-identities' && (
+              <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
+                <thead className="table-light">
+                  <tr>
+                    <th style={{ width: '50px' }}></th>
+                    <th>Identity</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mutedIdentities.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="text-center text-muted py-3">
+                        No muted identities.
+                      </td>
+                    </tr>
+                  ) : (
+                    mutedIdentities.map(id => (
+                      <tr key={id}>
+                        <td>
+                          <RoundedIdenticon data={Base37.toUint8Array(id)} size={32} />
+                        </td>
+                        <td className="font-monospace">
+                          @{id}
+                        </td>
+                        <td className="text-end">
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => handleUnmuteIdentity(id)}
+                            title="Unmute"
+                          >
+                            <BsVolumeUp className="me-1" /> Unmute
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            )}
+
+            {activeSection === 'muted-servers' && (
+              <Table hover responsive style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
+                <thead className="table-light">
+                  <tr>
+                    <th style={{ width: '50px' }}></th>
+                    <th>Server</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mutedServers.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="text-center text-muted py-3">
+                        No muted servers.
+                      </td>
+                    </tr>
+                  ) : (
+                    mutedServers.map(server => (
+                      <tr key={server}>
+                        <td className="text-center text-muted">
+                          <ServerIdenticon data={new TextEncoder().encode(server)} style={{ width: 32, height: 32 }} />
+                        </td>
+                        <td className="font-monospace">
+                          {server}
+                        </td>
+                        <td className="text-end">
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => handleUnmuteServer(server)}
+                            title="Unmute"
+                          >
+                            <BsVolumeUp className="me-1" /> Unmute
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            )}
+          </DetailPanel>
+        </Col>
+      </Row>
 
       <Modal show={!!targetKeyPair} onHide={() => setTargetKeyPair(null)} centered>
         <Modal.Header closeButton>

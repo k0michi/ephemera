@@ -49,7 +49,7 @@ export default function User() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {isValidKey ? <>
-        <Card className="p-3 d-flex flex-row align-items-center gap-3">
+        <Card className="p-3 d-flex flex-row align-items-center gap-3" style={{ borderColor: 'var(--server-border-color)' }}>
           {identiconData && (
             <RoundedIdenticon data={identiconData} size={48} />
           )}
@@ -97,7 +97,7 @@ export default function User() {
 
         <Timeline author={userKey} />
       </> : <>
-        <Card className="p-3">
+        <Card className="p-3" style={{ borderColor: 'var(--server-border-color)' }}>
           <div className="fw-bold fs-5">
             User does not exist
           </div>

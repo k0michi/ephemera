@@ -17,6 +17,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "gen-all": "npm run gen-migration -w backend && npm run gen-proto -w shared && npm run gen-zod -w shared"
   }
 }

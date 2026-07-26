@@ -6,17 +6,19 @@ import NullableHelper from "@ephemera/shared/lib/nullable_helper";
 import PostUtil from "@ephemera/shared/lib/post_util.js";
 import { DisposableURL } from "lib/disposable_url";
 import { useReader, useSelector } from "lib/store";
-import { useEffect,useRef, useState } from "react";
-import { Button, Card, Dropdown,Form, Spinner } from "react-bootstrap";
-import { BsCheckLg, BsImage, BsPaperclip,BsXLg } from "react-icons/bs";
+import { useEffect, useRef, useState } from "react";
+import { Button, Card, Dropdown, Form, Spinner } from "react-bootstrap";
+import { BsCheckLg, BsImage, BsPaperclip, BsPencilSquare, BsXLg } from "react-icons/bs";
 
 import { useDisposableState } from "~/hooks/disposable_state";
 import { useMutex } from "~/hooks/mutex";
 import { EphemeraStore } from "~/store";
 
+import PrimaryButton from "./button";
 import { RoundedIdenticon } from "./identicon";
 
 export interface ComposerProps {
+  onSubmit?: () => void;
 }
 
 const allowedFileTypes = new Set([
@@ -70,7 +72,7 @@ function containsAttachable(files: FileList): boolean {
   return false;
 }
 
-export default function Composer({ }: ComposerProps) {
+export default function Composer(props: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachments, setAttachments] = useState<AttachmentEntry[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -211,6 +213,7 @@ export default function Composer({ }: ComposerProps) {
       store.addLog("success", "Post submitted successfully!");
       setValue("");
       handleRemoveAttachment();
+      props.onSubmit?.();
     } catch (error) {
       store.addLog("danger", error instanceof Error ? error.message : "Failed to submit post.");
     }
@@ -220,7 +223,7 @@ export default function Composer({ }: ComposerProps) {
   const isOver = count > maxLength;
 
   return (
-    <Card>
+    <Card style={{ borderColor: 'var(--server-border-color)' }}>
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <div style={{
@@ -491,14 +494,15 @@ export default function Composer({ }: ComposerProps) {
               {count} / {maxLength}
             </div>
             <div className="text-end">
-              <Button
+              <PrimaryButton
                 type="submit"
-                variant="primary"
+                baseColor="var(--server-color)"
                 disabled={isUnder || isOver || isSubmitting || isReading}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "0.5rem",
+                  gap: "6px",
+                  color: "white",
                 }}
               >
                 {isSubmitting && (
@@ -510,8 +514,8 @@ export default function Composer({ }: ComposerProps) {
                     aria-hidden="true"
                   />
                 )}
-                {isSubmitting ? "Posting..." : "Post"}
-              </Button>
+                {isSubmitting ? "Submitting..." : <><BsPencilSquare size={16} />Fleet</>}
+              </PrimaryButton>
             </div>
           </div>
         </Form>

@@ -33,7 +33,7 @@ export default function Layout() {
             }}
           >
             <Row className="justify-content-md-center">
-              <Col md={8} lg={6}>
+              <Col>
                 <Outlet />
               </Col>
             </Row>
@@ -41,7 +41,7 @@ export default function Layout() {
             <div
               style={{
                 textAlign: "center",
-                color: "#bbb",
+                color: "var(--server-user-name-color)",
                 fontSize: "0.8rem",
               }}
             >

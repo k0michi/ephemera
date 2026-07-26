@@ -1,6 +1,6 @@
 import type { ExportedKeyPair } from "@ephemera/shared/api/api";
 import Base37 from "@ephemera/shared/lib/base37";
-import Client from '@ephemera/shared/lib/client.js';
+import Client, { type IdentityInfo } from '@ephemera/shared/lib/client.js';
 import Crypto, { type KeyPair } from '@ephemera/shared/lib/crypto.js';
 import NullableHelper from "@ephemera/shared/lib/nullable_helper.js";
 import SymbolHelper from "@ephemera/shared/lib/symbol_helper.js";
@@ -41,6 +41,8 @@ export class EphemeraStore extends Store implements Disposable {
 
   private _kPublicKeyStorageKey = 'ephemera_publicKey';
   private _kPrivateKeyStorageKey = 'ephemera_privateKey';
+
+  public cachedIdentityInfos: Record<string, IdentityInfo> = {};
 
   constructor(host: string, date: number) {
     super();
@@ -430,5 +432,21 @@ export class EphemeraStore extends Store implements Disposable {
       };
       request.onerror = () => reject(request.error);
     });
+  }
+
+  public async getIdentityInfoCached(keyPair: KeyPair): Promise<IdentityInfo> {
+    const client = this.getClient();
+    const identity = Base37.fromUint8Array(keyPair.publicKey);
+
+    if (this.cachedIdentityInfos[identity]) {
+      return this.cachedIdentityInfos[identity];
+    }
+
+    const info = await client.getIdentityInfo(keyPair);
+
+    this.cachedIdentityInfos[identity] = info;
+    this.notifyListeners();
+
+    return info;
   }
 }

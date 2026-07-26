@@ -6,8 +6,8 @@ import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader, useSelector } from "lib/store";
 import React from "react";
 import { Button, Card, Dropdown, Modal, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
-import { BsServer, BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
-import { Link } from "react-router";
+import { BsThreeDots, BsTrash, BsVolumeMute } from "react-icons/bs";
+import { Link, useNavigate } from "react-router";
 
 import { useIsClient } from "~/hooks/is_client";
 import { EphemeraStore } from "~/store";
@@ -24,7 +24,6 @@ export interface PostProps {
 export default function Post({ post, onDelete }: PostProps) {
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const { isLocked, tryLock } = useMutex();
-  const digest = Hex.fromUint8Array(SignalCrypto.digestSync(post[0]));
   const isClient = useIsClient();
   const initialDate = useSelector(EphemeraStore, s => s.initialDate);
   const [now, setNow] = React.useState(
@@ -49,6 +48,7 @@ export default function Post({ post, onDelete }: PostProps) {
     };
   }, [post, now, initialDate]);
 
+  const navigate = useNavigate();
   const store = useReader(EphemeraStore);
   const publicKeys = Object.keys(store.keyPairs);
   const postPublicKey = post[0][1][1];
@@ -76,28 +76,38 @@ export default function Post({ post, onDelete }: PostProps) {
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      return;
+    }
+
+    navigate(getPostUrl(post, store.host));
+  };
+
   const attachments = post[0][3].filter((footer) => footer[0] === 'attachment');
   const blank = post[0][2] === "" && attachments.length === 0;
   const localHost = useSelector(EphemeraStore, s => s.host);
 
   return (
     <>
-      <Card className={styles.post}>
+      <Card className={styles.post} onClick={handleCardClick}>
         <Card.Body style={{ padding: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
             {/* Icon */}
             <div style={{ flexShrink: 0 }}>
-              <Link to={`/${postPublicKey}`}>
+              <Link to={`/${postPublicKey}`} onClick={(e) => e.stopPropagation()}>
                 <RoundedIdenticon data={Base37.toUint8Array(post[0][1][1])} style={{
                   display: 'block',
                   verticalAlign: 'middle',
+                  marginTop: '4px',
                 }} size={48} />
               </Link>
             </div>
             {/* Content */}
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               {/* Username & Date Row */}
-              <div className="text-secondary fs-6" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--server-user-name-color)', fontSize: '14px' }}>
                 <Link
                   to={`/${postPublicKey}`}
                   className={styles.postUsernameLink}
@@ -108,20 +118,21 @@ export default function Post({ post, onDelete }: PostProps) {
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                   }}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   @{post[0][1][1]}
                 </Link>
                 {!isLocal(post, localHost) && (
                   <>
-                    {'•'}
+                    {'·'}
                     <span style={{ flexShrink: 0 }}>
-                      <Link to={`https://${post[0][1][0]}`} style={{ color: 'inherit' }} className={styles.postHostLink}>
+                      <Link to={`https://${post[0][1][0]}`} style={{ color: 'inherit' }} className={styles.postHostLink} onClick={(e) => e.stopPropagation()}>
                         {post[0][1][0]}
                       </Link>
                     </span>
                   </>
                 )}
-                {'•'}
+                {'·'}
                 <OverlayTrigger
                   placement="top"
                   delay={{ show: 500, hide: 0 }}
@@ -132,7 +143,7 @@ export default function Post({ post, onDelete }: PostProps) {
                   )}
                 >
                   <span style={{ flexShrink: 0 }}>
-                    <Link to={isLocal(post, localHost) ? `/post/${digest}` : `https://${post[0][1][0]}/post/${digest}`} style={{ color: 'inherit' }} className={styles.postDateLink}>
+                    <Link to={getPostUrl(post, localHost)} style={{ color: 'inherit' }} className={styles.postDateLink} onClick={(e) => e.stopPropagation()}>
                       {formatDate(post[0][1][2], now, isClient)}
                     </Link>
                   </span>
@@ -140,11 +151,11 @@ export default function Post({ post, onDelete }: PostProps) {
               </div>
 
               {/* Body */}
-              <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: '16px', lineHeight: 1.375 }}>
                 <Card.Text
                   style={{
                     whiteSpace: 'pre-wrap',
-                    ...(blank && { color: '#999', fontStyle: 'italic' })
+                    ...(blank && { color: 'var(--server-user-name-color)', fontStyle: 'italic' })
                   }}
                 >
                   {blank ? "(intentionally left blank)" : post[0][2]}
@@ -168,11 +179,22 @@ export default function Post({ post, onDelete }: PostProps) {
 
               {/* Menu */}
               <div>
-                <Dropdown>
-                  <Dropdown.Toggle variant="link" bsPrefix="btn p-0 border-0" id={`dropdown-${post[1]}`} aria-label="Post options">
-                    <BsThreeDots className="text-secondary" />
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)', }}>
+                <Dropdown onClick={(e) => e.stopPropagation()}>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={<Tooltip id={`tooltip-more-${post[1]}`}>More</Tooltip>}
+                  >
+                    <Dropdown.Toggle
+                      variant="link"
+                      bsPrefix="btn p-0 border-0"
+                      className={styles.moreButton}
+                      id={`dropdown-${post[1]}`}
+                      aria-label="More"
+                    >
+                      <BsThreeDots size={20} />
+                    </Dropdown.Toggle>
+                  </OverlayTrigger>
+                  <Dropdown.Menu style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                     {canMuteIdentity(post, publicKeys) && (
                       <Dropdown.Item
                         onClick={() => store.addMutedIdentity(postPublicKey)}
@@ -186,7 +208,7 @@ export default function Post({ post, onDelete }: PostProps) {
                         onClick={() => store.addMutedServer(postHost)}
                         className="d-flex align-items-center gap-2"
                       >
-                        <BsServer /> Mute server {postHost}
+                        <BsVolumeMute /> Mute server {postHost}
                       </Dropdown.Item>
                     )}
                     {canDelete(post, localHost, publicKeys) ? (
@@ -333,4 +355,9 @@ function getRenderTimeout(timestamp: number, now: number): number {
   }
 
   return 24 * 60 * 60 * 1000 - (diff % (24 * 60 * 60 * 1000));
+}
+
+function getPostUrl(post: CreatePostSignal, localHost: string): string {
+  const digest = Hex.fromUint8Array(SignalCrypto.digestSync(post[0]));
+  return isLocal(post, localHost) ? `/post/${digest}` : `https://${post[0][1][0]}/post/${digest}`;
 }

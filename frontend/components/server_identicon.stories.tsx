@@ -3,7 +3,7 @@ import Crypto from "@ephemera/shared/lib/crypto";
 import type { Story } from "@ladle/react";
 import { useEffect, useState } from "react";
 
-import ServerIdenticon, { deriveColor } from "./server_identicon";
+import ServerIdenticon, { getServerTheme, rgbToString } from "./server_identicon";
 
 function* generateHostnames() {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -56,7 +56,7 @@ export const ColorList: Story = () => {
         const encoder = new TextEncoder();
         const data = encoder.encode(hostname);
         const digest = await Crypto.digest(data);
-        const color = deriveColor(digest);
+        const color = rgbToString(getServerTheme(digest).main);
         newColors.push(color);
       }
       setColors(newColors);

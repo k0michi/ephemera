@@ -9,13 +9,14 @@
   padding-inline: 0.625rem;
   text-decoration: none;
   color: var(--nav-link-color);
-  font-size: 0.95rem;
+  font-size: 14px;
+  font-weight: 500;
   transition: color 150ms ease;
 }
 
 .nav-link:hover,
 .nav-link.active {
-  color: var(--nav-link-active-color);
+  color: var(--server-color);
 }
 
 .nav-link-indicator {
@@ -23,7 +24,7 @@
   inset-inline: 0;
   inset-block-end: 0;
   block-size: 0;
-  background: var(--nav-link-active-color);
+  background: var(--server-color);
   transition: block-size 150ms ease;
 }
 

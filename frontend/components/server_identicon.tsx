@@ -14,6 +14,24 @@ export interface ServerIdenticonProps {
   style?: React.CSSProperties;
 }
 
+export interface ServerTheme {
+  main: RGB;
+  background: RGB;
+  border: RGB;
+  font: RGB;
+  userName: RGB;
+  postButton: RGB;
+}
+
+type RGB = { r: number, g: number, b: number };
+type OKLCH = { l: number, c: number, h: number };
+
+const toRgb = converter("rgb");
+const toOklch = converter("oklch");
+const clampToSRGB = clampGamut("rgb");
+
+const kSize = 400;
+
 function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: number): Vector2 {
   if (W <= 0.01) return P;
   const v1 = Vector2.sub(P_prev, P);
@@ -28,12 +46,6 @@ function calculateInsetVertex(P: Vector2, P_prev: Vector2, P_next: Vector2, W: n
 
   return Vector2.add(P, Vector2.mul(b, dist));
 }
-
-const toRgb = converter("rgb");
-const clampToSRGB = clampGamut("rgb");
-
-type RGB = { r: number, g: number, b: number };
-type OKLCH = { l: number, c: number, h: number };
 
 function oklchToRgb({ l, c, h }: OKLCH): RGB {
   h = MathHelper.toDegrees(h);
@@ -52,11 +64,66 @@ function addRgb(c1: RGB, c2: RGB): RGB {
   };
 }
 
-function rgbToString(rgb: RGB): string {
+export function rgbToString(rgb: RGB): string {
   return `rgb(${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)})`;
 }
 
-const kSize = 400;
+function deriveBaseColor(bytes: Uint8Array): RGB {
+  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 2 * Math.PI;
+  const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
+  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 2 * Math.PI;
+  const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
+
+  let result = { r: 0, g: 0, b: 0 };
+  const maxOffset = Math.floor(bytes.length * 8 / 7);
+
+  for (let i = 0; i < maxOffset; i++) {
+    const t = i / maxOffset;
+    const hue = MathHelper.slerp(startHue, endHue, t);
+    const lightness = 0.1;
+    const chroma = MathHelper.lerp(startChroma, endChroma, t);
+    const rgb = oklchToRgb({ l: lightness, c: chroma, h: hue });
+    result = addRgb(result, rgb);
+  }
+
+  return result;
+}
+
+function adjustColor(baseRgb: RGB, l: number, c: number): RGB {
+  const derivedOklch = toOklch({
+    mode: "rgb",
+    r: baseRgb.r,
+    g: baseRgb.g,
+    b: baseRgb.b,
+  });
+
+  const adjustedOklch = oklch({
+    mode: "oklch",
+    l,
+    c,
+    h: derivedOklch?.h ?? 0,
+  });
+
+  const finalRgb = toRgb(clampToSRGB(adjustedOklch));
+
+  return {
+    r: finalRgb?.r ?? 0,
+    g: finalRgb?.g ?? 0,
+    b: finalRgb?.b ?? 0,
+  };
+}
+
+export function getServerTheme(bytes: Uint8Array): ServerTheme {
+  const main = deriveBaseColor(bytes);
+  return {
+    main,
+    background: adjustColor(main, 0.97, 0.004),
+    border: adjustColor(main, 0.92, 0.01),
+    font: adjustColor(main, 0.3, 0.01),
+    userName: adjustColor(main, 0.67, 0.027),
+    postButton: adjustColor(main, 0.87, 0.015),
+  };
+}
 
 export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegments: number, gapWidth: number }): string {
   const cx = kSize / 2;
@@ -135,32 +202,6 @@ export function render(bytes: Uint8Array, { numSegments, gapWidth }: { numSegmen
     ${svgPaths.join('')}
   </g>
 </svg>`;
-}
-
-export function deriveColor(bytes: Uint8Array): string {
-  const startHue = ArrayHelper.getOrDefault(bytes, 0, 0) / 255 * 2 * Math.PI;
-  const startChroma = ArrayHelper.getOrDefault(bytes, 1, 0) / 255 * 0.025;
-  const endHue = ArrayHelper.getOrDefault(bytes, 2, 0) / 255 * 2 * Math.PI;
-  const endChroma = ArrayHelper.getOrDefault(bytes, 3, 0) / 255 * 0.025;
-
-  let result = {
-    r: 0,
-    g: 0,
-    b: 0
-  };
-
-  const maxOffset = Math.floor(bytes.length * 8 / 7);
-
-  for (let i = 0; i < maxOffset; i++) {
-    const t = i / maxOffset;
-    const hue = MathHelper.slerp(startHue, endHue, t);
-    const lightness = 0.1;
-    const chroma = MathHelper.lerp(startChroma, endChroma, t);
-    const rgb = oklchToRgb({ l: lightness, c: chroma, h: hue });
-    result = addRgb(result, rgb);
-  }
-
-  return rgbToString(result);
 }
 
 export default function ServerIdenticon(props: ServerIdenticonProps) {
