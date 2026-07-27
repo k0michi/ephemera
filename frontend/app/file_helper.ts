@@ -1,5 +1,3 @@
-import ArrayHelper from "@ephemera/shared/lib/array_helper";
-
 export interface SelectFileOptions {
   accept?: string;
 }
