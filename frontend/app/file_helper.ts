@@ -18,26 +18,36 @@ export default class FileHelper {
     URL.revokeObjectURL(url);
   }
 
-  static selectFile(options: SelectFileOptions = {}): Promise<File> {
-    return new Promise((resolve, reject) => {
+  static async selectFile(options: SelectFileOptions = {}): Promise<File | null> {
+    const [ok, files] = await this.openFileDialog({ ...options, multiple: false });
+    if (!ok) {
+      return null;
+    }
+    return files[0] ?? null;
+  }
+
+  static async selectFiles(options: SelectFileOptions = {}): Promise<File[]> {
+    const [ok, files] = await this.openFileDialog({ ...options, multiple: true });
+    return files;
+  }
+
+  private static openFileDialog(
+    options: SelectFileOptions & { multiple?: boolean }
+  ): Promise<[boolean, File[]]> {
+    return new Promise((resolve) => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = options.accept || '';
+      input.accept = options.accept ?? '';
+      input.multiple = Boolean(options.multiple);
       input.style.display = 'none';
 
       input.onchange = (event) => {
         const target = event.target as HTMLInputElement;
-
-        if (target.files) {
-          resolve(ArrayHelper.strictGet(target.files, 0));
-        } else {
-          // Never happens
-          reject(new Error('No files selected'));
-        }
+        resolve([true, target.files ? Array.from(target.files) : []]);
       };
 
-      input.oncancel = (event) => {
-        reject(new Error('Cancelled'));
+      input.oncancel = () => {
+        resolve([false, []]);
       };
 
       document.body.appendChild(input);
