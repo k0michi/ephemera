@@ -128,15 +128,17 @@ export default function Settings({ }: SettingsProps) {
   const activeSectionDef = SECTIONS.find(s => s.key === activeSection)!;
 
   const handleImportKeyPair = async () => {
-    try {
-      const file = await FileHelper.selectFile({ accept: 'application/json' });
-      const text = await file.text();
-      const parsed = exportedKeyPairSchema.parse(JSON.parse(text));
+    const files = await FileHelper.selectFiles({ accept: 'application/json' });
 
-      await store.importKeyPair(parsed);
-      store.addLog("success", "Key pair imported successfully!");
-    } catch (error) {
-      store.addLog("danger", error instanceof Error ? error.message : "Failed to import.");
+    for (const file of files) {
+      try {
+        const text = await file.text();
+        const parsed = exportedKeyPairSchema.parse(JSON.parse(text));
+
+        await store.importKeyPair(parsed);
+      } catch (error) {
+        store.addLog("danger", error instanceof Error ? error.message : "Failed to import.");
+      }
     }
   };
 
