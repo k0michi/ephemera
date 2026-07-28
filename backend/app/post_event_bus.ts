@@ -1,5 +1,6 @@
-import type { PostStreamEvent } from "@ephemera/shared/api/api.js";
 import { EventEmitter } from "node:events";
+
+import type { PostStreamEvent } from "@ephemera/shared/api/api.js";
 
 export interface IPostEventBus {
   emitEvent(event: PostStreamEvent): void;

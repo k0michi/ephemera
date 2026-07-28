@@ -1,6 +1,7 @@
-import { Router } from "express";
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
+
+import { Router } from "express";
 
 export interface IController {
   path: string;

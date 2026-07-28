@@ -1,6 +1,7 @@
-import type { PostCreatedStreamEvent, PostDeletedStreamEvent, PostStreamEvent } from "@ephemera/shared/api/api.js";
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
+
+import type { PostCreatedStreamEvent, PostDeletedStreamEvent, PostStreamEvent } from "@ephemera/shared/api/api.js";
 import { WebSocket, WebSocketServer } from "ws";
 
 import type { IWebSocketController } from "../lib/controller.js";

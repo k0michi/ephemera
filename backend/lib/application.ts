@@ -1,6 +1,7 @@
-import express from "express";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
+
+import express from "express";
 
 import type { IController, IWebSocketController } from "./controller.js";
 import IncomingMessageHelper from "./incoming_message_helper.js";
