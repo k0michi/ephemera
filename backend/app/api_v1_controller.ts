@@ -7,7 +7,7 @@ import express from 'express';
 import fsPromises from 'fs/promises';
 import multer from 'multer';
 
-import { type IController } from '../lib/controller.js';
+import { type IController, type IWebSocketController } from '../lib/controller.js';
 import { ApiError } from './api_error.js';
 import type { IAttachmentService } from './attachment_service.js';
 import type Config from './config.js';
@@ -18,6 +18,7 @@ import type { IPostService, PostFindOptions } from './post_service.js';
 export default class ApiV1Controller implements IController {
   public path = '/api/v1';
   public router = express.Router();
+  public children: (IController | IWebSocketController)[];
   private config: Config;
   private postService: IPostService;
   private attachmentService: IAttachmentService;
@@ -27,12 +28,13 @@ export default class ApiV1Controller implements IController {
     dest: './uploads/'
   });
 
-  constructor(config: Config, identityService: IIdentityService, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService) {
+  constructor(config: Config, identityService: IIdentityService, postService: IPostService, attachmentService: IAttachmentService, peerService: IPeerService, postStreamController: IWebSocketController) {
     this.config = config;
     this.identityService = identityService;
     this.postService = postService;
     this.attachmentService = attachmentService;
     this.peerService = peerService;
+    this.children = [postStreamController];
 
     this.router.post('/post', this.upload.array('attachments', 4), this.handlePost.bind(this));
     this.router.get('/posts', this.handleGetPosts.bind(this));

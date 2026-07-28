@@ -6,6 +6,7 @@
 		"@types/fluent-ffmpeg": "^2.1.28",
 		"@types/mime-types": "^3.0.1",
 		"@types/multer": "^2.0.0",
+		"@types/ws": "^8.18.1",
 		"drizzle-kit": "^0.31.8",
 		"node-mocks-http": "^1.17.2",
 		"testcontainers": "^11.11.0",
@@ -28,7 +29,8 @@
 		"mime-types": "^3.0.2",
 		"multer": "^2.0.2",
 		"mysql2": "^3.16.0",
-		"sharp": "^0.34.5"
+		"sharp": "^0.34.5",
+		"ws": "^8.21.1"
 	},
 	"type": "module",
 	"scripts": {

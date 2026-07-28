@@ -273,3 +273,19 @@ export interface GetIdentityResponse extends ApiResponse {
 export type Permission =
   | 'write'
   ;
+
+//
+// WebSocket /api/v1/post-stream
+//
+
+export interface PostCreatedStreamEvent {
+  type: 'post_created';
+  post: CreatePostSignal;
+}
+
+export interface PostDeletedStreamEvent {
+  type: 'post_deleted';
+  post: DeletePostSignal;
+}
+
+export type PostStreamEvent = PostCreatedStreamEvent | PostDeletedStreamEvent;
