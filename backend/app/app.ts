@@ -15,10 +15,13 @@ import Config from './config.js';
 import type { PooledDatabase } from './database.js';
 import IdentityService from "./identity_service.js";
 import { PeerService } from './peer_service.js';
+import { PostEventBus } from './post_event_bus.js';
 import PostService from "./post_service.js";
+import PostStreamController from './post_stream_controller.js';
+import PostStreamHeartbeatJob from './post_stream_heartbeat_job.js';
 import { SchedulerService } from './scheduler_service.js';
 import { type ISignalService,SignalService } from "./signal_service.js";
-import { createFixedRateWithSkipTicker } from './ticker.js';
+import { createFixedDelayTicker, createFixedRateWithSkipTicker } from './ticker.js';
 
 class Ephemera extends Application {
   config?: Config;
@@ -27,6 +30,8 @@ class Ephemera extends Application {
   postService?: PostService;
   attachmentService?: AttachmentService;
   peerService?: PeerService;
+  postEventBus?: PostEventBus;
+  postStreamController?: PostStreamController;
   schedulerService?: SchedulerService;
   db?: PooledDatabase;
 
@@ -105,16 +110,19 @@ class Ephemera extends Application {
     await this.connectDatabase();
     console.log('Database connection established');
 
-    this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db));
+    this.postEventBus = new PostEventBus();
+    this.postStreamController = new PostStreamController(this.postEventBus);
+    this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db), this.postEventBus);
     this.signalService = new SignalService(this.config);
     this.identityService = new IdentityService(this.config, this.signalService);
     this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
-    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService, this.identityService, this.signalService);
+    this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService, this.identityService, this.signalService, this.postEventBus);
     this.schedulerService = new SchedulerService();
     this.schedulerService.register(new AttachmentCleanerJob(this.attachmentService), createFixedRateWithSkipTicker(24 * 60 * 60 * 1000, this.schedulerService.signal));
+    this.schedulerService.register(new PostStreamHeartbeatJob(this.postStreamController), createFixedDelayTicker(PostStreamController.kHeartbeatIntervalMs, this.schedulerService.signal));
 
     this.app.use(express.json());
-    this.useController(new ApiV1Controller(this.config, this.identityService, this.postService, this.attachmentService, this.peerService));
+    this.useController(new ApiV1Controller(this.config, this.identityService, this.postService, this.attachmentService, this.peerService, this.postStreamController));
 
     this.app.use((req: express.Request, res: express.Response) => {
       res.status(404).json({ error: 'Not Found' } satisfies ApiResponse);
@@ -134,6 +142,7 @@ class Ephemera extends Application {
 
   start() {
     const port = NullableHelper.unwrap(this.config?.port);
+
     this.listen(port, (error?: Error) => {
       if (error) {
         console.error('Failed to start server:', error);

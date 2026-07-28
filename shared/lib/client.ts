@@ -1,11 +1,12 @@
-import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetIdentityRequest, GetPostsRequest, GetPostsResponse, PeerManifest, Permission, Version } from "../api/api.js";
-import { apiResponseSchema, getIdentityResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema } from "../api/api_schema.js";
+import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetIdentityRequest, GetPostsRequest, GetPostsResponse, PeerManifest, Permission, PostStreamEvent, Version } from "../api/api.js";
+import { apiResponseSchema, getIdentityResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema, postStreamEventSchema } from "../api/api_schema.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
 import Hex from "./hex.js";
 import PostUtil from "./post_util.js";
 import SignalCrypto from "./signal_crypto.js";
+import SymbolHelper from "./symbol_helper.js";
 
 export class FetchError extends Error {
 }
@@ -84,6 +85,58 @@ export class Fetcher {
       body: JSON.stringify(body),
       ...options,
     });
+  }
+}
+
+export class PostStream implements Disposable {
+  private static readonly kReconnectDelay = 3000;
+
+  private url: string;
+  private socket: WebSocket | null = null;
+  private closed = false;
+  private onEvent: (event: PostStreamEvent) => void;
+
+  constructor(url: string, onEvent: (event: PostStreamEvent) => void) {
+    this.url = url;
+    this.onEvent = onEvent;
+    this.connect();
+  }
+
+  private connect(): void {
+    if (this.closed) {
+      return;
+    }
+
+    const socket = new WebSocket(this.url);
+    this.socket = socket;
+
+    socket.addEventListener('message', (e) => {
+      let parsed;
+
+      try {
+        parsed = postStreamEventSchema.parse(JSON.parse(e.data));
+      } catch {
+        return;
+      }
+
+      this.onEvent(parsed as PostStreamEvent);
+    });
+
+    socket.addEventListener('close', () => this.scheduleReconnect());
+    socket.addEventListener('error', () => socket.close());
+  }
+
+  private scheduleReconnect(): void {
+    if (this.closed) {
+      return;
+    }
+
+    setTimeout(() => this.connect(), PostStream.kReconnectDelay);
+  }
+
+  [SymbolHelper.dispose](): void {
+    this.closed = true;
+    this.socket?.close();
   }
 }
 
@@ -265,6 +318,20 @@ export default class Client {
     }
 
     return path;
+  }
+
+  openPostStream(onEvent: (event: PostStreamEvent) => void, options: { author?: string } = {}): PostStream {
+    const params = new URLSearchParams();
+
+    if (options.author !== undefined) {
+      params.set('author', options.author);
+    }
+
+    const query = params.toString();
+    const httpUrl = new URL(`wss://${this._host}/api/v1/post-stream`);
+    httpUrl.search = query;
+
+    return new PostStream(httpUrl.toString(), onEvent);
   }
 }
 

@@ -20,6 +20,7 @@ import { posts, remotePosts } from "./db/schema.js";
 import FSHelper from "./fs_helper.js";
 import type { IIdentityService } from "./identity_service.js";
 import type { IPeerService } from "./peer_service.js";
+import type { IPostEventBus } from "./post_event_bus.js";
 import type { ISignalService } from "./signal_service.js";
 
 export interface IPostService {
@@ -55,15 +56,17 @@ export default class PostService implements IPostService {
   private peerService: IPeerService;
   private identityService: IIdentityService;
   private signalService: ISignalService;
+  private postEventBus: IPostEventBus;
   private static _kMaxAttachmentsPerPost: number = 4;
 
-  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService, identityService: IIdentityService, signalService: ISignalService) {
+  constructor(config: Config, database: PooledDatabase, attachmentService: IAttachmentService, peerService: IPeerService, identityService: IIdentityService, signalService: ISignalService, postEventBus: IPostEventBus) {
     this.config = config;
     this.database = database;
     this.attachmentService = attachmentService;
     this.peerService = peerService;
     this.identityService = identityService;
     this.signalService = signalService;
+    this.postEventBus = postEventBus;
   }
 
   async validateAttachmentCount(attachmentPaths: string[]): Promise<void> {
@@ -164,6 +167,7 @@ export default class PostService implements IPostService {
       ], Base37.toUint8Array(this.config.privateKey));
 
       await this.peerService.publish(serverSigned);
+      this.postEventBus.emitEvent({ type: 'post_created', post: signal });
     } else {
       console.error(`Failed to retrieve insertedAt for post ${digestHex}`);
     }
@@ -388,6 +392,8 @@ export default class PostService implements IPostService {
       signal,
       [],
     ], Base37.toUint8Array(this.config.privateKey)));
+
+    this.postEventBus.emitEvent({ type: 'post_deleted', post: signal });
   }
 
   async getPostCountForIdentity(identity: string): Promise<number> {
