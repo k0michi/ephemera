@@ -2,6 +2,7 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
 import { PostStream } from "@ephemera/shared/lib/client";
 import Hex from "@ephemera/shared/lib/hex";
+import { KeyedCache } from "@ephemera/shared/lib/keyed_cache";
 import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader, useSelector } from "lib/store";
 import React from "react";
@@ -34,13 +35,11 @@ export default function Timeline({ author }: TimelineProps) {
     return !(mutedIdentitySet.has(postAuthor) || mutedServerSet.has(postHost));
   });
 
-  // digest -> signature
-  const postIdCache = React.useRef(new Map<string, string>()).current;
+  const postIdCache = React.useRef(new KeyedCache<string, string>({ maxSize: 512 })).current;
 
-  const cachePostId = React.useCallback((post: CreatePostSignal) => {
-    SignalCrypto.digest(post[0]).then((digest) => {
-      postIdCache.set(post[1], Hex.fromUint8Array(digest));
-    });
+  const cachePostId = React.useCallback(async (post: CreatePostSignal) => {
+    const digest = await SignalCrypto.digest(post[0]);
+    postIdCache.set(post[1], Hex.fromUint8Array(digest));
   }, [postIdCache]);
 
   const fetchPosts = React.useCallback(async () => {
@@ -68,9 +67,9 @@ export default function Timeline({ author }: TimelineProps) {
   const [, setStream] = useDisposableState<PostStream>();
 
   React.useEffect(() => {
-    setStream(store.getClient().openPostStream((event) => {
+    setStream(store.getClient().openPostStream(async (event) => {
       if (event.type === 'post_created') {
-        cachePostId(event.post);
+        await cachePostId(event.post);
         setPosts((prevPosts) => prevPosts.some((p) => p[1] === event.post[1]) ? prevPosts : [event.post, ...prevPosts]);
       } else {
         const deletedId = event.post[0][2][0];
