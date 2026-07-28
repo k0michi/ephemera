@@ -12,6 +12,7 @@ import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import type Config from './config.js';
 import type { PooledDatabase } from './database.js';
 import { remotePosts } from './db/schema.js';
+import type { IPostEventBus } from './post_event_bus.js';
 
 export interface IPeerService {
   publish(signal: ServerSignal): Promise<void>;
@@ -28,15 +29,17 @@ export class PeerService implements IPeerService {
   private database: PooledDatabase;
   private grpcClient: PubSubServiceClient;
   private stream: grpc.ClientReadableStream<Message>;
+  private postEventBus: IPostEventBus;
   // host -> peerDescriptor
   private peerDescriptorCache = new KeyedCache<string, PeerManifest>({
     maxSize: 128,
   });
   private static readonly kMaxRemotePosts = 65535;
 
-  constructor(config: Config, database: PooledDatabase) {
+  constructor(config: Config, database: PooledDatabase, postEventBus: IPostEventBus) {
     this.config = config;
     this.database = database;
+    this.postEventBus = postEventBus;
     this.grpcClient = new PubSubServiceClient(
       this.config.peerHost,
       grpc.credentials.createInsecure()
@@ -163,6 +166,8 @@ export class PeerService implements IPeerService {
         serverFooter: signal[0][3],
       });
 
+      this.postEventBus.emitEvent({ type: 'post_created', post: inner });
+
       const c = (await this.database
         .select({ c: count() })
         .from(remotePosts))[0]?.c;
@@ -194,6 +199,8 @@ export class PeerService implements IPeerService {
       await this.database.delete(remotePosts)
         .where(and(eq(remotePosts.id, inner[0][2][0]), eq(remotePosts.author, inner[0][1][1])))
         .execute();
+
+      this.postEventBus.emitEvent({ type: 'post_deleted', post: inner });
     }
   }
 

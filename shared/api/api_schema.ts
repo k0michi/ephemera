@@ -146,6 +146,18 @@ export const getIdentityRequestSchema = apiRequestSchema.extend({
 
 export const permissionSchema = z.literal("write");
 
+export const postCreatedStreamEventSchema = z.object({
+    type: z.literal("post_created"),
+    post: createPostSignalSchema
+});
+
+export const postDeletedStreamEventSchema = z.object({
+    type: z.literal("post_deleted"),
+    post: deletePostSignalSchema
+});
+
+export const postStreamEventSchema = z.union([postCreatedStreamEventSchema, postDeletedStreamEventSchema]);
+
 export const getIdentityResponseSchema = apiResponseSchema.extend({
     identity: authorSchema,
     permissions: z.array(permissionSchema),

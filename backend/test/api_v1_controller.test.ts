@@ -14,7 +14,9 @@ import type { Transaction } from '../app/database.js';
 import { IllegalArgumentError } from '../app/errors.js';
 import type { IdentityDescriptor, IIdentityService } from '../app/identity_service.js';
 import type { IPeerService } from '../app/peer_service.js';
+import { PostEventBus } from '../app/post_event_bus.js';
 import { type IPostService, type PostFindOptions, type PostFindResult } from '../app/post_service.js';
+import PostStreamController from '../app/post_stream_controller.js';
 
 function testConfig() {
   const keyPair = Crypto.generateKeyPair();
@@ -170,7 +172,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService(), new PostStreamController(new PostEventBus()));
       await expect(controller.handlePost(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -194,7 +196,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService(), new PostStreamController(new PostEventBus()));
       await expect(controller.handlePost(req, res)).resolves.not.toThrow();
     });
   });
@@ -210,7 +212,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService(), new PostStreamController(new PostEventBus()));
       await expect(controller.handleGetPosts(req, res)).rejects.toThrow('Invalid request');
     });
 
@@ -225,7 +227,7 @@ describe('ApiV1Controller', () => {
 
       const config = testConfig();
 
-      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService());
+      const controller = new ApiV1Controller(config, new MockIdentityService(), new MockPostService(), new MockAttachmentService(), new MockPeerService(), new PostStreamController(new PostEventBus()));
       await controller.handleGetPosts(req, res);
       expect(res.statusCode).toBe(200);
       const data = res._getJSONData();

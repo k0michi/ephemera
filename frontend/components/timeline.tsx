@@ -1,9 +1,13 @@
 
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
+import { PostStream } from "@ephemera/shared/lib/client";
+import Hex from "@ephemera/shared/lib/hex";
+import SignalCrypto from "@ephemera/shared/lib/signal_crypto";
 import { useReader, useSelector } from "lib/store";
 import React from "react";
 import { Card } from "react-bootstrap";
 
+import { useDisposableState } from "~/hooks/disposable_state";
 import { EphemeraStore } from "~/store";
 
 import Post from "./post";
@@ -30,6 +34,15 @@ export default function Timeline({ author }: TimelineProps) {
     return !(mutedIdentitySet.has(postAuthor) || mutedServerSet.has(postHost));
   });
 
+  // digest -> signature
+  const postIdCache = React.useRef(new Map<string, string>()).current;
+
+  const cachePostId = React.useCallback((post: CreatePostSignal) => {
+    SignalCrypto.digest(post[0]).then((digest) => {
+      postIdCache.set(post[1], Hex.fromUint8Array(digest));
+    });
+  }, [postIdCache]);
+
   const fetchPosts = React.useCallback(async () => {
     if (loading || !hasMore) {
       return;
@@ -39,6 +52,7 @@ export default function Timeline({ author }: TimelineProps) {
 
     try {
       const response = await store.getClient().fetchPosts({ cursor, author });
+      response.posts.forEach(cachePostId);
       setPosts((prevPosts) => [...prevPosts, ...response.posts]);
       setCursor(response.nextCursor);
       setHasMore(!!response.nextCursor);
@@ -49,7 +63,21 @@ export default function Timeline({ author }: TimelineProps) {
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, store, cursor, author]);
+  }, [loading, hasMore, store, cursor, author, cachePostId]);
+
+  const [, setStream] = useDisposableState<PostStream>();
+
+  React.useEffect(() => {
+    setStream(store.getClient().openPostStream((event) => {
+      if (event.type === 'post_created') {
+        cachePostId(event.post);
+        setPosts((prevPosts) => prevPosts.some((p) => p[1] === event.post[1]) ? prevPosts : [event.post, ...prevPosts]);
+      } else {
+        const deletedId = event.post[0][2][0];
+        setPosts((prevPosts) => prevPosts.filter((p) => postIdCache.get(p[1]) !== deletedId));
+      }
+    }, author !== undefined ? { author } : {}));
+  }, [store, author, cachePostId, postIdCache, setStream]);
 
   React.useEffect(() => {
     const target = bottomRef.current;
