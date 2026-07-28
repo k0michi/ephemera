@@ -328,9 +328,8 @@ export default class Client {
     }
 
     const query = params.toString();
-    const path = `/api/v1/post-stream${query ? `?${query}` : ''}`;
-    const httpUrl = new URL(this.buildLocalUrl(path));
-    httpUrl.protocol = httpUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+    const httpUrl = new URL(`wss://${this._host}/api/v1/post-stream`);
+    httpUrl.search = query;
 
     return new PostStream(httpUrl.toString(), onEvent);
   }
