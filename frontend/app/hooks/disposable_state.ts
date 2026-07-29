@@ -1,20 +1,34 @@
 import SymbolHelper from "@ephemera/shared/lib/symbol_helper";
-import { type Dispatch, type SetStateAction,useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 
 export function useDisposableState<T extends Disposable>(): [
   T | null,
   Dispatch<SetStateAction<T | null>>
 ] {
-  const [resource, setResource] = useState<T | null>(null);
+  const [resource, setResourceState] = useState<T | null>(null);
+  const resourceRef = useRef<T | null>(null);
+
+  const setResource = useCallback<Dispatch<SetStateAction<T | null>>>(action => {
+    const prev = resourceRef.current;
+    const next = typeof action === "function"
+      ? (action as (prev: T | null) => T | null)(prev)
+      : action;
+
+    if (prev && prev !== next) {
+      prev[SymbolHelper.dispose]();
+    }
+
+    resourceRef.current = next;
+    setResourceState(next);
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (resource) {
-        resource[SymbolHelper.dispose]();
-        console.debug("Disposed resource:", resource);
+      if (resourceRef.current) {
+        resourceRef.current[SymbolHelper.dispose]();
       }
     };
-  }, [resource]);
+  }, []);
 
   return [resource, setResource];
 }
