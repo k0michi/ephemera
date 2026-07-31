@@ -2,6 +2,7 @@ import { pipeline } from 'node:stream/promises';
 
 import type { GetIdentityResponse, GetPeerResponse, GetPostResponse, GetPostsResponse, GetRemoteServersResponse } from '@ephemera/shared/api/api.js';
 import { deletePostRequestSchema, getIdentityRequestSchema, getPeerRequestSchema, getPostRequestSchema, getPostsRequestSchema, getRemoteServersRequestSchema, postRequestSchema } from '@ephemera/shared/api/api_schema.js';
+import AttachmentUtil from '@ephemera/shared/lib/attachment_util.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import express from 'express';
 import fsPromises from 'fs/promises';
@@ -40,6 +41,9 @@ export default class ApiV1Controller implements IController {
     this.router.get('/posts', this.handleGetPosts.bind(this));
     this.router.delete('/post', this.handleDeletePost.bind(this));
     this.router.get('/attachments/:hash', this.handleGetAttachment.bind(this));
+    this.router.get('/attachments/:hash/index.m3u8', this.handleGetAttachmentVideoIndex.bind(this));
+    this.router.get('/attachments/:hash/:variant.webp', this.handleGetAttachmentImage.bind(this));
+    this.router.get('/attachments/:hash/:variant/:part', this.handleGetAttachmentVideoPart.bind(this));
     this.router.get('/peer', this.handleGetPeer.bind(this));
     this.router.get('/remote-servers', this.handleGetRemoteServers.bind(this));
     this.router.get('/posts/:id', this.handleGetPost.bind(this));
@@ -130,16 +134,7 @@ export default class ApiV1Controller implements IController {
     res.status(200).json({});
   }
 
-  async handleGetAttachment(req: express.Request, res: express.Response) {
-    const hash = req.params.hash;
-
-    if (typeof hash !== 'string') {
-      throw new ApiError('Invalid request', 400);
-    }
-
-    await using file = await this.attachmentService.open(hash);
-    const type = await this.attachmentService.getType(hash);
-
+  async sendAttachment(res: express.Response, file: fsPromises.FileHandle, hash: string, type: { ext: string, type: string }) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `inline; filename=${hash}.${type.ext}`);
     res.setHeader('Content-Type', type.type);
@@ -149,6 +144,57 @@ export default class ApiV1Controller implements IController {
       file.createReadStream(),
       res
     );
+  }
+
+  async handleGetAttachment(req: express.Request, res: express.Response) {
+    const hash = req.params.hash;
+
+    if (typeof hash !== 'string') {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    await using file = await this.attachmentService.open(hash);
+    const type = await this.attachmentService.getType(hash);
+    await this.sendAttachment(res, file, hash, type);
+  }
+
+  async handleGetAttachmentImage(req: express.Request, res: express.Response) {
+    const hash = req.params.hash;
+    const variant = req.params.variant;
+
+    if (typeof hash !== 'string' || typeof variant !== 'string' || !AttachmentUtil.isVariant(variant)) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    await using file = await this.attachmentService.openVariant(hash, variant);
+    const type = await this.attachmentService.getVariantType(hash, variant);
+    await this.sendAttachment(res, file, hash, type);
+  }
+
+  async handleGetAttachmentVideoIndex(req: express.Request, res: express.Response) {
+    const hash = req.params.hash;
+
+    if (typeof hash !== 'string') {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    await using file = await this.attachmentService.openVariant(hash, 'index');
+    const type = await this.attachmentService.getVariantType(hash, 'index');
+    await this.sendAttachment(res, file, hash, type);
+  }
+
+  async handleGetAttachmentVideoPart(req: express.Request, res: express.Response) {
+    const hash = req.params.hash;
+    const variant = req.params.variant;
+    const part = req.params.part;
+
+    if (typeof hash !== 'string' || typeof variant !== 'string' || typeof part !== 'string' || !AttachmentUtil.isVariant(variant)) {
+      throw new ApiError('Invalid request', 400);
+    }
+
+    await using file = await this.attachmentService.openVariant(hash, variant, part);
+    const type = await this.attachmentService.getVariantType(hash, variant, part);
+    await this.sendAttachment(res, file, hash, type);
   }
 
   async handleGetPeer(req: express.Request, res: express.Response) {

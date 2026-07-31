@@ -32,6 +32,7 @@ services:
       - EPHEMERA_DENIED_IDENTITIES=${EPHEMERA_DENIED_IDENTITIES:-}
     volumes:
       - backend_data:/app/backend/data
+      - backend_cache:/app/backend/cache
     depends_on:
       - mariadb
       - redis
@@ -88,3 +89,4 @@ volumes:
   mariadb_data:
   redis_data:
   backend_data:
+  backend_cache:

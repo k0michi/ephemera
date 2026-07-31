@@ -107,8 +107,16 @@ class MockAttachmentService implements IAttachmentService {
     throw new Error('Method not implemented.');
   }
 
+  async openVariant(hash: string, variant: string, part?: string): Promise<fs.FileHandle> {
+    throw new Error('Method not implemented.');
+  }
+
   async getType(hash: string): Promise<AttachmentType> {
     return { type: 'image/png', ext: 'png' };
+  }
+
+  async getVariantType(hash: string, variant: string, part?: string): Promise<AttachmentType> {
+    return { type: 'image/webp', ext: 'webp' };
   }
 
   async linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void> {

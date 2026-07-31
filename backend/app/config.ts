@@ -23,6 +23,7 @@ export default class Config {
   privateKey: string;
   publicKey: string;
   dataDir: string;
+  cacheDir: string;
   allowedTimeSkewMillis: number;
   allowedIdentities: string[];
   deniedIdentities: string[];
@@ -31,6 +32,7 @@ export default class Config {
   static _kDefaultDBQueueLimit = 500;
   static _kDefaultDBConnectTimeout = 10000;
   static _kDefaultDataDir = './data';
+  static _kDefaultCacheDir = './cache';
   static _kDefaultAllowedTimeSkewMillis = 5 * 60 * 1000;
 
   constructor({
@@ -50,6 +52,7 @@ export default class Config {
     privateKey,
     publicKey,
     dataDir,
+    cacheDir,
     allowedTimeSkewMillis,
     allowedIdentities,
     deniedIdentities
@@ -70,6 +73,7 @@ export default class Config {
     privateKey: string;
     publicKey: string;
     dataDir?: string | undefined;
+    cacheDir?: string | undefined;
     allowedTimeSkewMillis: number;
     allowedIdentities?: string[] | undefined;
     deniedIdentities?: string[] | undefined;
@@ -90,6 +94,7 @@ export default class Config {
     this.privateKey = privateKey;
     this.publicKey = publicKey;
     this.dataDir = dataDir ?? Config._kDefaultDataDir;
+    this.cacheDir = cacheDir ?? Config._kDefaultCacheDir;
     this.allowedTimeSkewMillis = allowedTimeSkewMillis;
     this.allowedIdentities = allowedIdentities ?? [];
     this.deniedIdentities = deniedIdentities ?? [];
@@ -114,6 +119,7 @@ export default class Config {
       privateKey: envParser.getStringRequired('EPHEMERA_PRIVATE_KEY'),
       publicKey: envParser.getStringRequired('EPHEMERA_PUBLIC_KEY'),
       dataDir: envParser.getStringOptional('EPHEMERA_DATA_DIR', Config._kDefaultDataDir),
+      cacheDir: envParser.getStringOptional('EPHEMERA_CACHE_DIR', Config._kDefaultCacheDir),
       allowedTimeSkewMillis: envParser.getNumberOptional('EPHEMERA_ALLOWED_TIME_SKEW_MILLIS', Config._kDefaultAllowedTimeSkewMillis),
       allowedIdentities: envParser.getStringArrayOptional('EPHEMERA_ALLOWED_IDENTITIES'),
       deniedIdentities: envParser.getStringArrayOptional('EPHEMERA_DENIED_IDENTITIES'),

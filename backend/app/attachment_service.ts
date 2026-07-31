@@ -1,3 +1,4 @@
+import AttachmentUtil, { type AttachmentCategory, type AttachmentVariant } from '@ephemera/shared/lib/attachment_util.js';
 import Hex from '@ephemera/shared/lib/hex.js';
 import NullableHelper from '@ephemera/shared/lib/nullable_helper.js';
 import SymbolHelper from '@ephemera/shared/lib/symbol_helper.js';
@@ -28,7 +29,11 @@ export interface IAttachmentService {
 
   open(hash: string): Promise<fs.FileHandle>;
 
+  openVariant(hash: string, variant: AttachmentVariant, part?: string): Promise<fs.FileHandle>;
+
   getType(hash: string): Promise<AttachmentType>;
+
+  getVariantType(hash: string, variant: AttachmentVariant, part?: string): Promise<AttachmentType>;
 
   linkPost(postId: string, attachmentIds: string[], tx: Transaction): Promise<void>;
 
@@ -71,6 +76,10 @@ export class AttachmentService implements IAttachmentService {
 
   get attachmentsDir(): string {
     return path.join(this.config.dataDir, 'attachments');
+  }
+
+  get variantsDir(): string {
+    return path.join(this.config.cacheDir, 'attachments');
   }
 
   private ffprobe(filePath: string): Promise<ffmpeg.FfprobeData> {
@@ -213,6 +222,67 @@ export class AttachmentService implements IAttachmentService {
     }
   }
 
+  private async getAttachmentKind(hash: string): Promise<AttachmentCategory> {
+    const [record] = await this.database
+      .select({ type: attachments.type })
+      .from(attachments)
+      .where(eq(attachments.id, hash))
+      .limit(1)
+      .execute();
+
+    if (!record) {
+      throw new ApiError('Attachment not found', 404);
+    }
+
+    return AttachmentUtil.getKindFromMimeType(NullableHelper.unwrap(record.type));
+  }
+
+  private validateVariant(kind: AttachmentCategory, variant: AttachmentVariant): void {
+    if (!AttachmentUtil.isVariantInCategory(kind, variant)) {
+      throw new ApiError('Invalid variant requested', 400);
+    }
+  }
+
+  private resolveVariantPath(kind: AttachmentCategory, hash: string, variant: AttachmentVariant, part?: string): string {
+    if (variant === 'index') {
+      return path.join(this.variantsDir, hash, 'index.m3u8');
+    }
+
+    if (kind === 'image') {
+      return path.join(this.variantsDir, hash, `${variant}.webp`);
+    }
+
+    if (part === undefined) {
+      throw new ApiError('Invalid variant for video', 400);
+    }
+
+    return path.join(this.variantsDir, hash, variant, part);
+  }
+
+  async openVariant(hash: string, variant: AttachmentVariant, part?: string): Promise<fs.FileHandle> {
+    this.validateAttachment(hash);
+
+    const kSafePart = /^[\w.-]+\.(m3u8|ts|aac)$/;
+
+    if (part !== undefined && !kSafePart.test(part)) {
+      throw new ApiError('Invalid part requested', 400);
+    }
+
+    const kind = await this.getAttachmentKind(hash);
+    this.validateVariant(kind, variant);
+    const variantPath = this.resolveVariantPath(kind, hash, variant, part);
+
+    try {
+      return await fs.open(variantPath, 'r');
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new ApiError('Attachment variant or part not found', 404);
+      }
+
+      throw e;
+    }
+  }
+
   async getType(hash: string): Promise<AttachmentType> {
     // Read the attachment type from the database to prevent spoofing
 
@@ -235,6 +305,27 @@ export class AttachmentService implements IAttachmentService {
 
     if (!ext) {
       throw new ApiError('Could not determine file extension', 500);
+    }
+
+    return { type, ext };
+  }
+
+  async getVariantType(hash: string, variant: AttachmentVariant, part?: string): Promise<AttachmentType> {
+    const kind = await this.getAttachmentKind(hash);
+
+    if (kind === 'image') {
+      return { type: 'image/webp', ext: 'webp' };
+    }
+
+    if (part === undefined) {
+      return { type: 'application/vnd.apple.mpegurl', ext: 'm3u8' };
+    }
+
+    const ext = path.extname(part).slice(1);
+    const type = AttachmentUtil.getVariantPartMimeType(ext);
+
+    if (!type) {
+      throw new ApiError('Unsupported part extension', 400);
     }
 
     return { type, ext };
