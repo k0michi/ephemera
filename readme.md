@@ -1,6 +1,6 @@
 # Ephemera
 
-**Ephemera** is a PKI-oriented decentralized bulletin board system.
+**Ephemera** is a PKI-oriented decentralized micro-blogging system.
 
 ## Features
 
