@@ -193,7 +193,7 @@ export default function Post({ post, onDelete }: PostProps) {
 
                   if (type.startsWith('video/')) {
                     const url = store.getClient().getAttachmentVideoIndexUrl(attachmentHash, post[0][1][0]);
-                    return <HlsVideo key={attachmentHash} src={url} controls style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />;
+                    return <HlsVideo key={attachmentHash} src={url} controls onClick={(e) => e.stopPropagation()} style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />;
                   }
 
                   return null;
