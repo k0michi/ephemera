@@ -139,6 +139,7 @@ export default class ApiV1Controller implements IController {
     res.setHeader('Content-Disposition', `inline; filename=${hash}.${type.ext}`);
     res.setHeader('Content-Type', type.type);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     await pipeline(
       file.createReadStream(),
