@@ -134,9 +134,13 @@ export default class ApiV1Controller implements IController {
     res.status(200).json({});
   }
 
-  async sendAttachment(res: express.Response, file: fsPromises.FileHandle, hash: string, type: { ext: string, type: string }) {
+  async sendAttachment(res: express.Response, file: fsPromises.FileHandle, hash: string, type: { ext: string, type: string }, options: { disposition?: boolean } = {}) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Content-Disposition', `inline; filename=${hash}.${type.ext}`);
+
+    if (options.disposition ?? true) {
+      res.setHeader('Content-Disposition', `inline; filename=${hash}.${type.ext}`);
+    }
+
     res.setHeader('Content-Type', type.type);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -169,7 +173,7 @@ export default class ApiV1Controller implements IController {
 
     await using file = await this.attachmentService.openVariant(hash, variant);
     const type = await this.attachmentService.getVariantType(hash, variant);
-    await this.sendAttachment(res, file, hash, type);
+    await this.sendAttachment(res, file, hash, type, { disposition: false });
   }
 
   async handleGetAttachmentVideoIndex(req: express.Request, res: express.Response) {
@@ -181,7 +185,7 @@ export default class ApiV1Controller implements IController {
 
     await using file = await this.attachmentService.openVariant(hash, 'index');
     const type = await this.attachmentService.getVariantType(hash, 'index');
-    await this.sendAttachment(res, file, hash, type);
+    await this.sendAttachment(res, file, hash, type, { disposition: false });
   }
 
   async handleGetAttachmentVideoPart(req: express.Request, res: express.Response) {
@@ -195,7 +199,7 @@ export default class ApiV1Controller implements IController {
 
     await using file = await this.attachmentService.openVariant(hash, variant, part);
     const type = await this.attachmentService.getVariantType(hash, variant, part);
-    await this.sendAttachment(res, file, hash, type);
+    await this.sendAttachment(res, file, hash, type, { disposition: false });
   }
 
   async handleGetPeer(req: express.Request, res: express.Response) {
