@@ -40,6 +40,11 @@ function parseFps(rFrameRate: string | undefined): number {
   return Number.isFinite(fps) && fps > 0 ? fps : kDefaultFps;
 }
 
+function isSideways(videoStream: ffmpeg.FfprobeStream): boolean {
+  const rotation = Number(videoStream.rotation ?? videoStream.tags?.rotate ?? 0);
+  return Number.isFinite(rotation) && Math.abs(rotation) % 180 === 90;
+}
+
 export default class MediaTranscoder {
   static async exists(filePath: string): Promise<boolean> {
     try {
@@ -82,7 +87,11 @@ export default class MediaTranscoder {
           return;
         }
 
-        resolve({ width: videoStream.width, height: videoStream.height, fps: parseFps(videoStream.r_frame_rate) });
+        const sideways = isSideways(videoStream);
+        const width = sideways ? videoStream.height : videoStream.width;
+        const height = sideways ? videoStream.width : videoStream.height;
+
+        resolve({ width, height, fps: parseFps(videoStream.r_frame_rate) });
       });
     });
   }
