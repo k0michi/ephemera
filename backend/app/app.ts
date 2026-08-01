@@ -22,6 +22,7 @@ import PostStreamHeartbeatJob from './post_stream_heartbeat_job.js';
 import { SchedulerService } from './scheduler_service.js';
 import { type ISignalService,SignalService } from "./signal_service.js";
 import { createFixedDelayTicker, createFixedRateWithSkipTicker } from './ticker.js';
+import { TranscoderService } from './transcoder_service.js';
 
 class Ephemera extends Application {
   config?: Config;
@@ -29,6 +30,7 @@ class Ephemera extends Application {
   identityService?: IdentityService;
   postService?: PostService;
   attachmentService?: AttachmentService;
+  transcoderService?: TranscoderService;
   peerService?: PeerService;
   postEventBus?: PostEventBus;
   postStreamController?: PostStreamController;
@@ -115,7 +117,8 @@ class Ephemera extends Application {
     this.peerService = new PeerService(this.config, NullableHelper.unwrap(this.db), this.postEventBus);
     this.signalService = new SignalService(this.config);
     this.identityService = new IdentityService(this.config, this.signalService);
-    this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db));
+    this.transcoderService = new TranscoderService(this.config);
+    this.attachmentService = new AttachmentService(this.config, NullableHelper.unwrap(this.db), this.transcoderService);
     this.postService = new PostService(this.config, NullableHelper.unwrap(this.db), this.attachmentService, this.peerService, this.identityService, this.signalService, this.postEventBus);
     this.schedulerService = new SchedulerService();
     this.schedulerService.register(new AttachmentCleanerJob(this.attachmentService), createFixedRateWithSkipTicker(24 * 60 * 60 * 1000, this.schedulerService.signal));

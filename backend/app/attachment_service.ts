@@ -16,6 +16,7 @@ import type { PooledDatabase, Transaction } from './database.js';
 import { attachments, postAttachments } from './db/schema.js';
 import FSHelper from './fs_helper.js';
 import { KeyedRWLock } from './keyed_rw_lock.js';
+import type { ITranscoderService } from './transcoder_service.js';
 
 export interface AttachmentType {
   type: string;
@@ -69,17 +70,20 @@ export class AttachmentService implements IAttachmentService {
     'av1'
   ]);
 
-  constructor(config: Config, database: PooledDatabase) {
+  private transcoderService: ITranscoderService;
+
+  constructor(config: Config, database: PooledDatabase, transcoderService: ITranscoderService) {
     this.config = config;
     this.database = database;
+    this.transcoderService = transcoderService;
   }
 
   get attachmentsDir(): string {
-    return path.join(this.config.dataDir, 'attachments');
+    return this.config.attachmentsDir;
   }
 
   get variantsDir(): string {
-    return path.join(this.config.cacheDir, 'attachments');
+    return this.config.variantsDir;
   }
 
   private ffprobe(filePath: string): Promise<ffmpeg.FfprobeData> {
@@ -188,6 +192,11 @@ export class AttachmentService implements IAttachmentService {
       size: size,
     }).onDuplicateKeyUpdate({ set: { id: hash } });
 
+    this.transcoderService.encodeAll(hash, AttachmentUtil.getKindFromMimeType(detected.mime))
+      .catch((e) => {
+        console.error(`Failed to encode variants for ${hash}:`, e);
+      });
+
     return hash;
   }
 
@@ -276,6 +285,11 @@ export class AttachmentService implements IAttachmentService {
       return await fs.open(variantPath, 'r');
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        this.transcoderService.encodeVariant(hash, kind, variant)
+          .catch((encodeError) => {
+            console.error(`Failed to encode variant ${variant} for ${hash}:`, encodeError);
+          });
+
         throw new ApiError('Attachment variant or part not found', 404);
       }
 
@@ -346,6 +360,10 @@ export class AttachmentService implements IAttachmentService {
     return path.join(this.attachmentsDir, hash);
   }
 
+  private async removeVariantCache(hash: string): Promise<void> {
+    await fs.rm(path.join(this.variantsDir, hash), { recursive: true, force: true });
+  }
+
   async removeOrphans(): Promise<string[]> {
     const candidates = await this.database
       .select({
@@ -380,6 +398,8 @@ export class AttachmentService implements IAttachmentService {
             throw e;
           }
         }
+
+        await this.removeVariantCache(orphan.id);
 
         console.log(`Successfully cleaned up: ${orphan.id}`);
         removed.push(orphan.id);
@@ -416,6 +436,7 @@ export class AttachmentService implements IAttachmentService {
 
         if (!record) {
           await fs.unlink(this.getFilePath(fileId));
+          await this.removeVariantCache(fileId);
 
           console.log(`Successfully removed unlinked file: ${fileId}`);
           removed.push(fileId);

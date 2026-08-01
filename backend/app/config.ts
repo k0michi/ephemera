@@ -1,4 +1,5 @@
 import EnvParser from "@ephemera/shared/lib/env_parser.js";
+import path from "path";
 
 export default class Config {
   /**
@@ -124,5 +125,13 @@ export default class Config {
       allowedIdentities: envParser.getStringArrayOptional('EPHEMERA_ALLOWED_IDENTITIES'),
       deniedIdentities: envParser.getStringArrayOptional('EPHEMERA_DENIED_IDENTITIES'),
     });
+  }
+
+  get attachmentsDir(): string {
+    return path.join(this.dataDir, 'attachments');
+  }
+
+  get variantsDir(): string {
+    return path.join(this.cacheDir, 'attachments');
   }
 }

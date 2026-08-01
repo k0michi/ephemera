@@ -17,6 +17,7 @@ import { type IPeerService } from '../app/peer_service.js';
 import { PostEventBus } from '../app/post_event_bus.js';
 import PostService from '../app/post_service.js';
 import { SignalService } from '../app/signal_service.js';
+import { TranscoderService } from '../app/transcoder_service.js';
 import TestHelper from './test_helper.js';
 
 describe('PostService', () => {
@@ -64,7 +65,7 @@ describe('PostService', () => {
         return [];
       }
     };
-    attachmentService = new AttachmentService(config, database);
+    attachmentService = new AttachmentService(config, database, new TranscoderService(config));
     signalService = new SignalService(config);
     identityService = new IdentityService(config, signalService);
     postService = new PostService(config,

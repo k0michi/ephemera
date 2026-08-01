@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AttachmentService } from "../app/attachment_service.js";
 import type { PooledDatabase } from "../app/database.js";
 import FSHelper from "../app/fs_helper.js";
+import { TranscoderService } from "../app/transcoder_service.js";
 import TestHelper from "./test_helper.js";
 
 describe('AttachmentService', () => {
@@ -30,7 +31,7 @@ describe('AttachmentService', () => {
     await migrate(db, { migrationsFolder: './drizzle' });
 
     const config = TestHelper.getConfig(container, redisContainer);
-    attachmentService = new AttachmentService(config, database);
+    attachmentService = new AttachmentService(config, database, new TranscoderService(config));
   }, 60_000);
 
   afterEach(async () => {
