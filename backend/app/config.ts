@@ -28,6 +28,8 @@ export default class Config {
   allowedTimeSkewMillis: number;
   allowedIdentities: string[];
   deniedIdentities: string[];
+  maxAttachmentSize: number;
+  maxAttachmentWidth: number;
 
   static _kDefaultDBConnectionLimit = 5;
   static _kDefaultDBQueueLimit = 500;
@@ -35,6 +37,8 @@ export default class Config {
   static _kDefaultDataDir = './data';
   static _kDefaultCacheDir = './cache';
   static _kDefaultAllowedTimeSkewMillis = 5 * 60 * 1000;
+  static _kDefaultMaxAttachmentSize = 64 * 1024 * 1024; // 64 MB
+  static _kDefaultMaxAttachmentWidth = 4096; // 4096 pixels
 
   constructor({
     host,
@@ -56,7 +60,9 @@ export default class Config {
     cacheDir,
     allowedTimeSkewMillis,
     allowedIdentities,
-    deniedIdentities
+    deniedIdentities,
+    maxAttachmentSize,
+    maxAttachmentWidth
   }: {
     host: string;
     port: number;
@@ -78,6 +84,8 @@ export default class Config {
     allowedTimeSkewMillis: number;
     allowedIdentities?: string[] | undefined;
     deniedIdentities?: string[] | undefined;
+    maxAttachmentSize?: number | undefined;
+    maxAttachmentWidth?: number | undefined;
   }) {
     this.host = host;
     this.port = port;
@@ -99,6 +107,8 @@ export default class Config {
     this.allowedTimeSkewMillis = allowedTimeSkewMillis;
     this.allowedIdentities = allowedIdentities ?? [];
     this.deniedIdentities = deniedIdentities ?? [];
+    this.maxAttachmentSize = maxAttachmentSize ?? Config._kDefaultMaxAttachmentSize;
+    this.maxAttachmentWidth = maxAttachmentWidth ?? Config._kDefaultMaxAttachmentWidth;
   }
 
   static fromEnv(): Config {
@@ -124,6 +134,8 @@ export default class Config {
       allowedTimeSkewMillis: envParser.getNumberOptional('EPHEMERA_ALLOWED_TIME_SKEW_MILLIS', Config._kDefaultAllowedTimeSkewMillis),
       allowedIdentities: envParser.getStringArrayOptional('EPHEMERA_ALLOWED_IDENTITIES'),
       deniedIdentities: envParser.getStringArrayOptional('EPHEMERA_DENIED_IDENTITIES'),
+      maxAttachmentSize: envParser.getNumberOptional('EPHEMERA_MAX_ATTACHMENT_SIZE', Config._kDefaultMaxAttachmentSize),
+      maxAttachmentWidth: envParser.getNumberOptional('EPHEMERA_MAX_ATTACHMENT_WIDTH', Config._kDefaultMaxAttachmentWidth),
     });
   }
 

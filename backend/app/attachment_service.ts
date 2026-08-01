@@ -53,8 +53,6 @@ export class AttachmentService implements IAttachmentService {
   private config: Config;
   private database: PooledDatabase;
   private rwLock = new KeyedRWLock();
-  private static _kMaxAttachmentSize: number = 64 * 1024 * 1024; // 64 MB
-  private static _kMaxAttachmentWidth: number = 4096; // 4096 pixels
   private static _kAllowedAttachmentTypes: Set<string> = new Set([
     'image/png',
     'image/jpeg',
@@ -101,11 +99,11 @@ export class AttachmentService implements IAttachmentService {
 
   private async validateImage(srcFile: string): Promise<void> {
     try {
-      const image = sharp(srcFile, { failOn: 'error', limitInputPixels: AttachmentService._kMaxAttachmentWidth ** 2 });
+      const image = sharp(srcFile, { failOn: 'error', limitInputPixels: this.config.maxAttachmentWidth ** 2 });
       const metadata = await image.metadata();
 
-      if (metadata.width > AttachmentService._kMaxAttachmentWidth
-        || metadata.height > AttachmentService._kMaxAttachmentWidth) {
+      if (metadata.width > this.config.maxAttachmentWidth
+        || metadata.height > this.config.maxAttachmentWidth) {
         throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
       }
 
@@ -132,8 +130,8 @@ export class AttachmentService implements IAttachmentService {
         throw new ApiError('Could not determine video dimensions', 400);
       }
 
-      if (width > AttachmentService._kMaxAttachmentWidth
-        || height > AttachmentService._kMaxAttachmentWidth) {
+      if (width > this.config.maxAttachmentWidth
+        || height > this.config.maxAttachmentWidth) {
         throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
       }
 
@@ -160,7 +158,7 @@ export class AttachmentService implements IAttachmentService {
 
     const size = await FSHelper.size(srcFile);
 
-    if (size > AttachmentService._kMaxAttachmentSize) {
+    if (size > this.config.maxAttachmentSize) {
       throw new ApiError('Attachment size exceeds maximum allowed size', 400);
     }
 
