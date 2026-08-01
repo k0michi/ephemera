@@ -16,6 +16,7 @@ import type { PooledDatabase, Transaction } from './database.js';
 import { attachments, postAttachments } from './db/schema.js';
 import FSHelper from './fs_helper.js';
 import { KeyedRWLock } from './keyed_rw_lock.js';
+import SafeFS from './safe_fs.js';
 import type { ITranscoderService } from './transcoder_service.js';
 
 export interface AttachmentType {
@@ -212,7 +213,7 @@ export class AttachmentService implements IAttachmentService {
     const lock = await this.rwLock.acquireRead(hash);
 
     try {
-      const handle = await fs.open(this.getFilePath(hash), 'r');
+      const handle = await SafeFS.open(this.attachmentsDir, hash);
       const realAsyncDispose = handle[SymbolHelper.asyncDispose];
       const disposableHandle = handle;
 
@@ -254,18 +255,18 @@ export class AttachmentService implements IAttachmentService {
 
   private resolveVariantPath(kind: AttachmentCategory, hash: string, variant: AttachmentVariant, part?: string): string {
     if (variant === 'index') {
-      return path.join(this.variantsDir, hash, 'index.m3u8');
+      return path.join(hash, 'index.m3u8');
     }
 
     if (kind === 'image') {
-      return path.join(this.variantsDir, hash, `${variant}.webp`);
+      return path.join(hash, `${variant}.webp`);
     }
 
     if (part === undefined) {
       throw new ApiError('Invalid variant for video', 400);
     }
 
-    return path.join(this.variantsDir, hash, variant, part);
+    return path.join(hash, variant, part);
   }
 
   async openVariant(hash: string, variant: AttachmentVariant, part?: string): Promise<fs.FileHandle> {
@@ -282,7 +283,7 @@ export class AttachmentService implements IAttachmentService {
     const variantPath = this.resolveVariantPath(kind, hash, variant, part);
 
     try {
-      return await fs.open(variantPath, 'r');
+      return await SafeFS.open(this.variantsDir, variantPath);
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
         this.transcoderService.encodeVariant(hash, kind, variant)
