@@ -285,12 +285,17 @@ export class AttachmentService implements IAttachmentService {
     try {
       return await SafeFS.open(this.variantsDir, variantPath);
     } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-        this.transcoderService.encodeVariant(hash, kind, variant)
-          .catch((encodeError) => {
-            console.error(`Failed to encode variant ${variant} for ${hash}:`, encodeError);
-          });
+      if ((e as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw e;
+      }
+    }
 
+    await this.transcoderService.encodeVariant(hash, kind, variant);
+
+    try {
+      return await SafeFS.open(this.variantsDir, variantPath);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
         throw new ApiError('Attachment variant or part not found', 404);
       }
 
