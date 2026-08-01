@@ -55,6 +55,7 @@ export default class MediaTranscoder {
 
     try {
       await sharp(srcPath)
+        .rotate()
         .resize(size, size, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toFile(tempPath);
