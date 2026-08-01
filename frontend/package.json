@@ -20,6 +20,7 @@
     "core-js": "^3.48.0",
     "culori": "^4.0.2",
     "get-east-asian-width": "^1.4.0",
+    "hls.js": "^1.6.16",
     "isbot": "^5",
     "png-to-ico": "^3.0.1",
     "react": "^19.2.3",

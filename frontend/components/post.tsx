@@ -1,4 +1,5 @@
 import type { CreatePostSignal } from "@ephemera/shared/api/api";
+import AttachmentUtil from "@ephemera/shared/lib/attachment_util";
 import Base37 from "@ephemera/shared/lib/base37";
 import Hex from "@ephemera/shared/lib/hex";
 import NullableHelper from "@ephemera/shared/lib/nullable_helper";
@@ -13,6 +14,7 @@ import { useIsClient } from "~/hooks/is_client";
 import { EphemeraStore } from "~/store";
 
 import { useMutex } from "../app/hooks/mutex";
+import HlsVideo from "./hls_video";
 import { RoundedIdenticon } from "./identicon";
 import styles from "./post.module.css";
 
@@ -167,13 +169,34 @@ export default function Post({ post, onDelete }: PostProps) {
                 {attachments.map((footer) => {
                   const type = footer[1];
                   const attachmentHash = footer[2];
-                  const url = store.getClient().getAttachmentUrl(attachmentHash, post[0][1][0]);
 
-                  return type.startsWith('image/') ? (
-                    <img key={attachmentHash} src={url} alt="post attachment" style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />
-                  ) : type.startsWith('video/') ? (
-                    <video key={attachmentHash} src={url} controls style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />
-                  ) : null;
+                  if (type.startsWith('image/')) {
+                    const client = store.getClient();
+                    const imageVariants = AttachmentUtil.getVariants('image');
+                    const srcSet = imageVariants
+                      .map((variant) => `${client.getAttachmentVariantUrl(attachmentHash, post[0][1][0], variant)} ${variant}w`)
+                      .join(', ');
+                    const largestVariant = NullableHelper.unwrap(imageVariants.at(-1));
+                    const src = client.getAttachmentVariantUrl(attachmentHash, post[0][1][0], largestVariant);
+
+                    return (
+                      <img
+                        key={attachmentHash}
+                        src={src}
+                        srcSet={srcSet}
+                        sizes="100vw"
+                        alt="post attachment"
+                        style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }}
+                      />
+                    );
+                  }
+
+                  if (type.startsWith('video/')) {
+                    const url = store.getClient().getAttachmentVideoIndexUrl(attachmentHash, post[0][1][0]);
+                    return <HlsVideo key={attachmentHash} src={url} controls style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid #eee', marginTop: 4 }} />;
+                  }
+
+                  return null;
                 })}
               </div>
 

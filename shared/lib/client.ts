@@ -1,5 +1,6 @@
 import type { ApiRequest, ApiResponse, Attachment, CreatePostSignal, CreatePostSignalPayload, DeletePostRequest, DeletePostSignal, DeletePostSignalPayload, GetIdentityRequest, GetPostsRequest, GetPostsResponse, PeerManifest, Permission, PostStreamEvent, Version } from "../api/api.js";
 import { apiResponseSchema, getIdentityResponseSchema, getPeerResponseSchema, getPostResponseSchema, getPostsResponseSchema, getRemoteServersResponseSchema, postStreamEventSchema } from "../api/api_schema.js";
+import type { AttachmentVariant } from "./attachment_util.js";
 import Base37 from "./base37.js";
 import type { KeyPair } from "./crypto.js";
 import Crypto from "./crypto.js";
@@ -251,6 +252,22 @@ export default class Client {
     }
 
     return this.buildLocalUrl(`/api/v1/attachments/${hash}`);
+  }
+
+  getAttachmentVariantUrl(hash: string, host: string, variant: AttachmentVariant): string {
+    if (host !== this._host) {
+      return `https://${host}/api/v1/attachments/${hash}/${variant}.webp`;
+    }
+
+    return this.buildLocalUrl(`/api/v1/attachments/${hash}/${variant}.webp`);
+  }
+
+  getAttachmentVideoIndexUrl(hash: string, host: string): string {
+    if (host !== this._host) {
+      return `https://${host}/api/v1/attachments/${hash}/index.m3u8`;
+    }
+
+    return this.buildLocalUrl(`/api/v1/attachments/${hash}/index.m3u8`);
   }
 
   async getLocalServer(): Promise<PeerManifest> {
