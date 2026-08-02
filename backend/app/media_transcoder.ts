@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import ffmpeg from 'fluent-ffmpeg';
 import type { Dirent } from 'fs';
 import fs from 'fs/promises';
+import { parse, stringify, types } from 'hls-parser';
 import path from 'path';
 import sharp from 'sharp';
 
@@ -171,21 +172,20 @@ export default class MediaTranscoder {
   }
 
   private static async measureBitrate(variantDir: string, indexPath: string): Promise<number | undefined> {
-    const playlist = await fs.readFile(indexPath, 'utf8');
+    const playlist = parse(await fs.readFile(indexPath, 'utf8'));
 
-    const totalDuration = [...playlist.matchAll(/^#EXTINF:(\d+(?:\.\d+)?),/gm)]
-      .reduce((sum, m) => sum + Number(m[1]), 0);
+    if (playlist.isMasterPlaylist) {
+      return undefined;
+    }
+
+    const totalDuration = playlist.segments.reduce((sum, segment) => sum + segment.duration, 0);
 
     if (totalDuration <= 0) {
       return undefined;
     }
 
-    const segmentNames = playlist.split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith('#'));
-
-    const sizes = await Promise.all(segmentNames.map(async (name) => {
-      const stat = await fs.stat(path.join(variantDir, name));
+    const sizes = await Promise.all(playlist.segments.map(async (segment) => {
+      const stat = await fs.stat(path.join(variantDir, segment.uri));
       return stat.size;
     }));
 
@@ -207,7 +207,7 @@ export default class MediaTranscoder {
       throw e;
     }
 
-    const variantLines: string[] = [];
+    const variants: types.Variant[] = [];
 
     for (const entry of entries) {
       if (!entry.isDirectory()) {
@@ -237,10 +237,11 @@ export default class MediaTranscoder {
           continue;
         }
 
-        const resolution = `${metadata.width}x${metadata.height}`;
-
-        variantLines.push(`#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution}`);
-        variantLines.push(`${variantName}/index.m3u8`);
+        variants.push(new types.Variant({
+          uri: `${variantName}/index.m3u8`,
+          bandwidth,
+          resolution: { width: metadata.width, height: metadata.height },
+        }));
       } catch {
         continue;
       }
@@ -248,7 +249,7 @@ export default class MediaTranscoder {
 
     const masterPath = path.join(hashDir, 'index.m3u8');
 
-    if (variantLines.length === 0) {
+    if (variants.length === 0) {
       if (await this.exists(masterPath)) {
         await fs.unlink(masterPath);
       }
@@ -256,7 +257,7 @@ export default class MediaTranscoder {
       return;
     }
 
-    const masterContent = ['#EXTM3U', '#EXT-X-VERSION:3', ...variantLines].join('\n');
+    const masterContent = stringify(new types.MasterPlaylist({ variants }));
     const tempMasterPath = `${masterPath}.${crypto.randomUUID()}.tmp`;
 
     try {
