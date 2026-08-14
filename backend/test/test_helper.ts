@@ -101,6 +101,34 @@ export default class TestHelper {
     return filePath;
   }
 
+  static async newDummyAnimatedGif({
+    width,
+    height,
+    frameCount,
+    fps
+  }: {
+    width: number;
+    height: number;
+    frameCount: number;
+    fps: number;
+  }): Promise<string> {
+    const frames = await Promise.all(Array.from({ length: frameCount }, (_, i) => {
+      const value = Math.floor((255 * i) / Math.max(frameCount - 1, 1));
+      return sharp({
+        create: { width, height, channels: 3, background: { r: value, g: 0, b: 0 } }
+      }).png().toBuffer();
+    }));
+
+    let outputPath = await this.newTempFile();
+    outputPath += '.gif';
+
+    await sharp(frames, { join: { animated: true } })
+      .gif({ delay: Math.round(1000 / fps) })
+      .toFile(outputPath);
+
+    return outputPath;
+  }
+
   static async assertFileEquals(filePath1: string, filePath2: string): Promise<void> {
     const buffer1 = await fsPromises.readFile(filePath1);
     const buffer2 = await fsPromises.readFile(filePath2);
