@@ -99,11 +99,16 @@ export class AttachmentService implements IAttachmentService {
 
   private async validateImage(srcFile: string): Promise<void> {
     try {
-      const image = sharp(srcFile, { failOn: 'error', limitInputPixels: this.config.maxAttachmentWidth ** 2 });
+      const image = sharp(srcFile, {
+        failOn: 'error',
+        animated: true,
+        limitInputPixels: false
+      });
       const metadata = await image.metadata();
+      const frameHeight = metadata.pageHeight ?? metadata.height;
 
       if (metadata.width > this.config.maxAttachmentWidth
-        || metadata.height > this.config.maxAttachmentWidth) {
+        || frameHeight > this.config.maxAttachmentWidth) {
         throw new ApiError('Attachment dimensions exceed maximum allowed size', 400);
       }
 

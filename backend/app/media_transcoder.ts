@@ -60,7 +60,7 @@ export default class MediaTranscoder {
     const tempPath = `${destPath}.${crypto.randomUUID()}.tmp`;
 
     try {
-      await sharp(srcPath, { animated: true })
+      await sharp(srcPath, { animated: true, limitInputPixels: false })
         .rotate()
         .resize(size, size, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
